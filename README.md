@@ -10,7 +10,7 @@ Requires `nodejs` and `npm`.
 
 `make bindings`: Creates go bindings in `./build/bindings/go`
 
-`PORT=<port> SILENT=<bool> make start_ganache`: Starts a ganache instance, default `PORT=8545 SILENT=false`
+`PORT=<port> SILENT=<bool> make start-ganache`: Starts a ganache instance, default `PORT=8545 SILENT=false`
 
 `PORT=<port> make deploy`: Deploys all contract instances, default `PORT=8545`
 

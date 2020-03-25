@@ -1,0 +1,26 @@
+# Copyright 2020 ChainSafe Systems
+# SPDX-License-Identifier: LGPL-3.0-only
+
+language: node_js
+node_js: 12
+
+env:
+  global:
+    - GO111MODULE=on
+
+cache: npm
+
+jobs:
+  include:
+    - name: "Run Truffle tests"
+      env: CI=true
+      script:
+        - make install-deps
+        - make test
+    - name: "Verify contract deployment and binding creation"
+      env: CI=true
+      script:
+        - make install-deps
+        - make bindings
+        - SILENT=true make start-ganache
+        - make deploy

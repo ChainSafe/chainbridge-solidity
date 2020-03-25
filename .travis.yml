@@ -5,11 +5,7 @@ env:
   global:
     - GO111MODULE=on
 
-cache:
-  cargo: true
-  directories:
-    - $HOME/.cache/go-build
-    - $GOPATH/pkg/mod
+cache: npm
 
 jobs:
   include:

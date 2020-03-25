@@ -1,0 +1,22 @@
+# Copyright 2020 ChainSafe Systems
+# SPDX-License-Identifier: LGPL-3.0-only
+
+env:
+  global:
+    - GO111MODULE=on
+
+cache:
+  cargo: true
+  directories:
+    - $HOME/.cache/go-build
+    - $GOPATH/pkg/mod
+
+jobs:
+  include:
+    - language: node_js
+      node_js: 12
+      name: "Run Truffle tests"
+      env: CI=true
+      script:
+        - make install-deps
+        - make test

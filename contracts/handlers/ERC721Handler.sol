@@ -99,7 +99,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             calldatacopy(
                 metaData,                  // copy to metaData
                 0xA4,                      // copy from calldata @ 0xA4
-                sub(calldatasize(), 0xA4)    // copy size (calldatasize - 0xA0)
+                sub(calldatasize(), 0xA4)  // copy size (calldatasize - 0xA0)
             )
         }
 

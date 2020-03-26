@@ -48,8 +48,8 @@ contract Bridge {
     mapping(address => mapping(uint256 => bytes)) public _depositRecords;
     // originChainID => originChainHandlerAddress => depositNonce => depositProposal
     mapping(uint256 => mapping(address => mapping(uint256 => DepositProposal))) public _depositProposals;
-    // originChainID => originChainHandlerAddress => depositNonce => bool
-    mapping(uint256 => mapping(address => mapping(uint256 => bool))) public _hasVotedOnDepositProposal;
+    // originChainID => originChainHandlerAddress => depositNonce => relayerAddress => bool
+    mapping(uint256 => mapping(address => mapping(uint256 => mapping(address => bool)))) public _hasVotedOnDepositProposal;
 
     event RelayerThresholdProposalCreated(uint indexed proposedValue);
     event RelayerThresholdProposalVote(Vote vote);
@@ -95,12 +95,13 @@ contract Bridge {
     }
 
     function getCurrentRelayerThresholdProposal() public view returns (
-        uint, address[] memory, address[] memory, string memory) {
+        uint256, address[] memory, address[] memory, RelayerThresholdProposalStatus) {
         return (
             _currentRelayerThresholdProposal._proposedValue,
             _currentRelayerThresholdProposal._yesVotes,
             _currentRelayerThresholdProposal._noVotes,
             _currentRelayerThresholdProposal._status
+        );
     }
 
     function getDepositProposal(
@@ -149,7 +150,7 @@ contract Bridge {
 
         // If _depositThreshold is set to 1, then auto finalize
         if (_relayerThreshold <= 1) {
-            _depositProposals[destinationChainID][depositNonce]._status = DepositProposalStatus.Passed;
+            _depositProposals[originChainID][originChainHandlerAddress][depositNonce]._status = DepositProposalStatus.Passed;
         }
 
         // Creator always votes in favour
@@ -218,9 +219,9 @@ contract Bridge {
 
         _currentRelayerThresholdProposal = RelayerThresholdProposal({
             _proposedValue: proposedValue,
-            _yesVotes:      new address[](1),
-            _noVotes:       new address[](0),
-            _status:        RelayerThresholdProposalStatus.Active
+            _yesVotes: new address[](1),
+            _noVotes: new address[](0),
+            _status: RelayerThresholdProposalStatus.Active
             });
 
         if (_relayerThreshold <= 1) {
@@ -241,7 +242,7 @@ contract Bridge {
 
         // Cast vote
         if (vote == Vote.Yes) {
-            _currentRelayerThresholdProposal._yesVotes.push(msg.sender)
+            _currentRelayerThresholdProposal._yesVotes.push(msg.sender);
         } else {
             _currentRelayerThresholdProposal._noVotes.push(msg.sender);
         }

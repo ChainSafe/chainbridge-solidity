@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const truffleAssert = require('truffle-assertions');
-const ethers = require('ethers');
+const TruffleAssert = require('truffle-assertions');
+const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
@@ -12,15 +12,16 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (accounts) => {
-    // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
-    const originChainDepositerAddress = accounts[2];
-    const destinationChainRecipientAddress = accounts[3];
+    const depositerAddress = accounts[2];
     const originChainID = 0;
-    const destinationChainID = 0;
-    const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
+<<<<<<< HEAD
+    const expectedDepositID = 1;
+    const relayerThreshold = 1;
+=======
     const expectedDepositNonce = 1;
+>>>>>>> master
 
     let RelayerInstance;
     let BridgeInstance;
@@ -32,31 +33,31 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     let dataHash = '';
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([originChainRelayerAddress], 1);
-        BridgeInstance = await BridgeContract.new(RelayerInstance.address, 1);
+        RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
+        BridgeInstance = await BridgeContract.new(RelayerInstance.address, relayerThreshold);
         OriginERC20MintableInstance = await ERC20MintableContract.new();
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await OriginERC20MintableInstance.mint(originChainDepositerAddress, originChainInitialTokenAmount);
-        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: originChainDepositerAddress });
-        await BridgeInstance.depositERC20(
-            OriginERC20MintableInstance.address,
-            OriginERC20HandlerInstance.address,
-            destinationChainID,
-            DestinationERC20HandlerInstance.address,
-            destinationChainRecipientAddress,
-            depositAmount,
-            { from: originChainDepositerAddress }
-        );
-
-        data = '0x' + ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
-            ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(depositAmount), 32).substr(2);
-        dataHash = ethers.utils.keccak256(data);
+        data = '0x' +
+            Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
+            Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2);
+        dataHash = Ethers.utils.keccak256(data);
     });
 
+<<<<<<< HEAD
+    it('should create depositProposal successfully', async () => {
+        TruffleAssert.passes(await BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: originChainRelayerAddress }
+        ));
+    });
+=======
     it('[sanity] ERC20 deposit record is created with expected depositNonce and values', async () => {
         const expectedDepositRecord = {
             _originChainTokenAddress: OriginERC20MintableInstance.address,
@@ -71,50 +72,90 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
         for (const expectedProperty of Object.keys(expectedDepositRecord)) {
             // Testing all expected object properties
             assert.property(depositRecord, expectedProperty, `property: ${expectedProperty} does not exist in depositRecord`);
+>>>>>>> master
 
-            // Testing all expected object values
-            const depositRecordValue = depositRecord[expectedProperty].toNumber !== undefined ?
-                depositRecord[expectedProperty].toNumber() : depositRecord[expectedProperty];
-            assert.strictEqual(
-                depositRecordValue, expectedDepositRecord[expectedProperty],
-                `property: ${expectedProperty}'s value: ${depositRecordValue} does not match expected value: ${expectedDepositRecord[expectedProperty]}`)
-        }
+    it('should revert because depositerAddress is not a relayer', async () => {
+        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: depositerAddress }
+        ));
     });
 
+<<<<<<< HEAD
+    it("depositProposal shouldn't be created if it has an Active status", async () => {
+        await TruffleAssert.passes(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
     it('depositProposal can be created', async () => {
         truffleAssert.passes(await BridgeInstance.createDepositProposal(
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         ));
-    });
 
+<<<<<<< HEAD
+        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
     it('Only relayers should be able to create a deposit proposal', async () => {
         await truffleAssert.reverts(BridgeInstance.createDepositProposal(
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
-            { from: originChainDepositerAddress }
+            { from: originChainRelayerAddress }
         ));
     });
 
-    it('depositProposal is created with expected values', async () => {
+    xit("depositProposal shouldn't be created if it has a Passed status", async () => {
+        
+    });
+
+    xit("depositProposal shouldn't be created if it has a Transferred status", async () => {
+        
+    });
+
+    it('depositProposal should be created with expected values', async () => {
         const expectedDepositProposal = {
+<<<<<<< HEAD
+=======
             _destinationChainID: destinationChainID,
             _depositNonce: expectedDepositNonce,
+>>>>>>> master
             _dataHash: dataHash,
+            _numYes: 1,
+            _numNo: 0,
             _status: 3 // passed
         };
 
         await BridgeInstance.createDepositProposal(
+<<<<<<< HEAD
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         );
 
+<<<<<<< HEAD
+        const depositProposal = await BridgeInstance._depositProposals.call(
+            originChainID, OriginERC20HandlerInstance.address, expectedDepositID);
+=======
         const depositProposal = await BridgeInstance._depositProposals.call(destinationChainID, expectedDepositNonce);
+>>>>>>> master
         for (const expectedProperty of Object.keys(expectedDepositProposal)) {
             // Testing all expected object properties
             assert.property(depositProposal, expectedProperty, `property: ${expectedProperty} does not exist in depositRecord`);
@@ -128,6 +169,19 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
         }
     });
 
+<<<<<<< HEAD
+    it('originChainRelayerAddress should be marked as voted for proposal', async () => {
+        await BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: originChainRelayerAddress }
+        );
+        const hasVoted = await BridgeInstance.hasVoted(
+            originChainID, OriginERC20HandlerInstance.address,
+            expectedDepositID, originChainRelayerAddress);
+=======
     it("depositProposal shouldn't be created if it doesn't have Inactive or Denied status", async () => {
         await truffleAssert.passes(BridgeInstance.createDepositProposal(
             destinationChainID,
@@ -151,19 +205,34 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
             dataHash,
             { from: originChainRelayerAddress }
         );
-
-        const hasVoted = await BridgeInstance._hasVotedOnDepositProposal.call(destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+        const hasVoted = await BridgeInstance.hasVoted(destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+>>>>>>> master
         assert.isTrue(hasVoted);
     });
 
-    it('DepositProposalCreated event is fired with expected value', async () => {
+    it('DepositProposalCreated event  should be emitted with expected values', async () => {
         const proposalTx = await BridgeInstance.createDepositProposal(
+<<<<<<< HEAD
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         );
 
+<<<<<<< HEAD
+        TruffleAssert.eventEmitted(proposalTx, 'DepositProposalCreated', (event) => {
+            return event.originChainID.toNumber() === originChainID &&
+                event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
+                event.depositID.toNumber() === expectedDepositID &&
+                event.dataHash === dataHash
+        });
+    });
+=======
         truffleAssert.eventEmitted(proposalTx, 'DepositProposalCreated', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
@@ -173,12 +242,12 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
 
     it('getDepositProposal should return correct values in expected order', async () => {
         const expectedDepositProposal = {
-            0: destinationChainID,
-            1: expectedDepositNonce,
-            2: dataHash,
-            3: [originChainRelayerAddress],
-            4: [],
-            5: 'passed' // passed
+            _destinationChainID: destinationChainID,
+            _depositNonce: expectedDepositNonce,
+            _dataHash: dataHash,
+            _numYes: 1,
+            _numNo: 0,
+            _status: 'passed'
         };
 
         await BridgeInstance.createDepositProposal(
@@ -194,20 +263,26 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
             depositProposalValues[index] = depositRecordValue.toNumber !== undefined ?
                 depositRecordValue.toNumber() : depositRecordValue;
         });
-        assert.deepEqual(depositProposalValues, Object.values(expectedDepositProposal));
+        assert.sameOrderedMembers(depositProposalValues, Object.values(expectedDepositProposal));
     });
+>>>>>>> master
 });
 
 contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (accounts) => {
     // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
-    const originChainDepositerAddress = accounts[2];
+    const depositerAddress = accounts[2];
     const destinationChainRecipientAddress = accounts[3];
     const originChainID = 0;
     const destinationChainID = 0;
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
+<<<<<<< HEAD
+    const expectedDepositID = 1;
+    const relayerThreshold = 2;
+=======
     const expectedDepositNonce = 1;
+>>>>>>> master
 
     let RelayerInstance;
     let BridgeInstance;
@@ -219,31 +294,31 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     let dataHash = '';
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([originChainRelayerAddress], 1);
-        BridgeInstance = await BridgeContract.new(RelayerInstance.address, 2);
+        RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
+        BridgeInstance = await BridgeContract.new(RelayerInstance.address, relayerThreshold);
         OriginERC20MintableInstance = await ERC20MintableContract.new();
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await OriginERC20MintableInstance.mint(originChainDepositerAddress, originChainInitialTokenAmount);
-        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: originChainDepositerAddress });
-        await BridgeInstance.depositERC20(
-            OriginERC20MintableInstance.address,
-            OriginERC20HandlerInstance.address,
-            destinationChainID,
-            DestinationERC20HandlerInstance.address,
-            destinationChainRecipientAddress,
-            depositAmount,
-            { from: originChainDepositerAddress }
-        );
-
-        data = '0x' + ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
-            ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(depositAmount), 32).substr(2);
-        dataHash = ethers.utils.keccak256(data);
+        data = '0x' +
+            Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
+            Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2);
+        dataHash = Ethers.utils.keccak256(data);
     });
 
+<<<<<<< HEAD
+    it('should create depositProposal successfully', async () => {
+        TruffleAssert.passes(await BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: originChainRelayerAddress }
+        ));
+    });
+=======
     it('[sanity] ERC20 deposit record is created with expected depositNonce and values', async () => {
         const expectedDepositRecord = {
             _originChainTokenAddress: OriginERC20MintableInstance.address,
@@ -258,50 +333,90 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
         for (const expectedProperty of Object.keys(expectedDepositRecord)) {
             // Testing all expected object properties
             assert.property(depositRecord, expectedProperty, `property: ${expectedProperty} does not exist in depositRecord`);
+>>>>>>> master
 
-            // Testing all expected object values
-            const depositRecordValue = depositRecord[expectedProperty].toNumber !== undefined ?
-                depositRecord[expectedProperty].toNumber() : depositRecord[expectedProperty];
-            assert.strictEqual(
-                depositRecordValue, expectedDepositRecord[expectedProperty],
-                `property: ${expectedProperty}'s value: ${depositRecordValue} does not match expected value: ${expectedDepositRecord[expectedProperty]}`)
-        }
+    it('should revert because depositerAddress is not a relayer', async () => {
+        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: depositerAddress }
+        ));
     });
 
+<<<<<<< HEAD
+    it("depositProposal shouldn't be created if it has an Active status", async () => {
+        await TruffleAssert.passes(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
     it('depositProposal can be created', async () => {
         truffleAssert.passes(await BridgeInstance.createDepositProposal(
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         ));
-    });
 
+<<<<<<< HEAD
+        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
     it('Only relayers should be able to create a deposit proposal', async () => {
         await truffleAssert.reverts(BridgeInstance.createDepositProposal(
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
-            { from: originChainDepositerAddress }
+            { from: originChainRelayerAddress }
         ));
     });
 
-    it('depositProposal is created with expected values', async () => {
+    xit("depositProposal shouldn't be created if it has a Passed status", async () => {
+        
+    });
+
+    xit("depositProposal shouldn't be created if it has a Transferred status", async () => {
+        
+    });
+
+    it('depositProposal should be created with expected values', async () => {
         const expectedDepositProposal = {
+<<<<<<< HEAD
+=======
             _destinationChainID: destinationChainID,
             _depositNonce: expectedDepositNonce,
+>>>>>>> master
             _dataHash: dataHash,
-            _status: 1 // passed
+            _numYes: 1,
+            _numNo: 0,
+            _status: 1 // active
         };
 
         await BridgeInstance.createDepositProposal(
+<<<<<<< HEAD
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         );
 
+<<<<<<< HEAD
+        const depositProposal = await BridgeInstance._depositProposals.call(
+            originChainID, OriginERC20HandlerInstance.address, expectedDepositID);
+=======
         const depositProposal = await BridgeInstance._depositProposals.call(destinationChainID, expectedDepositNonce);
+>>>>>>> master
         for (const expectedProperty of Object.keys(expectedDepositProposal)) {
             // Testing all expected object properties
             assert.property(depositProposal, expectedProperty, `property: ${expectedProperty} does not exist in depositRecord`);
@@ -315,6 +430,19 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
         }
     });
 
+<<<<<<< HEAD
+    it('originChainRelayerAddress should be marked as voted for proposal', async () => {
+        await BridgeInstance.createDepositProposal(
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+            dataHash,
+            { from: originChainRelayerAddress }
+        );
+        const hasVoted = await BridgeInstance.hasVoted(
+            originChainID, OriginERC20HandlerInstance.address,
+            expectedDepositID, originChainRelayerAddress);
+=======
     it("depositProposal shouldn't be created if it doesn't have Inactive or Denied status", async () => {
         await truffleAssert.passes(BridgeInstance.createDepositProposal(
             destinationChainID,
@@ -338,19 +466,34 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
             dataHash,
             { from: originChainRelayerAddress }
         );
-
-        const hasVoted = await BridgeInstance._hasVotedOnDepositProposal.call(destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+        const hasVoted = await BridgeInstance.hasVoted(destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+>>>>>>> master
         assert.isTrue(hasVoted);
     });
 
-    it('DepositProposalCreated event is fired with expected value', async () => {
+    it('DepositProposalCreated event  should be emitted with expected values', async () => {
         const proposalTx = await BridgeInstance.createDepositProposal(
+<<<<<<< HEAD
+            originChainID,
+            OriginERC20HandlerInstance.address,
+            expectedDepositID,
+=======
             destinationChainID,
             expectedDepositNonce,
+>>>>>>> master
             dataHash,
             { from: originChainRelayerAddress }
         );
 
+<<<<<<< HEAD
+        TruffleAssert.eventEmitted(proposalTx, 'DepositProposalCreated', (event) => {
+            return event.originChainID.toNumber() === originChainID &&
+                event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
+                event.depositID.toNumber() === expectedDepositID &&
+                event.dataHash === dataHash
+        });
+    });
+=======
         truffleAssert.eventEmitted(proposalTx, 'DepositProposalCreated', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
@@ -363,8 +506,8 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
             _destinationChainID: destinationChainID,
             _depositNonce: expectedDepositNonce,
             _dataHash: dataHash,
-            _yesVotes: [originChainRelayerAddress],
-            _noVotes: [],
+            _numYes: 1,
+            _numNo: 0,
             _status: 'active'
         };
 
@@ -381,6 +524,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
             depositProposalValues[index] = depositRecordValue.toNumber !== undefined ?
                 depositRecordValue.toNumber() : depositRecordValue;
         });
-        assert.deepEqual(depositProposalValues, Object.values(expectedDepositProposal));
+        assert.sameOrderedMembers(depositProposalValues, Object.values(expectedDepositProposal));
     });
+>>>>>>> master
 });

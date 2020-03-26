@@ -12,6 +12,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address _originChainTokenAddress;
         uint    _destinationChainID;
         address _destinationChainHandlerAddress;
+        address _destinationChainTokenAddress;
         address _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
@@ -37,6 +38,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address originChainTokenAddress;
         uint256 destinationChainID;
         address destinationChainHandlerAddress;
+        address destinationChainTokenAddress;
         address destinationRecipientAddress;
         address depositer;
         uint256 amount;
@@ -45,9 +47,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             originChainTokenAddress        := mload(add(data, 0x20))
             destinationChainID             := mload(add(data, 0x40))
             destinationChainHandlerAddress := mload(add(data, 0x60))
-            destinationRecipientAddress    := mload(add(data, 0x80))
-            depositer                      := mload(add(data, 0xA0))
-            amount                         := mload(add(data, 0xC0))
+            destinationChainTokenAddress   := mload(add(data, 0x80))
+            destinationRecipientAddress    := mload(add(data, 0xA0))
+            depositer                      := mload(add(data, 0xC0))
+            amount                         := mload(add(data, 0xE0))
         }
 
         lockERC20(originChainTokenAddress, depositer, address(this), amount);
@@ -56,12 +59,14 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             originChainTokenAddress,
             destinationChainID,
             destinationChainHandlerAddress,
+            destinationChainTokenAddress,
             destinationRecipientAddress,
             depositer,
             amount
         );
     }
 
+    // TODO If any address can call this, anyone can mint tokens
     function executeDeposit(bytes memory data) public override {
         address destinationChainTokenAddress;
         address destinationRecipientAddress;

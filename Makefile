@@ -7,11 +7,11 @@ install-deps:
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "
-	truffle test
+	npx truffle test
 
 compile:
 	@echo " > \033[32mCompiling contracts... \033[0m "
-	truffle compile
+	npx truffle compile
 
 start-ganache:
 	@echo " > \033[32mStarting ganache... \033[0m "

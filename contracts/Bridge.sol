@@ -11,7 +11,7 @@ contract Bridge {
     uint256 constant public CHAIN_ID = 0;
 
     IRelayer                 public _relayerContract;
-    uint256                    public _relayerThreshold;
+    uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
 
     enum Vote {No, Yes}

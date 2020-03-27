@@ -29,7 +29,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
@@ -165,7 +165,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);

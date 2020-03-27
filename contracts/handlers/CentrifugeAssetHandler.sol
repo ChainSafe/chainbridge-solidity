@@ -30,6 +30,10 @@ contract CentrifugeAssetHandler is IDepositHandler {
         _bridgeAddress = bridgeAddress;
     }
 
+    function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
+        return _depositRecords[depositID];
+    }
+
     function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
         address originChainContractAddress;
         uint256 destinationChainID;

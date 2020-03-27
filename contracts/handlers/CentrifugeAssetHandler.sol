@@ -1,4 +1,5 @@
 pragma solidity 0.6.4;
+pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositHandler.sol";
 
@@ -28,6 +29,10 @@ contract CentrifugeAssetHandler is IDepositHandler {
 
     constructor(address bridgeAddress) public {
         _bridgeAddress = bridgeAddress;
+    }
+
+    function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
+        return _depositRecords[depositID];
     }
 
     function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {

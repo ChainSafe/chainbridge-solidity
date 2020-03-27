@@ -12,13 +12,12 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (accounts) => {
-    // const minterAndRelayer = accounts[0];
+    const originChainID = 0;
     const originChainRelayerAddress = accounts[1];
     const originChainRelayer2Address = accounts[4];
     const originChainRelayer3Address = accounts[5];
     const depositerAddress = accounts[2];
     const destinationChainRecipientAddress = accounts[3];
-    const originChainID = 0;
     const destinationChainID = 0;
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
@@ -39,7 +38,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             originChainRelayerAddress,
             originChainRelayer2Address,
             originChainRelayer3Address], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         OriginERC20MintableInstance = await ERC20MintableContract.new();
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();

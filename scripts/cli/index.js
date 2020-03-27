@@ -26,7 +26,6 @@ cli.command("deploy")
     .option('--relayers <value>', 'Number of initial relayers', 2)
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {
-        console.log(cli)
         setupCli(cli)
         cli.relayers = cli.commands[0].relayers
         cli.relayerThreshold = cli.commands[0].relayerThreshold
@@ -49,49 +48,10 @@ cli.command("transfer")
     .option('--dest <value>', "destination chain", 1)
     .action(async function () {
         setupCli(cli)
-        cli.value = Number(cli.value);
-        cli.dest = Number(cli.dest);
+        cli.value = Number(cli.commands[2].value);
+        cli.dest = Number(cli.commands[2].dest);
 
         await transfer.erc20Transfer(cli);
     })
 
-    //
-    // .option('-d, --deposit-threshold <value>', 'Value of deposit threshold', 1)
-    //
-    // .option('--watchMode', "Watch contracts", false)
-console.log("now parsing")
 cli.parseAsync(process.argv);
-
-// Connect to the network
-
-
-// if (cli.relayerThreshold > cli.numRelayers) {
-//     cli.relayerThreshold = cli.numRelayers;
-// }
-// if (cli.depositThreshold <= cli.numRelayers) {
-//     cli.depositThreshold = cli.numRelayers;
-// }
-
-
-// // Load the wallet to deploy the contract with
-//
-// // Deployment is asynchronous, so we use an async IIFE
-// (async function () {
-//     if (!cli.testOnly) {
-//         await deploy.deployRelayerContract(cli);
-//         await deploy.deployBridgeContract(cli);
-//         await deploy.deployERC20Handler(cli);
-//     }
-//
-//     if (cli.depositErc) {
-//         await transfer.erc20Transfer(cli);
-//     } else if (cli.mintErc20) {
-//         await transfer.mintErc20(cli);
-//     } else if (cli.depositNft) {
-//         await transfer.erc721Transfer(cli);
-//     } else if (cli.depositTest) {
-//         await transfer.depositTest(cli);
-//     } else if (cli.depositAsset) {
-//         await transfer.assetTestTransfer(cli);
-//     }
-// })();

@@ -10,8 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/ChainSafe/chainbridge-solidity.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "ChainSafe Systems",
+  "license": "LGPL-3.0",
   "bugs": {
     "url": "https://github.com/ChainSafe/chainbridge-solidity/issues"
   },

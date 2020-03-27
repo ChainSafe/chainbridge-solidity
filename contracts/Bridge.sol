@@ -8,8 +8,7 @@ import "./interfaces/IDepositHandler.sol";
 contract Bridge {
     using SafeMath for uint;
 
-    uint256 constant public CHAIN_ID = 0;
-
+    uint256                  public _chainID;
     IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
@@ -89,7 +88,8 @@ contract Bridge {
         _;
     }
 
-    constructor (address relayerContract, uint initialRelayerThreshold) public {
+    constructor (uint256 chainID, address relayerContract, uint initialRelayerThreshold) public {
+        _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
     }
@@ -126,7 +126,7 @@ contract Bridge {
         IDepositHandler depositHandler = IDepositHandler(originChainHandlerAddress);
         depositHandler.deposit(depositNonce, data);
 
-        emit Deposit(CHAIN_ID, originChainHandlerAddress, depositNonce);
+        emit Deposit(_chainID, originChainHandlerAddress, depositNonce);
     }
 
     function createDepositProposal(

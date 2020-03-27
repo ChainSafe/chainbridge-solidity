@@ -124,7 +124,7 @@ contract Bridge {
         _depositRecords[originChainHandlerAddress][depositNonce] = data;
 
         IDepositHandler depositHandler = IDepositHandler(originChainHandlerAddress);
-        depositHandler.deposit(depositNonce, data);
+        depositHandler.deposit(depositNonce, msg.sender, data);
 
         emit Deposit(_chainID, originChainHandlerAddress, depositNonce);
     }

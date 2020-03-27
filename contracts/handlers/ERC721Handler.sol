@@ -35,13 +35,12 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, bytes memory data) public override _onlyBridge {
+    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
         address      originChainTokenAddress;
         uint256      destinationChainID;
         address      destinationChainHandlerAddress;
         address      destinationChainTokenAddress;
         address      destinationRecipientAddress;
-        address      depositer;
         uint256      tokenID;
         bytes memory metaData;
 
@@ -53,21 +52,20 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             destinationChainHandlerAddress := mload(add(data, 0x60))
             destinationChainTokenAddress   := mload(add(data, 0x80))
             destinationRecipientAddress    := mload(add(data, 0xA0))
-            depositer                      := mload(add(data, 0xC0))
-            tokenID                        := mload(add(data, 0xE0))
+            tokenID                        := mload(add(data, 0xC0))
 
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x100, data))
+            let lenMeta := mload(add(0xE0, data))
             mstore(0x40, add(0xC0, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositID
             calldatacopy(
                 metaData,                     // copy to metaData
-                0x144,                        // copy from calldata after metaData length declaration @0x144
-                sub(calldatasize(), 0x144)   // copy size (calldatasize - 0x144)
+                0x124,                        // copy from calldata after metaData length declaration @0x124
+                sub(calldatasize(), 0x124)   // copy size (calldatasize - 0x124)
             )
         }
 

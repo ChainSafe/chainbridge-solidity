@@ -10,6 +10,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
     struct DepositRecord {
         uint256 _destinationChainID;
         address _destinationRecipientAddress;
+        address _depositer;
         bytes   _metaData;
     }
 
@@ -29,27 +30,36 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, bytes memory data) public override _onlyBridge {
+    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
         uint256       destinationChainID;
         address       destinationRecipientAddress;
         bytes memory  metaData;
 
         assembly {
+            // These are all fixed 32 bytes
+            // first 32 bytes of bytes is the length
             destinationChainID             := mload(add(data, 0x20))
             destinationRecipientAddress    := mload(add(data, 0x40))
-            metaData                       := mload(add(data, 0x60))
-            let lenExtra := mload(add(data, 0x80))
-            mstore(0x60, add(0x60, add(metaData, lenExtra)))
-                calldatacopy(
-                metaData,                  // copy to extra
-                0xA0,                      // copy from calldata @ 0xA0
-                sub(calldatasize(), 0xA0)  // copy size (calldatasize - 0xA0)
+
+            // metadata has variable length
+            // load free memory pointer to store metadata
+            metaData := mload(0x40)
+            // first 32 bytes of variable length in storage refer to length
+            let lenMeta := mload(add(0x60, data))
+            mstore(0x40, add(0x60, add(metaData, lenMeta)))
+
+            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositID
+            calldatacopy(
+                metaData,                     // copy to metaData
+                0x124,                        // copy from calldata after metaData length declaration @0xA4
+                sub(calldatasize(), 0x124)   // copy size (calldatasize - 0xA4)
             )
         }
 
         _depositRecords[depositID] = DepositRecord(
             destinationChainID,
             destinationRecipientAddress,
+            depositer,
             metaData
         );
     }

@@ -11,7 +11,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract('Bridge - [depositERC20]', async (accounts) => {
+contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const originChainID = 0;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -27,7 +27,6 @@ contract('Bridge - [depositERC20]', async (accounts) => {
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
     let depositData;
-    let expectedDepositRecord;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], 0);
@@ -46,18 +45,7 @@ contract('Bridge - [depositERC20]', async (accounts) => {
             Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2);
-
-        expectedDepositRecord = {
-            _originChainTokenAddress: OriginERC20MintableInstance.address,
-            _destinationChainID: destinationChainID,
-            _destinationChainHandlerAddress: DestinationERC20HandlerInstance.address,
-            _destinationTokenAddress: DestinationERC20MintableInstance.address,
-            _recipientAddress: recipientAddress,
-            _depositer: depositerAddress,
-            _amount: depositAmount
-        };
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -114,7 +102,7 @@ contract('Bridge - [depositERC20]', async (accounts) => {
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 
-    it('ERC20Deposited event is fired with expected value', async () => {
+    it('Deposit event is fired with expected value', async () => {
         const depositTx = await BridgeInstance.deposit(
             OriginERC20HandlerInstance.address,
             depositData,

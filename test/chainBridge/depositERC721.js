@@ -11,8 +11,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC721MintableContract = artifacts.require("ERC721Mintable");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
-contract('Bridge - [depositERC721]', async (accounts) => {
-    // const minter = accounts[0];
+contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const originChainID = 0;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -46,19 +45,8 @@ contract('Bridge - [depositERC721]', async (accounts) => {
             Ethers.utils.hexZeroPad(DestinationERC721HandlerInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(DestinationERC721MintableInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(originChainTokenID), 32).substr(2);
             Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
-
-        expectedDepositRecord = {
-            _originChainTokenAddress: OriginERC721MintableInstance.address,
-            _destinationChainID: destinationChainID,
-            _destinationChainHandlerAddress: DestinationERC721HandlerInstance.address,
-            _destinationRecipientAddress: recipientAddress,
-            _depositer: depositerAddress,
-            _tokenID: originChainTokenID,
-            _data: genericBytes
-        };
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -123,7 +111,7 @@ contract('Bridge - [depositERC721]', async (accounts) => {
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 
-    it('ERC721Deposited event is fired with expected value', async () => {
+    it('Deposit event is fired with expected value', async () => {
         const depositTx = await BridgeInstance.deposit(
             OriginERC721HandlerInstance.address,
             depositData,

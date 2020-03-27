@@ -112,10 +112,6 @@ contract Bridge {
         return _depositProposals[originChainID][originChainHandlerAddress][depositNonce];
     }
 
-    function hasVotedRelayerThresholdProposal(address relayerAddress) public view returns (bool) {
-        return _currentRelayerThresholdProposal._hasVoted[relayerAddress];
-    }
-
     function deposit(
         address      originChainHandlerAddress,
         bytes memory data

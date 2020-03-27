@@ -17,3 +17,26 @@ Requires `nodejs` and `npm`.
 `make test`: Runs truffle tests.
 
 `make compile`: Compile contracts.
+
+### JS CLI
+
+#### deploy
+
+Deploy contracts with configurable constructor args. Relayers will be added from default keys (max 5).
+```
+./scripts/cli/index.js deploy --port <port> --validator-threshold <n> --relayers <n>
+```
+
+#### mint
+
+Mint default erc20 tokens.
+```
+./scripts/cli/index.js mint --port <port> --value <n>
+```
+
+#### transfer
+
+Initiate a transfer of erc20 to some destination chain.
+```
+./scripts/cli/index.js transfer --port <port> --value <n> --dest <n>
+```

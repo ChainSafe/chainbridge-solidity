@@ -4,6 +4,10 @@ install-deps:
 	@echo " > \033[32mInstalling dependencies... \033[0m "
 	./scripts/install_deps.sh
 
+install-cli:
+	@echo " > \033[32mInstalling cb-sol-cli... \033[0m "
+	npm install --global ./scripts/cli
+
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "

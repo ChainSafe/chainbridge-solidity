@@ -29,12 +29,12 @@ async function assetTestTransfer(cfg) {
 }
 
 async function mintErc20(cfg) {
-    const depositer = constants.relayerAddresses[1];
+    const depositer = constants.relayerAddresses[0];
     const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20MintableContract.abi, cfg.mainWallet);
     
     try {
         await erc20Instance.mint(depositer, cfg.value);
-        console.log(`Succesfully minted ${cfg.value} tokens to ${depositer}`);
+        console.log(`Successfully minted ${cfg.value} tokens to ${depositer}`);
     } catch (e) {
         console.log({ e })
     }

@@ -17,15 +17,6 @@ contract Bridge {
     enum RelayerThresholdProposalStatus {Inactive, Active}
     enum DepositProposalStatus {Inactive, Active, Denied, Passed, Transferred}
 
-    struct CentrifugeAssetDepositRecord {
-        address   _originChainTokenAddress;
-        address   _originChainHandlerAddress;
-        uint      _destinationChainID;
-        address   _destinationChainHandlerAddress;
-        address   _destinationRecipientAddress;
-        bytes32   _metaDataHash;
-    }
-
     struct DepositProposal {
         bytes32                  _dataHash;
         address[]                _yesVotes;

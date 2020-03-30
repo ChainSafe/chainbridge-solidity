@@ -4,6 +4,10 @@ install-deps:
 	@echo " > \033[32mInstalling dependencies... \033[0m "
 	./scripts/install_deps.sh
 
+install-cli:
+	@echo " > \033[32mInstalling cb-sol-cli... \033[0m "
+	npm install --global ./scripts/cli
+
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "
@@ -19,7 +23,7 @@ start-ganache:
 
 deploy:
 	@echo " > \033[32mDeploying evm contracts... \033[0m "
-	./scripts/cli/index.js --relayers 3 --port ${PORT}
+	./scripts/cli/index.js deploy --port=${PORT}
 
 bindings: compile
 	@echo " > \033[32mCreating go bindings for ethereum contracts... \033[0m "

@@ -1,0 +1,22 @@
+{
+  "name": "chainbridge-solidity-cli",
+  "version": "0.0.1",
+  "description": "Basic ethereum interactions for ChainBridge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChainSafe/chainbridge-solidity.git"
+  },
+  "author": "ChainSafe Systems",
+  "license": "LGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ChainSafe/chainbridge-solidity/issues"
+  },
+  "homepage": "https://github.com/ChainSafe/chainbridge-solidity#readme",
+  "bin": {
+    "cb-sol-cli": "./index.js"
+  }
+}

@@ -29,12 +29,12 @@ async function assetTestTransfer(cfg) {
 }
 
 async function mintErc20(cfg) {
-    const depositer = constants.relayerAddresses[1];
+    const depositer = constants.relayerAddresses[0];
     const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20MintableContract.abi, cfg.mainWallet);
     
     try {
         await erc20Instance.mint(depositer, cfg.value);
-        console.log(`Succesfully minted ${cfg.value} tokens to ${depositer}`);
+        console.log(`Successfully minted ${cfg.value} tokens to ${depositer}`);
     } catch (e) {
         console.log({ e })
     }
@@ -52,7 +52,7 @@ async function erc20Transfer(cfg) {
         const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);
         const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, depositerWallet);
 
-        // Mint & Approve tokens
+        // Approve tokens
         await erc20Instance.approve(constants.ERC20_HANDLER_ADDRESS, cfg.value);
         console.log("[ERC20 Transfer] Approved tokens!");
 
@@ -60,7 +60,6 @@ async function erc20Transfer(cfg) {
         const handlerPreBal = await erc20Instance.balanceOf(constants.ERC20_HANDLER_ADDRESS);
         console.log("[ERC20 Transfer] Depositer token balance: ", depositerPreBal.toNumber());
         console.log("[ERC20 Transfer] Handler token balance: ", handlerPreBal.toNumber());
-        console.log(cfg.dest)
         // Make the deposit
         await bridgeInstance.depositERC20(
             constants.ERC20_ADDRESS, // home

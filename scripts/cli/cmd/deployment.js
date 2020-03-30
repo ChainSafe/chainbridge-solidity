@@ -23,6 +23,8 @@ async function deployRelayerContract(cfg) {
         relayers,
         cfg.relayerThreshold
     );
+    console.log("[Relayer] Initial Relayers: ", relayers)
+    console.log("[Relayer] Relayer Threshold: ", cfg.relayerThreshold)
     console.log("[Relayer] Contract address: ", contract.address);
     console.log("[Relayer] Transaction Hash: ", contract.deployTransaction.hash);
     await contract.deployed();
@@ -36,9 +38,9 @@ async function deployBridgeContract(cfg) {
         // Deploy
         let contract = await factory.deploy(
             constants.RELAYER_ADDRESS,
-            1
+            cfg.relayerThreshold
         );
-
+        console.log("[Bridge] Relayer Threshold: ", cfg.relayerThreshold)
         console.log("[Bridge] Contract address: ", contract.address);
         console.log("[Bridge] Transaction Hash: ", contract.deployTransaction.hash);
         await contract.deployed();

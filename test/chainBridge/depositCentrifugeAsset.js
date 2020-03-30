@@ -1,0 +1,80 @@
+const TruffleAssert = require('truffle-assertions');
+const Ethers = require('ethers');
+
+
+const RelayerContract = artifacts.require('Relayer');
+const BridgeContract = artifacts.require('Bridge');
+const CentrifugeAssetHandlerContract = artifacts.require('CentrifugeAssetHandler');
+
+contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
+    const chainID = 0;
+    const relayerThreshold = 0;
+    const destinationChainID = 1;
+    const depositerAddress = accounts[1];
+    const recipientAddress = accounts[2];
+    const expectedDepositID = 1;
+    const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
+    
+    let RelayerInstance;
+    let BridgeInstance;
+    let CentrifugeAssetHandlerInstance;
+    let depositData;
+
+    beforeEach(async () => {
+        RelayerInstance = await RelayerContract.new([], relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        CentrifugeAssetHandlerInstance = await CentrifugeAssetHandlerContract.new(BridgeInstance.address);
+
+        depositData = '0x' +
+            Ethers.utils.hexZeroPad('0x0', 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) +
+            Ethers.utils.hexZeroPad('0x0', 32).substr(2) +
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
+            Ethers.utils.keccak256(genericBytes).substr(2);
+    });
+
+    it('should make a CentrifugeAsset deposit successfully', async () => {
+        TruffleAssert.passes(await BridgeInstance.deposit(
+            CentrifugeAssetHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        ));
+    });
+
+    it('deposit count for CentrifugeAssetHandlerInstance.address should be incremented to expectedDepositID', async () => {
+        await BridgeInstance.deposit(
+            CentrifugeAssetHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        );
+
+        const depositCount = await BridgeInstance._depositCounts.call(
+            CentrifugeAssetHandlerInstance.address);
+        assert.strictEqual(depositCount.toNumber(), expectedDepositID);
+    });
+
+    it('should create depositRecord with expected depositID and value', async () => {
+        await BridgeInstance.deposit(
+            CentrifugeAssetHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        );
+
+        const depositRecord = await BridgeInstance._depositRecords.call(
+            CentrifugeAssetHandlerInstance.address, expectedDepositID);
+        assert.strictEqual(depositRecord, String(depositData).toLowerCase());
+    });
+
+    it('deposit should trigger deposit event with expected values', async () => {
+        const depositTx = await BridgeInstance.deposit(
+            CentrifugeAssetHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        );
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.originChainHandlerAddress === CentrifugeAssetHandlerInstance.address &&
+                event.depositNonce.toNumber() === expectedDepositID
+        });
+    });
+});

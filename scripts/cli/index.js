@@ -23,10 +23,12 @@ cli.option('-p, --port <value>', 'Port of RPC instance', 8545)
 
 cli.command("deploy")
     .description("Deploys contracts via RPC")
+    .option('--chainID <value>', 'Chain ID deposits will originate from', 1)
     .option('--relayers <value>', 'Number of initial relayers', 2)
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {
         setupCli(cli)
+        cli.chainID = cli.commands[0].chainID
         cli.relayers = cli.commands[0].relayers
         cli.relayerThreshold = cli.commands[0].relayerThreshold
         await deploy.deployRelayerContract(cli);

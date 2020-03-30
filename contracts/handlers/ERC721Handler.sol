@@ -35,9 +35,8 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address      originChainTokenAddress;
-        uint256      destinationChainID;
         address      destinationChainHandlerAddress;
         address      destinationChainTokenAddress;
         address      destinationRecipientAddress;
@@ -48,20 +47,19 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             // These are all fixed 32 bytes
             // first 32 bytes of bytes is the length
             originChainTokenAddress        := mload(add(data, 0x20))
-            destinationChainID             := mload(add(data, 0x40))
-            destinationChainHandlerAddress := mload(add(data, 0x60))
-            destinationChainTokenAddress   := mload(add(data, 0x80))
-            destinationRecipientAddress    := mload(add(data, 0xA0))
-            tokenID                        := mload(add(data, 0xC0))
+            destinationChainHandlerAddress := mload(add(data, 0x40))
+            destinationChainTokenAddress   := mload(add(data, 0x60))
+            destinationRecipientAddress    := mload(add(data, 0x80))
+            tokenID                        := mload(add(data, 0xA0))
 
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0xE0, data))
-            mstore(0x40, add(0xC0, add(metaData, lenMeta)))
+            let lenMeta := mload(add(0xC0, data))
+            mstore(0x40, add(0xA0, add(metaData, lenMeta)))
 
-            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositID
+            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
             calldatacopy(
                 metaData,                     // copy to metaData
                 0x124,                        // copy from calldata after metaData length declaration @0x124
@@ -71,7 +69,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
 
-        _depositRecords[depositID] = DepositRecord(
+        _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
             destinationChainID,
             destinationChainHandlerAddress,

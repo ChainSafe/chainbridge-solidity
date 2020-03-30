@@ -30,23 +30,21 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
-        uint256       destinationChainID;
+    function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address       destinationRecipientAddress;
         bytes memory  metaData;
 
         assembly {
             // These are all fixed 32 bytes
             // first 32 bytes of bytes is the length
-            destinationChainID             := mload(add(data, 0x20))
-            destinationRecipientAddress    := mload(add(data, 0x40))
+            destinationRecipientAddress    := mload(add(data, 0x20))
 
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x60, data))
-            mstore(0x40, add(0x40, add(metaData, lenMeta)))
+            let lenMeta := mload(add(0x40, data))
+            mstore(0x40, add(0x20, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x64 after accounting for function signature and the depositID
             calldatacopy(
@@ -56,7 +54,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
             )
         }
 
-        _depositRecords[depositID] = DepositRecord(
+        _depositRecords[depositNonce] = DepositRecord(
             destinationChainID,
             destinationRecipientAddress,
             depositer,

@@ -55,15 +55,18 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
-            // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0xC0, data))
+            // first 32 bytes after 0xA0 of variable length in storage refer to length of metadata
+            // @NOTE: if the byte array is not encoded like solidity encodes a variable length byte array, there will be unpacking issues
+            let lenMeta := mload(add(0xA0, data))
+
+            // incrementing free memory pointer
             mstore(0x40, add(0xA0, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
             calldatacopy(
                 metaData,                     // copy to metaData
-                0x124,                        // copy from calldata after metaData length declaration @0x124
-                sub(calldatasize(), 0x124)   // copy size (calldatasize - 0x124)
+                0xE4,                        // copy from calldata after metaData length declaration @0xE4
+                sub(calldatasize(), 0xE4)   // copy size (calldatasize - 0xE4)
             )
         }
 

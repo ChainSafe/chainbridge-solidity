@@ -11,7 +11,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (accounts) => {
+contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayerThreshold = 1]', async (accounts) => {
     const originChainRelayerAddress = accounts[1];
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
@@ -43,7 +43,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 
     it('should create depositProposal successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.createDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -52,7 +52,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 
     it('should revert because depositerAddress is not a relayer', async () => {
-        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+        await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -61,27 +61,19 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 
     it("depositProposal shouldn't be created if it has an Active status", async () => {
-        await TruffleAssert.passes(BridgeInstance.createDepositProposal(
+        await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }
         ));
 
-        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+        await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }
         ));
-    });
-
-    xit("depositProposal shouldn't be created if it has a Passed status", async () => {
-        
-    });
-
-    xit("depositProposal shouldn't be created if it has a Transferred status", async () => {
-        
     });
 
     it("getDepositProposal should be called successfully", async () => {
@@ -95,10 +87,10 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
             _dataHash: dataHash,
             _yesVotes: [originChainRelayerAddress],
             _noVotes: [],
-            _status: '3' // passed
+            _status: '2' // passed
         };
 
-        await BridgeInstance.createDepositProposal(
+        await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -111,7 +103,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 
     it('originChainRelayerAddress should be marked as voted for proposal', async () => {
-        await BridgeInstance.createDepositProposal(
+        await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -123,7 +115,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 
     it('DepositProposalCreated event should be emitted with expected values', async () => {
-        const proposalTx = await BridgeInstance.createDepositProposal(
+        const proposalTx = await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -139,7 +131,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold = 1]', async (ac
     });
 });
 
-contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (accounts) => {
+contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayerThreshold > 1]', async (accounts) => {
     // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
     const depositerAddress = accounts[2];
@@ -172,7 +164,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     });
 
     it('should create depositProposal successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.createDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -181,7 +173,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     });
 
     it('should revert because depositerAddress is not a relayer', async () => {
-        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+        await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -190,27 +182,19 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     });
 
     it("depositProposal shouldn't be created if it has an Active status", async () => {
-        await TruffleAssert.passes(BridgeInstance.createDepositProposal(
+        await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }
         ));
 
-        await TruffleAssert.reverts(BridgeInstance.createDepositProposal(
+        await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }
         ));
-    });
-
-    xit("depositProposal shouldn't be created if it has a Passed status", async () => {
-        
-    });
-
-    xit("depositProposal shouldn't be created if it has a Transferred status", async () => {
-        
     });
 
     it('depositProposal should be created with expected values', async () => {
@@ -218,10 +202,10 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
             _dataHash: dataHash,
             _yesVotes: [originChainRelayerAddress],
             _noVotes: [],
-            _status: '1' // passed
+            _status: '1' // active
         };
 
-        await BridgeInstance.createDepositProposal(
+        await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -234,7 +218,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     });
 
     it('originChainRelayerAddress should be marked as voted for proposal', async () => {
-        await BridgeInstance.createDepositProposal(
+        await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,
@@ -246,7 +230,7 @@ contract('Bridge - [createDepositProposal with relayerThreshold > 1]', async (ac
     });
 
     it('DepositProposalCreated event  should be emitted with expected values', async () => {
-        const proposalTx = await BridgeInstance.createDepositProposal(
+        const proposalTx = await BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             dataHash,

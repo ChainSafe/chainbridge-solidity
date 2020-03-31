@@ -62,7 +62,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
         );
     }
 
-    function executeDeposit(bytes memory data) public override {
+    function executeDeposit(bytes memory data) public override _onlyBridge {
         bytes32 metaDataHash;
 
         assembly {

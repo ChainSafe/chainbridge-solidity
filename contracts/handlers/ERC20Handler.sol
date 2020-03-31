@@ -68,7 +68,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // TODO If any address can call this, anyone can mint tokens
-    function executeDeposit(bytes memory data) public override {
+    function executeDeposit(bytes memory data) public override _onlyBridge {
         address destinationChainTokenAddress;
         address destinationRecipientAddress;
         uint256 amount;

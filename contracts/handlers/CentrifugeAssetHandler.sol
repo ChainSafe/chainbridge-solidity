@@ -35,26 +35,24 @@ contract CentrifugeAssetHandler is IDepositHandler {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address originChainContractAddress;
-        uint256 destinationChainID;
         address destinationChainHandlerAddress;
         address destinationRecipientAddress;
         bytes32 metaDataHash;
 
         assembly {
             originChainContractAddress     := mload(add(data,0x20))
-            destinationChainID             := mload(add(data,0x40))
-            destinationChainHandlerAddress := mload(add(data,0x60))
-            destinationRecipientAddress    := mload(add(data,0x80))
-            metaDataHash                   := mload(add(data,0xA0))
+            destinationChainHandlerAddress := mload(add(data,0x40))
+            destinationRecipientAddress    := mload(add(data,0x60))
+            metaDataHash                   := mload(add(data,0x80))
         }
 
         require(_assetDepositStatuses[metaDataHash] == AssetDepositStatus.Uninitialized,
         "asset has already been deposited and cannot be changed");
         _assetDepositStatuses[metaDataHash] = AssetDepositStatus.Active;
 
-        _depositRecords[depositID] = DepositRecord(
+        _depositRecords[depositNonce] = DepositRecord(
             originChainContractAddress,
             destinationChainID,
             destinationChainHandlerAddress,

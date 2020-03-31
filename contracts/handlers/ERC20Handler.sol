@@ -34,9 +34,13 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function deposit(uint256 depositID, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(
+        uint256 destinationChainID,
+        uint256 depositNonce,
+        address depositer,
+        bytes memory data
+    ) public override _onlyBridge {
         address originChainTokenAddress;
-        uint256 destinationChainID;
         address destinationChainHandlerAddress;
         address destinationChainTokenAddress;
         address destinationRecipientAddress;
@@ -44,16 +48,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
-            destinationChainID             := mload(add(data, 0x40))
-            destinationChainHandlerAddress := mload(add(data, 0x60))
-            destinationChainTokenAddress   := mload(add(data, 0x80))
-            destinationRecipientAddress    := mload(add(data, 0xA0))
-            amount                         := mload(add(data, 0xC0))
+            destinationChainHandlerAddress := mload(add(data, 0x40))
+            destinationChainTokenAddress   := mload(add(data, 0x60))
+            destinationRecipientAddress    := mload(add(data, 0x80))
+            amount                         := mload(add(data, 0xA0))
         }
 
         lockERC20(originChainTokenAddress, depositer, address(this), amount);
 
-        _depositRecords[depositID] = DepositRecord(
+        _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
             destinationChainID,
             destinationChainHandlerAddress,

@@ -12,11 +12,11 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [deposit - ERC20]', async (accounts) => {
-    const originChainID = 0;
+    const originChainID = 1;
+    const destinationChainID = 2;
     const relayerThreshold = 0;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    const destinationChainID = 0;
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
@@ -42,7 +42,6 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) +
             Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
@@ -61,6 +60,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
     it('ERC20 deposit can be made', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
+            destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
             { from: depositerAddress }
@@ -69,17 +69,19 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
     it('_depositCounts should be increments from 0 to 1', async () => {
         await BridgeInstance.deposit(
+            destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
             { from: depositerAddress }
         );
 
-        const depositCount = await BridgeInstance._depositCounts.call(OriginERC20HandlerInstance.address);
+        const depositCount = await BridgeInstance._depositCounts.call(destinationChainID);
         assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
     });
 
     it('ERC20 can be deposited with correct balances', async () => {
         await BridgeInstance.deposit(
+            destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
             { from: depositerAddress }
@@ -94,17 +96,19 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
     it('depositRecord is created with expected depositNonce and correct value', async () => {
         await BridgeInstance.deposit(
+            destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
             { from: depositerAddress }
         );
 
-        const depositRecord = await BridgeInstance._depositRecords.call(OriginERC20HandlerInstance.address, expectedDepositNonce);
+        const depositRecord = await BridgeInstance._depositRecords.call(destinationChainID, expectedDepositNonce);
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 
     it('Deposit event is fired with expected value', async () => {
         const depositTx = await BridgeInstance.deposit(
+            destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
             { from: depositerAddress }
@@ -112,6 +116,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.originChainID.toNumber() === originChainID &&
+                event.destinationChainID.toNumber() === destinationChainID &&
                 event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });

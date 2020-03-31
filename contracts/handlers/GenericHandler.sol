@@ -63,5 +63,5 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
     }
 
     // Todo: Implement example of generic deposit
-    function executeDeposit(bytes memory data) public override {}
+    function executeDeposit(bytes memory data) public override _onlyBridge {}
 }

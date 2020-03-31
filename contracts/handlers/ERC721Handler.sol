@@ -86,7 +86,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         );
     }
 
-    function executeDeposit(bytes memory data) public override {
+    function executeDeposit(bytes memory data) public override _onlyBridge {
         address      destinationChainTokenAddress;
         address      destinationRecipientAddress;
         uint256      tokenID;

@@ -65,12 +65,12 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     });
 
     it('ERC721 deposit can be made', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await BridgeInstance.deposit(
             destinationChainID,
             OriginERC721HandlerInstance.address,
             depositData,
             { from: depositerAddress }
-        ));
+        )
     });
 
     it('_depositCounts should be increments from 0 to 1', async () => {

@@ -43,14 +43,14 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x20, data))
-            mstore(0x40, add(0x20, add(metaData, lenMeta)))
+            let lenMeta := mload(add(0x40, data))
+            mstore(0x40, add(0x40, add(metaData, lenMeta)))
 
-            // in the calldata, metadata is stored @0x64 after accounting for function signature and the depositID
+            // in the calldata, metadata is stored @0xC4 after accounting for function signature and the depositID
             calldatacopy(
                 metaData,                     // copy to metaData
-                0x64,                        // copy from calldata after data length declaration at 0x64
-                sub(calldatasize(), 0x64)   // copy size (calldatasize - 0x64)
+                0xC4,                        // copy from calldata after data length declaration at 0xA4
+                sub(calldatasize(), 0xC4)   // copy size (calldatasize - 0xA4)
             )
         }
 

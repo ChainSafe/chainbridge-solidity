@@ -123,11 +123,11 @@ contract Bridge {
     ) public _onlyRelayers {
         DepositProposal storage depositProposal = _depositProposals[destinationChainID][depositNonce];
 
-        require(uint(depositProposal._status) <= 1, "proposal has already been passsed or transferred");
+        require(uint(depositProposal._status) <= 1, "proposal has already been passed or transferred");
         require(!_hasVotedOnDepositProposal[destinationChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
-        if (uint(depositProposal._status() == 0) {
-            depositProposal = DepositProposal({
+        if (uint(depositProposal._status) == 0) {
+            _depositProposals[destinationChainID][depositNonce] = DepositProposal({
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
                 _noVotes: new address[](0),
@@ -146,7 +146,7 @@ contract Bridge {
         // If _depositThreshold is set to 1, then auto finalize
         // or if _relayerThreshold has been exceeded
         if (_relayerThreshold <= 1 || depositProposal._yesVotes.length >= _relayerThreshold) {
-            _depositProposals[destinationChainID][depositNonce]._status = DepositProposalStatus.Passed;
+            depositProposal._status = DepositProposalStatus.Passed;
             emit DepositProposalFinalized(_chainID, destinationChainID, depositNonce);
         }
     }

@@ -39,7 +39,7 @@ async function deployBridgeContract(cfg) {
     try {
         // Create an instance of a Contract Factory
         let factory = new ethers.ContractFactory(BridgeContract.abi, BridgeContract.bytecode, cfg.mainWallet);
-        console.log(`chainId: ${cfg.chainID} relayerAddr: ${constants.RELAYER_ADDRESS}`)
+
         // Deploy
         let contract = await factory.deploy(
             cfg.chainID,

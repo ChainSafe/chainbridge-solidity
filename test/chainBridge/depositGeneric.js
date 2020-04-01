@@ -29,7 +29,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(1), 32).substr(2) + // Number of remaining 32byte values
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
             Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
     });
 

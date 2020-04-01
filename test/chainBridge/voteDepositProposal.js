@@ -51,7 +51,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(2), 32).substr(2) + // Number of remaining 32byte values (45 bytes padded to 64)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
             tokenID;
         dataHash = Ethers.utils.keccak256(data);
 

@@ -215,4 +215,39 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
                 event.status.toNumber() === 1
         });
     });
+
+    it('Execution successful', async () => {
+        const voteTx = await BridgeInstance.voteDepositProposal(
+            destinationChainID,
+            expectedDepositNonce,
+            dataHash,
+            { from: originChainRelayer2Address }
+        );
+
+        TruffleAssert.eventEmitted(voteTx, 'DepositProposalVote', (event) => {
+            return event.originChainID.toNumber() === originChainID &&
+                event.destinationChainID.toNumber() === destinationChainID &&
+                event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toNumber() === 1
+        });
+
+        TruffleAssert.eventEmitted(voteTx, 'DepositProposalFinalized', (event) => {
+            return event.originChainID.toNumber() === originChainID &&
+                event.destinationChainID.toNumber() === destinationChainID &&
+                event.depositNonce.toNumber() === expectedDepositNonce
+        });
+
+        const executionTx = await BridgeInstance.executeDepositProposal(
+            originChainID,
+            expectedDepositNonce,
+            DestinationERC20HandlerInstance.address,
+            data,
+        )
+
+        TruffleAssert.eventEmitted(executionTx, 'DepositProposalExecuted', (event) => {
+            return event.originChainID.toNumber() === originChainID &&
+                event.destinationChainID.toNumber() === destinationChainID &&
+                event.depositNonce.toNumber() === expectedDepositNonce
+        });
+    });
 });

@@ -42,3 +42,56 @@ Initiate a transfer of erc20 to some destination chain.
 ```
 cb-sol-cli transfer --port <port> --value <n> --dest <n>
 ```
+
+# data layout
+
+## ERC20Handler.sol
+
+### deposit
+
+```
+    function deposit(
+        uint256 destinationChainID,
+        uint256 depositNonce,
+        address depositer,
+        bytes memory data
+    ) public override _onlyBridge
+```
+`bytes memory data` is laid out as following:
+```
+originChainTokenAddress     address   - @0x20 - 0x40
+destinationRecipientAddress address   - @0x40 - 0x60
+amount                      uint256   - @0x60 - 0x80 (END)
+```
+
+### executeDeposit
+
+```
+function executeDeposit(bytes memory data) public override _onlyBridge
+```
+`bytes memory data` is laid out as following:
+
+```
+destinationRecipientAddress address   - @0x20 - 0x40
+amount                      uint256   - @0x40 - 0x60
+tokenID                               - @0x60 - END
+------------------------------------------------------
+tokenID length declaration  uint256   - @0x60 - 0x80
+tokenID                     string    - @0x80 - END
+```
+
+
+### tokenID
+
+`tokenID` is a utf-8 encodable `string` identifier of a particular token. It is laid out as following:
+
+string(chainID) + string(originChainTokenAddress)
+
+Encoded it should be laid out like this:
+
+```
+tokenID length declaration  uint256   - @0x00 - 0x20
+tokenID                     string    - @0x20 - END
+```
+
+

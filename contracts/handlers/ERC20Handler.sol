@@ -80,13 +80,13 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // If we have never seen this token and someone was able to perform a deposit,
             // it follows that the token is native to the current chain.
 
-            IBridge bridge = IBridge(_bridgeAddress); 
-            uint chainID = bridge.get_chainID();
-            
+            IBridge bridge = IBridge(_bridgeAddress);
+            uint chainID = bridge._chainID();
+        
             tokenID = createTokenID(chainID, originChainTokenAddress);
 
              _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
-             _tokenIDToTokenContractAddress[tokenID] = originChainTokenAddress; 
+             _tokenIDToTokenContractAddress[tokenID] = originChainTokenAddress;
 
         }
 

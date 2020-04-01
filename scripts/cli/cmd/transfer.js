@@ -60,14 +60,17 @@ async function erc20Transfer(cfg) {
         const handlerPreBal = await erc20Instance.balanceOf(constants.ERC20_HANDLER_ADDRESS);
         console.log("[ERC20 Transfer] Depositer token balance: ", depositerPreBal.toNumber());
         console.log("[ERC20 Transfer] Handler token balance: ", handlerPreBal.toNumber());
+
+        const data = '0x' +
+            Ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +
+            Ethers.utils.hexZeroPad(recipient, 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(cfg.value), 32).substr(2);
+
         // Make the deposit
-        await bridgeInstance.depositERC20(
-            constants.ERC20_ADDRESS, // home
-            constants.ERC20_HANDLER_ADDRESS, // home
-            cfg.dest, // destination
-            constants.ERC20_HANDLER_ADDRESS, // away, same as home
-            recipient,
-            cfg.value,
+        await bridgeInstance.deposit(
+            cfg.dest, // destination chain id
+            constants.ERC20_HANDLER_ADDRESS,
+            data,
         );
         console.log("[ERC20 Transfer] Created deposit!");
 

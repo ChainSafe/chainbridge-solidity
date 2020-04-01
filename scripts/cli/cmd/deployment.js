@@ -30,7 +30,8 @@ async function deployRelayerContract(cfg) {
         console.log("[Relayer] Transaction Hash: ", contract.deployTransaction.hash);
         await contract.deployed();
     } catch (e) {
-        throw e
+        console.log(e)
+        process.exit(1)
     }
 }
 
@@ -38,7 +39,7 @@ async function deployBridgeContract(cfg) {
     try {
         // Create an instance of a Contract Factory
         let factory = new ethers.ContractFactory(BridgeContract.abi, BridgeContract.bytecode, cfg.mainWallet);
-
+        console.log(`chainId: ${cfg.chainID} relayerAddr: ${constants.RELAYER_ADDRESS}`)
         // Deploy
         let contract = await factory.deploy(
             cfg.chainID,
@@ -51,7 +52,8 @@ async function deployBridgeContract(cfg) {
         console.log("[Bridge] Transaction Hash: ", contract.deployTransaction.hash);
         await contract.deployed();
     } catch (e) {
-        throw e
+        console.log(e)
+        process.exit(1)
     }
 }
 
@@ -68,7 +70,8 @@ async function deployERC20Handler(cfg) {
         console.log("[ERC20 Token] Contract address: ", erc20MintableContract.address);
         console.log("[ERC20 Token] Transaction Hash: ", erc20MintableContract.deployTransaction.hash);
     } catch (e) {
-        throw e
+        console.log(e)
+        process.exit(1)
     }
 }
 

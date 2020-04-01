@@ -3,12 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC20Safe.sol";
 import "../erc/ERC20/ERC20Mintable.sol";
+import "../helpers/StringUtils.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../interfaces/IBridge.sol";
 
 contract ERC20Handler is IDepositHandler, ERC20Safe {
     address public _bridgeAddress;
-    
+
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
@@ -72,7 +73,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             IBridge bridge = IBridge(_bridgeAddress);
             uint chainID = bridge._chainID();
-        
+
             tokenID = createTokenID(chainID, originChainTokenAddress);
 
              _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
@@ -92,24 +93,64 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) internal returns (string memory) {
+    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (string memory) {
         return string(abi.encodePacked(chainID, originChainTokenAddress));
     }
 
-    // TODO If any address can call this, anyone can mint tokens
+    // execute a deposit
+    // bytes memory data is laid out as following:
+    // destinationRecipientAddress address   - @0x20 - 0x40
+    // amount                      uint256   - @0x40 - 0x60
+    // tokenID                               - @0x60 - END
+    // tokenID length declaration  uint256   - @0x60 - 0x80
+    // tokenID                     string    - @0x80 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
-        address destinationChainTokenAddress;
-        address destinationRecipientAddress;
-        uint256 amount;
+        address       destinationRecipientAddress;
+        uint256       amount;
+        string memory tokenID;
 
         assembly {
-            destinationChainTokenAddress := mload(add(data, 0x20))
-            destinationRecipientAddress  := mload(add(data, 0x40))
-            amount                       := mload(add(data, 0x60))
+            destinationRecipientAddress := mload(add(data, 0x20))
+            amount                      := mload(add(data, 0x40))
+
+            tokenID                     := mload(0x40)
+            let lenTokenID              := mload(add(0x40, data))
+
+            mstore(0x40, add(0x40, add(tokenID, lenTokenID)))
+
+            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            calldatacopy(
+                tokenID,                   // copy to metaData
+                0x64,                      // copy from calldata @ 0x64
+                sub(calldatasize(), 0x64)  // copy size (calldatasize - 0x64)
+            )
         }
 
-        ERC20Mintable erc20 = ERC20Mintable(destinationChainTokenAddress);
-        erc20.mint(destinationRecipientAddress, amount);
+        if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {
+            // token exists
+            uint256 tokenChainID = StringUtils.parseInt(StringUtils.subString(tokenID, 0, 1), 0);
+            address tokenAddress = StringUtils.parseAddr(StringUtils.subString(tokenID, 2, bytes(tokenID).length));
+
+            IBridge bridge = IBridge(_bridgeAddress);
+            uint256 chainID = bridge._chainID();
+
+            if (tokenChainID == chainID) {
+                // token is from same chain
+                releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
+            } else {
+                // token is not from chain
+                mintERC20(tokenAddress, destinationRecipientAddress, amount);
+            }
+        } else {
+            // Token doesn't exist
+            ERC20Mintable erc20 = new ERC20Mintable();
+
+            // Create a relationship between the originAddress and the synthetic
+            _tokenIDToTokenContractAddress[tokenID] = address(erc20);
+            _tokenContractAddressToTokenID[address(erc20)] = tokenID;
+            
+            mintERC20(address(erc20), destinationRecipientAddress, amount);
+        }
     }
 
     function withdraw(address tokenAddress, address recipient, uint amount) public _onlyBridge {

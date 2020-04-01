@@ -8,17 +8,7 @@ import "../interfaces/IBridge.sol";
 
 contract ERC20Handler is IDepositHandler, ERC20Safe {
     address public _bridgeAddress;
-
-    // struct DepositRecord {
-    //     address _originChainTokenAddress;
-    //     uint    _destinationChainID;
-    //     address _destinationChainHandlerAddress;
-    //     address _destinationChainTokenAddress;
-    //     address _destinationRecipientAddress;
-    //     address _depositer;
-    //     uint    _amount;
-    // }
-
+    
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;

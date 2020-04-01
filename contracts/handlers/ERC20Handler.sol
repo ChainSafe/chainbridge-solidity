@@ -139,8 +139,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
                 releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
             } else {
                 // token is not from chain
-                ERC20Mintable erc20 = ERC20Mintable(tokenAddress);
-                erc20.mint(destinationRecipientAddress, amount);
+                mintERC20(tokenAddress, destinationRecipientAddress, amount);
             }
         } else {
             // Token doesn't exist
@@ -149,8 +148,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
-
-            erc20.mint(destinationRecipientAddress, amount);
+            
+            mintERC20(address(erc20), destinationRecipientAddress, amount);
         }
     }
 

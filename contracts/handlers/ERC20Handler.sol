@@ -4,19 +4,35 @@ pragma experimental ABIEncoderV2;
 import "../ERC20Safe.sol";
 import "../erc/ERC20/ERC20Mintable.sol";
 import "../interfaces/IDepositHandler.sol";
+import "../interfaces/IBridge.sol";
 
 contract ERC20Handler is IDepositHandler, ERC20Safe {
     address public _bridgeAddress;
 
+    // struct DepositRecord {
+    //     address _originChainTokenAddress;
+    //     uint    _destinationChainID;
+    //     address _destinationChainHandlerAddress;
+    //     address _destinationChainTokenAddress;
+    //     address _destinationRecipientAddress;
+    //     address _depositer;
+    //     uint    _amount;
+    // }
+
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
-        address _destinationChainHandlerAddress;
-        address _destinationChainTokenAddress;
+        string  _tokenID;
         address _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
     }
+
+    // tokenID => token contract address
+    mapping (string => address) public _tokenIDToTokenContractAddress;
+
+    // token contract address => tokenID
+    mapping (address => string) public _tokenContractAddressToTokenID;
 
     // DepositID => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
@@ -34,24 +50,44 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
+
+    // Make a deposit
+    // bytes memory data is laid out as following:
+    // originChainTokenAddress     address   - @0x20
+    // destinationRecipientAddress address   - @0x40
+    // amount                      uint256   - @0x60
     function deposit(
         uint256 destinationChainID,
         uint256 depositNonce,
         address depositer,
         bytes memory data
     ) public override _onlyBridge {
-        address originChainTokenAddress;
-        address destinationChainHandlerAddress;
-        address destinationChainTokenAddress;
+        address tokenAddress;
         address destinationRecipientAddress;
         uint256 amount;
 
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
-            destinationChainHandlerAddress := mload(add(data, 0x40))
-            destinationChainTokenAddress   := mload(add(data, 0x60))
-            destinationRecipientAddress    := mload(add(data, 0x80))
-            amount                         := mload(add(data, 0xA0))
+            destinationRecipientAddress    := mload(add(data, 0x40))
+            amount                         := mload(add(data, 0x60))
+        }
+
+        string tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
+
+        if (tokenID == "") {
+            // The case where we have never seen this token address before
+
+            // If we have never seen this token and someone was able to perform a deposit,
+            // it follows that the token is native to the current chain.
+
+            IBridge bridge = IBridge(_bridgeAddress); 
+            chainID = bridge.get_chainID();
+            
+            tokenID = createTokenID(chainID, tokenAddress);
+
+             _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
+             _tokenIDToTokenContractAddress[tokenID] = tokenAddress 
+
         }
 
         lockERC20(originChainTokenAddress, depositer, address(this), amount);
@@ -59,12 +95,14 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
             destinationChainID,
-            destinationChainHandlerAddress,
-            destinationChainTokenAddress,
             destinationRecipientAddress,
             depositer,
             amount
         );
+    }
+
+    function createTokenID(chainID uint256, originChainTokenAddress address) internal returns {
+        return abi.encodePacked(chainID, originChainTokenAddress)
     }
 
     // TODO If any address can call this, anyone can mint tokens

@@ -130,8 +130,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             uint256 tokenChainID;
             address tokenAddress;
             assembly {
-                tokenChainID := mload(add(data,0x60))
-                tokenAddress := mload(add(data,0x80))
+                tokenChainID := mload(add(data,0x80))
+                tokenAddress := mload(add(data,0xA0))
             }
 
             IBridge bridge = IBridge(_bridgeAddress);

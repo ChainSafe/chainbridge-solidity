@@ -62,7 +62,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address depositer,
         bytes memory data
     ) public override _onlyBridge {
-        address tokenAddress;
+        address originChainTokenAddress;
         address destinationRecipientAddress;
         uint256 amount;
 
@@ -72,21 +72,21 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             amount                         := mload(add(data, 0x60))
         }
 
-        string tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
+        string memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
 
-        if (tokenID == "") {
+        if (keccak256(abi.encodePacked(tokenID)) == keccak256(abi.encodePacked(""))) {
             // The case where we have never seen this token address before
 
             // If we have never seen this token and someone was able to perform a deposit,
             // it follows that the token is native to the current chain.
 
             IBridge bridge = IBridge(_bridgeAddress); 
-            chainID = bridge.get_chainID();
+            uint chainID = bridge.get_chainID();
             
-            tokenID = createTokenID(chainID, tokenAddress);
+            tokenID = createTokenID(chainID, originChainTokenAddress);
 
              _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
-             _tokenIDToTokenContractAddress[tokenID] = tokenAddress 
+             _tokenIDToTokenContractAddress[tokenID] = originChainTokenAddress; 
 
         }
 
@@ -95,14 +95,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
             destinationChainID,
+            tokenID,
             destinationRecipientAddress,
             depositer,
             amount
         );
     }
 
-    function createTokenID(chainID uint256, originChainTokenAddress address) internal returns {
-        return abi.encodePacked(chainID, originChainTokenAddress)
+    function createTokenID(uint256 chainID, address originChainTokenAddress) internal returns (string memory) {
+        return string(abi.encodePacked(chainID, originChainTokenAddress));
     }
 
     // TODO If any address can call this, anyone can mint tokens

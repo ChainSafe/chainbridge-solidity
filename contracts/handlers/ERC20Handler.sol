@@ -161,15 +161,33 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return string(result);
     }
 
+    // execute a deposit
+    // bytes memory data is laid out as following:
+    // destinationRecipientAddress address   - @0x20 - 0x40
+    // amount                      uint256   - @0x40 - 0x60
+    // tokenID                               - @0x60 - END
+    // tokenID length declaration  uint256   - @0x60 - 0x80
+    // tokenID                     string    - @0x80 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
-        string memory tokenID;
         address       destinationRecipientAddress;
         uint256       amount;
+        string memory tokenID;
 
         assembly {
-            tokenID                     := mload(add(data, 0x20))
-            destinationRecipientAddress := mload(add(data, 0x40))
-            amount                      := mload(add(data, 0x60))
+            destinationRecipientAddress := mload(add(data, 0x20))
+            amount                      := mload(add(data, 0x40))
+
+            tokenID                     := mload(0x40)
+            let lenTokenID              := mload(add(0x40, data))
+
+            mstore(0x40, add(0x40, add(tokenID, lenTokenID)))
+
+            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            calldatacopy(
+                tokenID,                   // copy to metaData
+                0x64,                      // copy from calldata @ 0x64
+                sub(calldatasize(), 0x64)  // copy size (calldatasize - 0x64)
+            )
         }
 
         if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {

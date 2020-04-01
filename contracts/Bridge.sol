@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./helpers/SafeMath.sol";
 import "./interfaces/IRelayer.sol";
 import "./interfaces/IDepositHandler.sol";
+import "./interfaces/IBridge.sol";
 
 contract Bridge {
     using SafeMath for uint;

@@ -11,6 +11,7 @@ contract Bridge {
     uint256                  public _chainID;
     IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
+    uint256                  public _relayerThresholdProposalNonce;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
 
     enum Vote {No, Yes}
@@ -26,12 +27,15 @@ contract Bridge {
 
     struct RelayerThresholdProposal {
         uint256                        _proposedValue;
-        mapping(address => bool)       _hasVoted;
         address[]                      _yesVotes;
         address[]                      _noVotes;
         RelayerThresholdProposalStatus _status;
     }
 
+    // _relayerThresholdProposalNonce => RelayerThresholdProposal
+    mapping(uint256 => RelayerThresholdProposal) public _relayerThresholdProposals;
+    // _relayerThresholdProposalNonce => relayer address => has voted
+    mapping(uint256 => mapping(address => bool)) public _hasVotedOnRelayerThresholdProposal;
     // destinationChainID => number of deposits
     mapping(uint256 => uint256) public _depositCounts;
     // destinationChainID => depositNonce => bytes
@@ -85,14 +89,8 @@ contract Bridge {
         _relayerThreshold = initialRelayerThreshold;
     }
 
-    function getCurrentRelayerThresholdProposal() public view returns (
-        uint256, address[] memory, address[] memory, RelayerThresholdProposalStatus) {
-        return (
-            _currentRelayerThresholdProposal._proposedValue,
-            _currentRelayerThresholdProposal._yesVotes,
-            _currentRelayerThresholdProposal._noVotes,
-            _currentRelayerThresholdProposal._status
-        );
+    function getCurrentRelayerThresholdProposal() public view returns (RelayerThresholdProposal memory) {
+        return _currentRelayerThresholdProposal;
     }
 
     function getDepositProposal(
@@ -174,6 +172,8 @@ contract Bridge {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Inactive, "a proposal is currently active");
         require(proposedValue <= _relayerContract.getTotalRelayers(), "proposed value cannot be greater than the total number of relayers");
 
+        uint256 proposalNonce = ++_relayerThresholdProposalNonce;
+
         _currentRelayerThresholdProposal = RelayerThresholdProposal({
             _proposedValue: proposedValue,
             _yesVotes: new address[](1),
@@ -188,13 +188,14 @@ contract Bridge {
         }
         // Record vote
         _currentRelayerThresholdProposal._yesVotes[0] = msg.sender;
-        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
+        _hasVotedOnRelayerThresholdProposal[proposalNonce][msg.sender] = true;
+        _relayerThresholdProposals[proposalNonce] = _currentRelayerThresholdProposal;
         emit RelayerThresholdProposalCreated(proposedValue);
     }
 
     function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Active, "no proposal is currently active");
-        require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
+        require(!_hasVotedOnRelayerThresholdProposal[_relayerThresholdProposalNonce][msg.sender], "relayer has already voted");
         require(uint8(vote) <= 1, "vote out of the vote enum range");
 
         // Cast vote
@@ -204,7 +205,7 @@ contract Bridge {
             _currentRelayerThresholdProposal._noVotes.push(msg.sender);
         }
 
-        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
+        _hasVotedOnRelayerThresholdProposal[_relayerThresholdProposalNonce][msg.sender] = true;
         emit RelayerThresholdProposalVote(vote);
 
         // Todo: Edge case if relayer threshold changes?
@@ -216,5 +217,7 @@ contract Bridge {
         } else if (_relayerContract.getTotalRelayers().sub(_currentRelayerThresholdProposal._noVotes.length) < _relayerThreshold) {
             _currentRelayerThresholdProposal._status = RelayerThresholdProposalStatus.Inactive;
         }
+
+        _relayerThresholdProposals[_relayerThresholdProposalNonce] = _currentRelayerThresholdProposal;
     }
 }

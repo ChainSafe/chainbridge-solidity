@@ -136,8 +136,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-                ERC20Mintable erc20 = ERC20Mintable(tokenAddress);
-                erc20.transferFrom(address(this), destinationRecipientAddress, amount);
+                releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
             } else {
                 // token is not from chain
                 ERC20Mintable erc20 = ERC20Mintable(tokenAddress);

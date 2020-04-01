@@ -43,10 +43,10 @@ async function mintErc20(cfg) {
 async function erc20Transfer(cfg) {
     try {
         // consts
-        const depositer = constants.relayerAddresses[1];
-        const depositerPriv = constants.relayerPrivKeys[1];
+        const depositer = constants.relayerAddresses[0];
+        const depositerPriv = constants.relayerPrivKeys[0];
         const depositerWallet = new ethers.Wallet(depositerPriv, cfg.provider);
-        const recipient = constants.relayerAddresses[2];
+        const recipient = constants.relayerAddresses[1];
 
         // Instances
         const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);
@@ -58,16 +58,19 @@ async function erc20Transfer(cfg) {
 
         const depositerPreBal = await erc20Instance.balanceOf(depositer);
         const handlerPreBal = await erc20Instance.balanceOf(constants.ERC20_HANDLER_ADDRESS);
-        console.log("[ERC20 Transfer] Depositer token balance: ", depositerPreBal.toNumber());
-        console.log("[ERC20 Transfer] Handler token balance: ", handlerPreBal.toNumber());
+        console.log(`[ERC20 Transfer] Depositer token balance: ${depositerPreBal.toNumber()} Address: ${depositer}`);
+        console.log(`[ERC20 Transfer] Handler token balance: ${handlerPreBal.toNumber()} Address: ${constants.ERC20_HANDLER_ADDRESS}`);
+
+        const data = '0x' +
+            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +
+            ethers.utils.hexZeroPad(recipient, 32).substr(2) +
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 32).substr(2);
+
         // Make the deposit
-        await bridgeInstance.depositERC20(
-            constants.ERC20_ADDRESS, // home
-            constants.ERC20_HANDLER_ADDRESS, // home
-            cfg.dest, // destination
-            constants.ERC20_HANDLER_ADDRESS, // away, same as home
-            recipient,
-            cfg.value,
+        await bridgeInstance.deposit(
+            cfg.dest, // destination chain id
+            constants.ERC20_HANDLER_ADDRESS,
+            data,
         );
         console.log("[ERC20 Transfer] Created deposit!");
 

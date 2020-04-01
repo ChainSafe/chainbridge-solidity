@@ -42,8 +42,6 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2);
     });

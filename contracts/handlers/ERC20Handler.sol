@@ -113,15 +113,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             amount                      := mload(add(data, 0x40))
 
             tokenID                     := mload(0x40)
-            let lenTokenID              := mload(add(0x40, data))
+            let lenTokenID              := mload(add(0x60, data))
 
             mstore(0x40, add(0x40, add(tokenID, lenTokenID)))
 
-            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            // in the calldata the tokenID is stored at 0x84 after accounting for the function signature and length declaration
             calldatacopy(
-                tokenID,                   // copy to metaData
-                0x64,                      // copy from calldata @ 0x64
-                sub(calldatasize(), 0x64)  // copy size (calldatasize - 0x64)
+                tokenID,                   // copy to tokenID
+                0x84,                      // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84)  // copy size (calldatasize - 0x84)
             )
         }
 
@@ -139,7 +139,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
+                releaseERC20(tokenAddress, destinationRecipientAddress, amount);
             } else {
                 // token is not from chain
                 mintERC20(tokenAddress, destinationRecipientAddress, amount);
@@ -151,12 +151,12 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
-            
+
             mintERC20(address(erc20), destinationRecipientAddress, amount);
         }
     }
 
     function withdraw(address tokenAddress, address recipient, uint amount) public _onlyBridge {
-        releaseERC20(tokenAddress, address(this), recipient, amount);
+        releaseERC20(tokenAddress, recipient, amount);
     }
 }

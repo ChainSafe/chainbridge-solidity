@@ -80,6 +80,8 @@ contract Bridge {
         _;
     }
 
+    event Foo(address tokenAddress);
+
     constructor (uint256 chainID, address relayerContract, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
@@ -162,7 +164,11 @@ contract Bridge {
 
         require(depositProposal._status != DepositProposalStatus.Inactive, "proposal is not active");
         require(depositProposal._status == DepositProposalStatus.Passed, "proposal was not passed or has already been transferred");
-        require(keccak256(data) == depositProposal._dataHash, "provided data does not match proposal's data hash");
+        require(
+            keccak256(abi.encodePacked(destinationChainHandlerAddress, data)) == depositProposal._dataHash,
+            "provided data does not match proposal's data hash"
+        );
+
 
         IDepositHandler depositHandler = IDepositHandler(destinationChainHandlerAddress);
         depositHandler.executeDeposit(data);

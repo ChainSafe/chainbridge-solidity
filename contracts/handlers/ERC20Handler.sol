@@ -44,8 +44,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // Make a deposit
     // bytes memory data is laid out as following:
     // originChainTokenAddress     address   - @0x20
-    // destinationRecipientAddress address   - @0x40
-    // amount                      uint256   - @0x60
+    // amount                      uint256   - @0x40
+    // destinationRecipientAddress           - @0x60 - END
     function deposit(
         uint256 destinationChainID,
         uint256 depositNonce,
@@ -58,8 +58,17 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
-            destinationRecipientAddress    := mload(add(data, 0x40))
-            amount                         := mload(add(data, 0x60))
+            amount                         := mload(add(data, 0x40))
+
+            destinationRecipientAddress         := mload(0x40)
+            let lenDestinationRecipientAddress  := mload(add(0x60, data))
+            mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+
+            calldatacopy(
+                destinationRecipientAddress, // copy to destinationRecipientAddress
+                0xE4,                        // copy from calldata @ 0x104
+                sub(calldatasize(), 0xE4)    // copy size (calldatasize - 0x104)
+            )
         }
 
         bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];

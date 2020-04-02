@@ -45,14 +45,17 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2);
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);
 
         depositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID;
+            tokenID +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(recipientAddress), 32).substr(2);
+            
         depositProposalDataHash = Ethers.utils.keccak256(depositProposalData);
     });
 

@@ -23,6 +23,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
 
     let RelayerInstance;
     let BridgeInstance;
+    let DestBridgeInstance;
     let OriginERC20HandlerInstance;
     let DestinationERC20MintableInstance;
     let data = '';
@@ -31,6 +32,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
+        DestBridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
@@ -115,8 +117,8 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     });
 
     it('DepositProposalCreated event should be emitted with expected values', async () => {
-        const proposalTx = await BridgeInstance.voteDepositProposal(
-            destinationChainID,
+        const proposalTx = await DestBridgeInstance.voteDepositProposal(
+            originChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }
@@ -143,6 +145,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
 
     let RelayerInstance;
     let BridgeInstance;
+    let DestBridgeInstance;
     let OriginERC20HandlerInstance;
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
@@ -152,6 +155,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
+        DestBridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
@@ -230,8 +234,8 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     });
 
     it('DepositProposalCreated event  should be emitted with expected values', async () => {
-        const proposalTx = await BridgeInstance.voteDepositProposal(
-            destinationChainID,
+        const proposalTx = await DestBridgeInstance.voteDepositProposal(
+            originChainID,
             expectedDepositNonce,
             dataHash,
             { from: originChainRelayerAddress }

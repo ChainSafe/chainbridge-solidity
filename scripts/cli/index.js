@@ -27,7 +27,7 @@ cli.option('-h, --host <value>', 'Host of RPC instance', "127.0.0.1");
 
 cli.command("deploy")
     .description("Deploys contracts via RPC")
-    .option('--chainID <value>', 'Chain ID deposits will orbut they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization but they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization of everythingof everythingiginate from', 1)
+    .option('--chainID <value>', 'Chain ID where deposits originate from', 1)
     .option('--relayers <value>', 'Number of initial relayers', 2)
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {

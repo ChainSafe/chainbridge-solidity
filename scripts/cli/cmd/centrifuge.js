@@ -12,13 +12,14 @@ async function getHash(cli) {
         console.log(`The hash ${cli.hash} was ${res ? "found!" : "NOT found!"}`);
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 
 async function submitCentHash(cli) {
     const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, cli.mainWallet);
     
-    const nonce = (await bridgeInstance._totalProposals()).toNumber() + 1;
+    const nonce = (await bridgeInstance._totalDepositProposals()).toNumber() + 1;
     console.log("Nonce: ", nonce)
     
     const hash = ethers.utils.hexZeroPad(cli.hash, 32)
@@ -42,6 +43,7 @@ async function submitCentHash(cli) {
 
     } catch (e) {
         console.log({e});
+        process.exit(1)
     }
 }
 

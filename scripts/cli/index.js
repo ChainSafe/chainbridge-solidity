@@ -8,10 +8,13 @@
 const ethers = require('ethers');
 const cli = require('commander');
 
-const deploy = require('./cmd/deployment');
-const transfer = require('./cmd/transfer');
+// Comands
+const {
+    deploy,
+    transfer,
+    centrifuge,
+} = require('./cmd/index');
 const constants = require('./constants');
-
 
 const setupCli = (cli) => {
     cli.url = `http://${process.env.BASE_URL || "localhost"}:${cli.port}`;
@@ -19,7 +22,8 @@ const setupCli = (cli) => {
     cli.mainWallet = new ethers.Wallet(constants.deployerPrivKey, cli.provider);
 }
 
-cli.option('-p, --port <value>', 'Port of RPC instance', 8545)
+cli.option('-p, --port <value>', 'Port of RPC instance', 8545);
+cli.option('-h, --host <value>', 'Host of RPC instance', "127.0.0.1");
 
 cli.command("deploy")
     .description("Deploys contracts via RPC")
@@ -34,6 +38,7 @@ cli.command("deploy")
         await deploy.deployRelayerContract(cli);
         await deploy.deployBridgeContract(cli);
         await deploy.deployERC20Handler(cli);
+        await deploy-deployCentrifugeHandler(cli);
     })
 cli.command("mint")
     .description("Mints erc20 tokens")
@@ -52,8 +57,19 @@ cli.command("transfer")
         setupCli(cli)
         cli.value = Number(cli.commands[2].value);
         cli.dest = Number(cli.commands[2].dest);
-
         await transfer.erc20Transfer(cli);
     })
 
+cli.command('getCentHash')
+    .description('Returns if a the given hash exists')
+    .requiredOption('--hash <value>', 'A hash to lookup')
+    .action(async function () {
+        setupCli(cli);
+        cli.hash = cli.commands[3].hash;
+        await centrifuge.getHash(cli);
+    })
+
+
+cli.allowUnknownOption(false);
 cli.parseAsync(process.argv);
+if (process.argv && process.argv.length <= 2) cli.help();

@@ -9,6 +9,7 @@ const constants = require('../constants');
 const BridgeContract = require("../../../build/contracts/Bridge.json");
 const RelayerContract = require("../../../build/contracts/Relayer.json");
 const ERC20HandlerContract = require("../../../build/contracts/ERC20Handler.json");
+const CentrifugeHandlerContract = require("../../../build/contracts/CentrifugeAssetHandler.json");
 const ERC20MintableContract = require("../../../build/contracts/ERC20Mintable.json");
 
 async function deployRelayerContract(cfg) {
@@ -75,8 +76,27 @@ async function deployERC20Handler(cfg) {
     }
 }
 
+async function deployCentrifugeHandler(cfg) {
+    try {
+        const handlerFactory = new ethers.ContractFactory(CentrifugeHandlerContract.abi, ERC20HCentrifugeHandlerContractandlerContract.bytecode, cfg.mainWallet);
+        // const erc20MintableFactory = new ethers.ContractFactory(ERC20MintableContract.abi, ERC20MintableContract.bytecode, cfg.mainWallet);
+        const handlerContract = await handlerFactory.deploy(constants.BRIDGE_ADDRESS);
+        // const erc20MintableContract = await erc20MintableFactory.deploy();
+
+        console.log("[ERC20 Handler] Contract address: ", handlerContract.address);
+        console.log("[ERC20 Handler] Transaction Hash: ", handlerContract.deployTransaction.hash);
+
+        // console.log("[ERC20 Token] Contract address: ", erc20MintableContract.address);
+        // console.log("[ERC20 Token] Transaction Hash: ", erc20MintableContract.deployTransaction.hash);
+    } catch (e) {
+        console.log(e)
+        process.exit(1)
+    } 
+}
+
 module.exports = {
     deployRelayerContract,
     deployBridgeContract,
     deployERC20Handler,
+    deployCentrifugeHandler,
 }

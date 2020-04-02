@@ -62,7 +62,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             destinationRecipientAddress         := mload(0x40)
             let lenDestinationRecipientAddress  := mload(add(0x60, data))
-            mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
             calldatacopy(
                 destinationRecipientAddress, // copy to destinationRecipientAddress
@@ -126,7 +126,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         assembly {
             amount                      := mload(add(data, 0x20))
 
-
             tokenID                     := mload(0x40)
             let lenTokenID              := mload(add(0x40, data))
             mstore(0x40, add(0x20, add(tokenID, lenTokenID)))
@@ -135,7 +134,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             calldatacopy(
                 tokenID,                   // copy to tokenID
                 0x64,                      // copy from calldata @ 0x84
-                64                         // copy size 64 bytes. We can only make this assumption because we know the length
+                0x40                         // copy size 64 bytes. We can only make this assumption because we know the length
             )
 
             destinationRecipientAddress         := mload(0x40)

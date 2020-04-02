@@ -162,8 +162,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             address recipientAddress;
             assembly {
-                tokenChainID := mload(tokenID)
-                tokenAddress := mload(add(tokenID,0x20))
+                // tokenChainID := mload(tokenID)
+                // tokenAddress := mload(add(tokenID,0x20))
                 recipientAddress := mload(destinationRecipientAddress)
             }
 

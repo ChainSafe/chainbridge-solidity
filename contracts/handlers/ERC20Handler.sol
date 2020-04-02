@@ -122,21 +122,25 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         uint256       amount;
         bytes  memory tokenID;
         bytes  memory destinationRecipientAddress;
+        uint256 tokenChainID;
+        address tokenAddress;
 
 
         assembly {
             amount                      := mload(add(data, 0x20))
+            tokenChainID                := mload(add(data, 0x60))
+            tokenAddress                := mload(add(data, 0x80))
 
-            tokenID                     := mload(0x40)
-            let lenTokenID              := mload(add(0x40, data))
-            mstore(0x40, add(0x20, add(tokenID, lenTokenID)))
+            // tokenID                     := mload(0x40)
+            // let lenTokenID              := mload(add(0x40, data))
+            // mstore(0x40, add(0x100, add(tokenID, lenTokenID)))
 
-            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
-            calldatacopy(
-                tokenID,                   // copy to tokenID
-                0x64,                      // copy from calldata @ 0x64
-                0x40                       // copy size 64 bytes. We can only make this assumption because we know the length
-            )
+            // // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            // calldatacopy(
+            //     tokenID,                   // copy to tokenID
+            //     0x64,                      // copy from calldata @ 0x64
+            //     0x40                       // copy size 64 bytes. We can only make this assumption because we know the length
+            // )
 
             destinationRecipientAddress         := mload(0x40)
             let lenDestinationRecipientAddress  := mload(add(0xA0, data))
@@ -151,10 +155,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         }
 
+        tokenID = abi.encode(tokenChainID, tokenAddress);
+
         if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {
             // token exists
-            uint256 tokenChainID;
-            address tokenAddress;
 
             address recipientAddress;
             assembly {

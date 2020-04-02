@@ -58,7 +58,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
             metaDataHash
         );
     }
-    event f(bytes32 hash);
+
     function executeDeposit(bytes memory data) public override _onlyBridge {
         bytes32 metaDataHash;
 
@@ -68,7 +68,6 @@ contract CentrifugeAssetHandler is IDepositHandler {
 
         require(_assetDepositStatuses[metaDataHash] == false, "asset hasn't been deposited or has already been finalized");
         _assetDepositStatuses[metaDataHash] = true;
-        emit f(metaDataHash);
     }
     
     function getHash(bytes32 hash) public view returns (bool) {

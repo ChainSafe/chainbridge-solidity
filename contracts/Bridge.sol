@@ -80,8 +80,6 @@ contract Bridge {
         _;
     }
 
-    event Foo(address tokenAddress);
-
     constructor (uint256 chainID, address relayerContract, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
@@ -168,7 +166,6 @@ contract Bridge {
             keccak256(abi.encodePacked(destinationChainHandlerAddress, data)) == depositProposal._dataHash,
             "provided data does not match proposal's data hash"
         );
-
 
         IDepositHandler depositHandler = IDepositHandler(destinationChainHandlerAddress);
         depositHandler.executeDeposit(data);

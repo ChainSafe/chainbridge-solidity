@@ -130,7 +130,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             let lenTokenID              := mload(add(0x40, data))
             mstore(0x40, add(0x20, add(tokenID, lenTokenID)))
 
-            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            // in the calldata the tokenID is stored at 0x84 after accounting for the function signature and length declaration
             calldatacopy(
                 tokenID,                   // copy to tokenID
                 0x64,                      // copy from calldata @ 0x84
@@ -167,8 +167,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-
-                releaseERC20(tokenAddress, address(this), recipientAddress, amount);
+                releaseERC20(tokenAddress, recipientAddress, amount);
             } else {
                 // token is not from chain
 
@@ -186,12 +185,12 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
-            
+
             mintERC20(address(erc20), recipientAddress, amount);
         }
     }
 
     function withdraw(address tokenAddress, address recipient, uint amount) public _onlyBridge {
-        releaseERC20(tokenAddress, address(this), recipient, amount);
+        releaseERC20(tokenAddress, recipient, amount);
     }
 }

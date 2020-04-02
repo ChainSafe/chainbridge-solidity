@@ -66,7 +66,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
             metaDataHash := mload(add(data, 0x20))
         }
 
-        require(_assetDepositStatuses[metaDataHash] == false, "asset has been deposited or has already been finalized");
+        require(_assetDepositStatuses[metaDataHash] == false, "asset has been deposited!");
         _assetDepositStatuses[metaDataHash] = true;
     }
     

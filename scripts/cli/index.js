@@ -63,6 +63,7 @@ cli.command("transfer")
         cli.value = Number(cli.commands[2].value);
         cli.dest = Number(cli.commands[2].dest);
         cli.erc20Address = cli.commands[2].erc20Address;
+        cli.erc20HandlerAddress = clie.commands[2].erc20HandlerAddress;
         cli.bridgeAddress = cli.commands[2].bridgeAddress;
         await transfer.erc20Transfer(cli);
     })

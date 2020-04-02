@@ -73,7 +73,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
 
-        if (keccak256(abi.encodePacked(tokenID)) == keccak256(abi.encodePacked(""))) {
+        if (tokenID.length == 0) {
             // The case where we have never seen this token address before
 
             // If we have never seen this token and someone was able to perform a deposit,
@@ -130,11 +130,11 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             let lenTokenID              := mload(add(0x40, data))
             mstore(0x40, add(0x20, add(tokenID, lenTokenID)))
 
-            // in the calldata the tokenID is stored at 0x84 after accounting for the function signature and length declaration
+            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
             calldatacopy(
                 tokenID,                   // copy to tokenID
-                0x64,                      // copy from calldata @ 0x84
-                0x40                         // copy size 64 bytes. We can only make this assumption because we know the length
+                0x64,                      // copy from calldata @ 0x64
+                0x40                       // copy size 64 bytes. We can only make this assumption because we know the length
             )
 
             destinationRecipientAddress         := mload(0x40)
@@ -157,9 +157,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             address recipientAddress;
             assembly {
-                tokenChainID := mload(add(data,0x80))
-                tokenAddress := mload(add(data,0xA0))
-                recipientAddress := mload(add(destinationRecipientAddress,0x20))
+                tokenChainID := mload(add(data,0x60))
+                tokenAddress := mload(add(data,0x80))
+                recipientAddress := mload(add(data, 0xC0))
             }
 
             IBridge bridge = IBridge(_bridgeAddress);
@@ -179,7 +179,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             address recipientAddress;
 
             assembly {
-                recipientAddress := mload(add(destinationRecipientAddress,0x20))
+                recipientAddress := mload(add(data, 0xC0))
             }
 
             // Create a relationship between the originAddress and the synthetic

@@ -30,7 +30,7 @@ async function assetTestTransfer(cfg) {
 
 async function mintErc20(cfg) {
     const depositer = constants.relayerAddresses[0];
-    const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20MintableContract.abi, cfg.mainWallet);
+    const erc20Instance = new ethers.Contract(cfg.erc20Address || constants.ERC20_ADDRESS, ERC20MintableContract.abi, cfg.mainWallet);
     
     try {
         await erc20Instance.mint(depositer, cfg.value);
@@ -49,8 +49,8 @@ async function erc20Transfer(cfg) {
         const recipient = constants.relayerAddresses[1];
 
         // Instances
-        const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);
-        const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, depositerWallet);
+        const erc20Instance = new ethers.Contract(cfg.erc20Address || constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);
+        const bridgeInstance = new ethers.Contract(cfg.bridgeAddress || constants.BRIDGE_ADDRESS, BridgeContract.abi, depositerWallet);
 
         // Approve tokens
         await erc20Instance.approve(constants.ERC20_HANDLER_ADDRESS, cfg.value);

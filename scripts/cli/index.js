@@ -17,7 +17,7 @@ const {
 const constants = require('./constants');
 
 const setupCli = (cli) => {
-    cli.url = `http://${process.env.BASE_URL || "localhost"}:${cli.port}`;
+    cli.url = `http://${cli.host || "localhost"}:${cli.port}`;
     cli.provider = new ethers.providers.JsonRpcProvider(cli.url);
     cli.mainWallet = new ethers.Wallet(constants.deployerPrivKey, cli.provider);
 }
@@ -27,7 +27,7 @@ cli.option('-h, --host <value>', 'Host of RPC instance', "127.0.0.1");
 
 cli.command("deploy")
     .description("Deploys contracts via RPC")
-    .option('--chainID <value>', 'Chain ID deposits will originate from', 1)
+    .option('--chainID <value>', 'Chain ID deposits will orbut they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization but they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization of everythingof everythingiginate from', 1)
     .option('--relayers <value>', 'Number of initial relayers', 2)
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {
@@ -38,14 +38,16 @@ cli.command("deploy")
         await deploy.deployRelayerContract(cli);
         await deploy.deployBridgeContract(cli);
         await deploy.deployERC20Handler(cli);
-        await deploy-deployCentrifugeHandler(cli);
+        await deploy.deployCentrifugeHandler(cli);
     })
 cli.command("mint")
     .description("Mints erc20 tokens")
-    .option('--value <amount>', "Amount to mint", 100)
+    .option('--value <amount>', 'Amount to mint', 100)
+    .option('--erc20Address <address>', 'Custom erc20 address')
     .action(async function () {
         setupCli(cli)
         cli.value = Number(cli.commands[1].value);
+        cli.erc20Address = cli.commands[2].erc20Address;
         await transfer.mintErc20(cli);
     })
 
@@ -53,10 +55,14 @@ cli.command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
     .option('--dest <value>', "destination chain", 1)
+    .option('--erc20Address <address>', 'Custom erc20 address')
+    .option('--bridgeAddress <address>', 'Custom bridge address')
     .action(async function () {
         setupCli(cli)
         cli.value = Number(cli.commands[2].value);
         cli.dest = Number(cli.commands[2].dest);
+        cli.erc20Address = cli.commands[2].erc20Address;
+        cli.bridgeAddress = cli.commands[2].bridgeAddress;
         await transfer.erc20Transfer(cli);
     })
 

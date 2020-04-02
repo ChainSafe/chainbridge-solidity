@@ -9,7 +9,8 @@ const CentrifugeAssetHandlerContract = artifacts.require('CentrifugeAssetHandler
 contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
     const originChainID = 1;
     const destinationChainID = 2;
-    const relayerThreshold = 0;
+    const relayerThreshold = 1;
+    const relayer = accounts[0];
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const expectedDepositID = 1;
@@ -21,7 +22,7 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
     let depositData;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], relayerThreshold);
+        RelayerInstance = await RelayerContract.new([relayer], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         CentrifugeAssetHandlerInstance = await CentrifugeAssetHandlerContract.new(BridgeInstance.address);
 
@@ -80,4 +81,22 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
                 event.depositNonce.toNumber() === expectedDepositID
         });
     });
+
+    it('can query correct value', async () => {
+        await BridgeInstance.voteDepositProposal(
+            destinationChainID,
+            expectedDepositID,
+            Ethers.utils.keccak256(genericBytes),
+            { from: relayer }
+        )
+        await BridgeInstance.executeDepositProposal(
+            destinationChainID,
+            expectedDepositID,
+            CentrifugeAssetHandlerInstance.address,
+            genericBytes
+        )
+
+        const res = await CentrifugeAssetHandlerInstance.getHash(genericBytes);
+        assert.strictEqual(res, true);
+    })
 });

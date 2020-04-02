@@ -9,7 +9,7 @@ async function getHash(cli) {
     
     try {
         const res = await centHandler.getHash(ethers.utils.hexZeroPad(cli.hash, 32));
-        console.log(`The hash ${cli.hash} was ${res ? "" : "NOT"} found!`);
+        console.log(`The hash ${cli.hash} was ${res ? "found!" : "NOT found!"}`);
     } catch (e) {
         console.log({ e });
     }

@@ -151,7 +151,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
-            
+
             mintERC20(address(erc20), destinationRecipientAddress, amount);
         }
     }

@@ -18,11 +18,11 @@ async function getHash(cli) {
 async function submitCentHash(cli) {
     const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, cli.mainWallet);
     
-    const nonce = (await bridgeInstance._depositCounts(cli.originChain)).toNumber() + 1;
-    console.log(nonce)
+    const nonce = (await bridgeInstance._totalProposals()).toNumber() + 1;
+    console.log("Nonce: ", nonce)
     
     const keccakHash = ethers.utils.keccak256(cli.hash);
-    const hash = ethers.utils.hexZeroPad(cli.hash)
+    const hash = ethers.utils.hexZeroPad(cli.hash, 32)
 
     try {
         let tx = await bridgeInstance.voteDepositProposal(

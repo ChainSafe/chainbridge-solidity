@@ -12,8 +12,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
-        bytes  _tokenID;
-        address _destinationRecipientAddress;
+        bytes   _tokenID;
+        bytes   _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
     }
@@ -52,9 +52,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address depositer,
         bytes memory data
     ) public override _onlyBridge {
-        address originChainTokenAddress;
-        address destinationRecipientAddress;
-        uint256 amount;
+        address      originChainTokenAddress;
+        bytes memory destinationRecipientAddress;
+        uint256      amount;
 
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
@@ -113,6 +113,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         bytes  memory tokenID;
         bytes  memory destinationRecipientAddress;
 
+
         assembly {
             amount                      := mload(add(data, 0x20))
 
@@ -134,7 +135,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             
             // in the calldata the destinationRecipientAddress is stored at 0x64 after accounting for the function signature and length declaration
             calldatacopy(
-                destinationRecipientAddress, // copy to destinationRecipientAddress
+                destinationRecipientAddress,        // copy to destinationRecipientAddress
                 0xC4,                               // copy from calldata @ 0x84
                 sub(calldatasize(), 0xC4)           // copy size to the end of calldata
             )
@@ -145,9 +146,12 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // token exists
             uint256 tokenChainID;
             address tokenAddress;
+
+            address recipientAddress;
             assembly {
                 tokenChainID := mload(add(data,0x80))
                 tokenAddress := mload(add(data,0xA0))
+                recipientAddress := mload(add(destinationRecipientAddress,0x20))
             }
 
             IBridge bridge = IBridge(_bridgeAddress);
@@ -155,20 +159,27 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
+
+                releaseERC20(tokenAddress, address(this), recipientAddress, amount);
             } else {
                 // token is not from chain
-                mintERC20(tokenAddress, destinationRecipientAddress, amount);
+
+                mintERC20(tokenAddress, recipientAddress, amount);
             }
         } else {
             // Token doesn't exist
             ERC20Mintable erc20 = new ERC20Mintable();
+            address recipientAddress;
+
+            assembly {
+                recipientAddress := mload(add(destinationRecipientAddress,0x20))
+            }
 
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
             
-            mintERC20(address(erc20), destinationRecipientAddress, amount);
+            mintERC20(address(erc20), recipientAddress, amount);
         }
     }
 

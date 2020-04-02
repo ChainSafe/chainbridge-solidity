@@ -26,3 +26,5 @@ jobs:
         - make deploy
         - cb-sol-cli mint
         - cb-sol-cli transfer
+        - cb-sol-cli sendCentHash
+        - cb-sol-cli getCentHash

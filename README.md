@@ -59,9 +59,9 @@ function deposit(
 ```
 `bytes memory data` is laid out as following:
 ```
-originChainTokenAddress     address   - @0x20 - 0x40
-destinationRecipientAddress address   - @0x40 - 0x60
-amount                      uint256   - @0x60 - 0x80 (END)
+originChainTokenAddress     address   - @0x20
+amount                      uint256   - @0x40
+destinationRecipientAddress           - @0x60 - END
 ```
 
 ### executeDeposit
@@ -72,14 +72,16 @@ function executeDeposit(bytes memory data) public override _onlyBridge
 `bytes memory data` is laid out as following (since we know `len(tokenID) = 64`):
 
 ```
-destinationRecipientAddress address   - @0x20 - 0x40
-amount                      uint256   - @0x40 - 0x60
-tokenID                               - @0x60 - END
-
-------------------------------------------------------
-tokenID length declaration  uint256   - @0x60 - 0x80
-tokenID                     bytes     - @0x80 - 0xC0
-------------------------------------------------------
+amount                      uint256   - @0x20 - 0x40
+tokenID                               - @0x40 - 0xC0
+-----------------------------------------------------
+tokenID len                 uint256   - @0x40 - 0x60
+tokenID                     bytes     - @0x60 - 0xA0
+-----------------------------------------------------
+destinationRecipientAddress           - @0xA0 - END
+-----------------------------------------------------
+destinationRecipientAddress len uint256 - @0xA0 - 0xC0
+destinationRecipientAddress     bytes   - @0xC0 - END
 
 ```
 

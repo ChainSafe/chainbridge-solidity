@@ -48,11 +48,13 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) + 
                   Ethers.utils.hexZeroPad(Ethers.utils.hexlify(DestinationERC20MintableInstance.address), 32).substr(2);
 
+        
         data = '0x' +
-            Ethers.utils.hexZeroPad(DestinationERC20HandlerInstance.address, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID;
+            tokenID +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         dataHash = Ethers.utils.keccak256(data);
 
         await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);

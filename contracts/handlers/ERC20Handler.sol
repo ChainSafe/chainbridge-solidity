@@ -113,15 +113,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             amount                      := mload(add(data, 0x40))
 
             tokenID                     := mload(0x40)
-            let lenTokenID              := mload(add(0x40, data))
+            let lenTokenID              := mload(add(0x60, data))
 
             mstore(0x40, add(0x40, add(tokenID, lenTokenID)))
 
-            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
+            // in the calldata the tokenID is stored at 0x84 after accounting for the function signature and length declaration
             calldatacopy(
-                tokenID,                   // copy to metaData
-                0x64,                      // copy from calldata @ 0x64
-                sub(calldatasize(), 0x64)  // copy size (calldatasize - 0x64)
+                tokenID,                   // copy to tokenID
+                0x84,                      // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84)  // copy size (calldatasize - 0x84)
             )
         }
 

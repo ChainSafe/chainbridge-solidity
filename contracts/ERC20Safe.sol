@@ -17,7 +17,7 @@ contract ERC20Safe {
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
 
-    function releaseERC20(address tokenAddress, address owner, address recipient, uint amount) internal {
+    function releaseERC20(address tokenAddress, address recipient, uint amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         erc20.transfer(recipient, amount);
 

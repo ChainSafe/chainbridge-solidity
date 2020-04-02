@@ -139,7 +139,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, address(this), destinationRecipientAddress, amount);
+                releaseERC20(tokenAddress, destinationRecipientAddress, amount);
             } else {
                 // token is not from chain
                 mintERC20(tokenAddress, destinationRecipientAddress, amount);

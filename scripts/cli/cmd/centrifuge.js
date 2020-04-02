@@ -21,8 +21,8 @@ async function submitCentHash(cli) {
     const nonce = (await bridgeInstance._totalProposals()).toNumber() + 1;
     console.log("Nonce: ", nonce)
     
-    const keccakHash = ethers.utils.keccak256(cli.hash);
     const hash = ethers.utils.hexZeroPad(cli.hash, 32)
+    const keccakHash = ethers.utils.keccak256(hash);
 
     try {
         let tx = await bridgeInstance.voteDepositProposal(

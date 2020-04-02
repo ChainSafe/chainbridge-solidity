@@ -20,7 +20,9 @@ jobs:
     - name: "Verify contract deployment and binding creation"
       env: CI=true
       script:
-        - make install-deps
+        - make install-deps && make install-cli
         - make bindings
         - SILENT=true make start-ganache
         - make deploy
+        - cb-sol-cli mint
+        - cb-sol-cli transfer

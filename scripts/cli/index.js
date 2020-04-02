@@ -28,7 +28,7 @@ cli.command("deploy")
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {
         setupCli(cli)
-        cli.chainID = cli.commands[0].chainID
+        cli.chainID = Number(cli.commands[0].chainID)
         cli.relayers = cli.commands[0].relayers
         cli.relayerThreshold = cli.commands[0].relayerThreshold
         await deploy.deployRelayerContract(cli);

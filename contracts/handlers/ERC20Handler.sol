@@ -72,8 +72,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
+        bytes memory emptyBytes;
 
-        if (tokenID.length == 0) {
+        if (keccak256(abi.encodePacked((tokenID))) == keccak256(abi.encodePacked((emptyBytes)))) {
             // The case where we have never seen this token address before
 
             // If we have never seen this token and someone was able to perform a deposit,
@@ -157,9 +158,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             address recipientAddress;
             assembly {
-                tokenChainID := mload(add(data,0x60))
-                tokenAddress := mload(add(data,0x80))
-                recipientAddress := mload(add(data, 0xC0))
+                tokenChainID := mload(tokenID)
+                tokenAddress := mload(add(tokenID,0x20))
+                recipientAddress := mload(destinationRecipientAddress)
             }
 
             IBridge bridge = IBridge(_bridgeAddress);
@@ -179,7 +180,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             address recipientAddress;
 
             assembly {
-                recipientAddress := mload(add(data, 0xC0))
+                recipientAddress := mload(destinationRecipientAddress)
             }
 
             // Create a relationship between the originAddress and the synthetic

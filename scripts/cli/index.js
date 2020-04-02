@@ -55,8 +55,9 @@ cli.command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
     .option('--dest <value>', "destination chain", 1)
-    .option('--erc20Address <address>', 'Custom erc20 address')
-    .option('--bridgeAddress <address>', 'Custom bridge address')
+    .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
+    .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contrat', constants.ERC20_HANDLER_ADDRESS)
+    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .action(async function () {
         setupCli(cli)
         cli.value = Number(cli.commands[2].value);
@@ -69,12 +70,30 @@ cli.command("transfer")
 cli.command('getCentHash')
     .description('Returns if a the given hash exists')
     .requiredOption('--hash <value>', 'A hash to lookup')
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .action(async function () {
         setupCli(cli);
         cli.hash = cli.commands[3].hash;
+        cli.centAddress = cli.commands[4].centAddress;
         await centrifuge.getHash(cli);
     })
 
+cli.command('sendCentHash')
+    .description('Submits a hash as a deposit')
+    .requiredOption('--hash <value>', 'A hash that will be transferred')
+    .option('-oc, --originChain <value>', 'The chain where the deposit will originate from', 0)
+    .option('-dc, --destChain <value>', 'The cahin where the deposit will finalize', 1)
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
+    .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
+    .action(async function () {
+        setupCli(cli);
+        cli.hash = cli.commands[4].hash;
+        cli.originChain = Number(cli.commands[4].originChain);
+        cli.destChain = Number(cli.commands[4].destChain);
+        cli.centAddress = cli.commands[4].centAddress;
+        cli.bridgeAddress = cli.commands[4].bridgeAddress;
+        await centrifuge.submitCentHash(cli);
+    })
 
 cli.allowUnknownOption(false);
 cli.parseAsync(process.argv);

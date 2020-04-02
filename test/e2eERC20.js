@@ -62,8 +62,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     });
 
     it("[sanity] ERC20HandlerInstance.address should have an allowance of depositAmount from depositerAddress", async () => {
-        const originChainHandlerAllowance = await ERC20MintableInstance.allowance(depositerAddress, ERC20HandlerInstance.address);
-        assert.strictEqual(originChainHandlerAllowance.toNumber(), depositAmount);
+        const handlerAllowance = await ERC20MintableInstance.allowance(depositerAddress, ERC20HandlerInstance.address);
+        assert.strictEqual(handlerAllowance.toNumber(), depositAmount);
     });
 
     it("depositAmount of Destination ERC20 should be minted for recipientAddress", async () => {
@@ -79,7 +79,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         const handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
         assert.strictEqual(handlerBalance.toNumber(), depositAmount);
 
-        // destinationRelayer1 create the deposit proposal on the destination Bridge
+        // relayer1 creates the deposit proposal
         TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
             chainID,
             expectedDepositNonce,
@@ -87,7 +87,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             { from: relayer1Address }
         ));
 
-        // destinationRelayer2 votes in favor of the deposit proposal
+        // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
@@ -97,7 +97,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             { from: relayer2Address }
         ));
 
-        // destinationRelayer1 will execute the deposit proposal
+        // relayer1 will execute the deposit proposal
         TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
             chainID,
             expectedDepositNonce,
@@ -105,11 +105,11 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             depositProposalData
         ));
 
-        // Assert Origin ERC20 balance was transferred from depositerAddress
+        // Assert ERC20 balance was transferred from depositerAddress
         const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
         assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount);
 
-        // // Assert Destination ERC20 balance was transferred to recipientAddress
+        // // Assert ERC20 balance was transferred to recipientAddress
         const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
     });

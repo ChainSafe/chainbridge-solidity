@@ -98,31 +98,47 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     // execute a deposit
     // bytes memory data is laid out as following:
-    // destinationRecipientAddress address   - @0x20 - 0x40
-    // amount                      uint256   - @0x40 - 0x60
-    // tokenID                               - @0x60 - END
-    // tokenID length declaration  uint256   - @0x60 - 0x80
-    // tokenID                     bytes     - @0x80 - END
+    // amount                      uint256   - @0x20 - 0x40
+    // tokenID                               - @0x40 - 0xC0
+    // -----------------------------------------------------
+    // tokenID len                 uint256   - @0x40 - 0x60
+    // tokenID                     bytes     - @0x60 - 0xA0
+    // -----------------------------------------------------
+    // destinationRecipientAddress           - @0xA0 - END
+    // -----------------------------------------------------
+    // destinationRecipientAddress len uint256 - @0xA0 - 0xC0
+    // destinationRecipientAddress     bytes   - @0xC0 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
-        address       destinationRecipientAddress;
         uint256       amount;
         bytes  memory tokenID;
+        bytes  memory destinationRecipientAddress;
 
         assembly {
-            destinationRecipientAddress := mload(add(data, 0x20))
-            amount                      := mload(add(data, 0x40))
+            amount                      := mload(add(data, 0x20))
+
 
             tokenID                     := mload(0x40)
-            let lenTokenID              := mload(add(0x60, data))
+            let lenTokenID              := mload(add(0x40, data))
+            mstore(0x40, add(0x20, add(tokenID, lenTokenID)))
 
-            mstore(0x40, add(0x40, add(tokenID, lenTokenID)))
-
-            // in the calldata the tokenID is stored at 0x84 after accounting for the function signature and length declaration
+            // in the calldata the tokenID is stored at 0x64 after accounting for the function signature and length declaration
             calldatacopy(
                 tokenID,                   // copy to tokenID
-                0x84,                      // copy from calldata @ 0x84
-                sub(calldatasize(), 0x84)  // copy size (calldatasize - 0x84)
+                0x64,                      // copy from calldata @ 0x84
+                64                         // copy size 64 bytes. We can only make this assumption because we know the length
             )
+
+            destinationRecipientAddress         := mload(0x40)
+            let lenDestinationRecipientAddress  := mload(add(0xA0, data))
+            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            
+            // in the calldata the destinationRecipientAddress is stored at 0x64 after accounting for the function signature and length declaration
+            calldatacopy(
+                destinationRecipientAddress, // copy to destinationRecipientAddress
+                0xC4,                               // copy from calldata @ 0x84
+                sub(calldatasize(), 0xC4)           // copy size to the end of calldata
+            )
+
         }
 
         if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {

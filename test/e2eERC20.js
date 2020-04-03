@@ -56,7 +56,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             
-        depositProposalDataHash = Ethers.utils.keccak256(depositProposalData);
+        depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
     });
 
     it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {

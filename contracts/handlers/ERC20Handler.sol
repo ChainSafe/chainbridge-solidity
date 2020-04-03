@@ -62,7 +62,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             originChainTokenAddress        := mload(add(data, 0x20))
             amount                         := mload(add(data, 0x40))
 
-            destinationRecipientAddress         := mload(0x40)
+            destinationRecipientAddress     := mload(0x40)
             lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
@@ -71,6 +71,11 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
                 0xE4,                        // copy from calldata @ 0x104
                 sub(calldatasize(), 0xE4)    // copy size (calldatasize - 0x104)
             )
+        }
+
+        bytes20 recipientAddress;
+        assembly {
+            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
         bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
@@ -99,7 +104,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             destinationChainID,
             tokenID,
             lenDestinationRecipientAddress,
-            destinationRecipientAddress,
+            abi.encodePacked(recipientAddress),
             depositer,
             amount
         );

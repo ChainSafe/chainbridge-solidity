@@ -27,7 +27,7 @@ cli.option('-h, --host <value>', 'Host of RPC instance', "127.0.0.1");
 
 cli.command("deploy")
     .description("Deploys contracts via RPC")
-    .option('--chainID <value>', 'Chain ID deposits will orbut they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization but they kinda just assert certain parts of it and have low coverage as is, where the main thing I would want to test is just the serialization of everythingof everythingiginate from', 1)
+    .option('--chainID <value>', 'Chain ID where deposits originate from', 1)
     .option('--relayers <value>', 'Number of initial relayers', 2)
     .option('-v, --relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async function () {
@@ -55,14 +55,16 @@ cli.command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
     .option('--dest <value>', "destination chain", 1)
-    .option('--erc20Address <address>', 'Custom erc20 address')
-    .option('--bridgeAddress <address>', 'Custom bridge address')
+    .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
+    .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
+    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .option(`--recipient <address>`, 'Destination recipient address')
     .action(async function () {
         setupCli(cli)
         cli.value = Number(cli.commands[2].value);
         cli.dest = Number(cli.commands[2].dest);
         cli.erc20Address = cli.commands[2].erc20Address;
+        cli.erc20HandlerAddress = cli.commands[2].erc20HandlerAddress;
         cli.bridgeAddress = cli.commands[2].bridgeAddress;
         cli.recipient = cli.commands[2].recipient
         await transfer.erc20Transfer(cli);
@@ -71,12 +73,30 @@ cli.command("transfer")
 cli.command('getCentHash')
     .description('Returns if a the given hash exists')
     .requiredOption('--hash <value>', 'A hash to lookup')
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .action(async function () {
         setupCli(cli);
         cli.hash = cli.commands[3].hash;
+        cli.centAddress = cli.commands[4].centAddress;
         await centrifuge.getHash(cli);
     })
 
+cli.command('sendCentHash')
+    .description('Submits a hash as a deposit')
+    .requiredOption('--hash <value>', 'A hash that will be transferred')
+    .option('-oc, --originChain <value>', 'The chain where the deposit will originate from', 0)
+    .option('-dc, --destChain <value>', 'The cahin where the deposit will finalize', 1)
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
+    .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
+    .action(async function () {
+        setupCli(cli);
+        cli.hash = cli.commands[4].hash;
+        cli.originChain = Number(cli.commands[4].originChain);
+        cli.destChain = Number(cli.commands[4].destChain);
+        cli.centAddress = cli.commands[4].centAddress;
+        cli.bridgeAddress = cli.commands[4].bridgeAddress;
+        await centrifuge.submitCentHash(cli);
+    })
 
 cli.allowUnknownOption(false);
 cli.parseAsync(process.argv);

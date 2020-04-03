@@ -13,6 +13,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address _originChainTokenAddress;
         uint    _destinationChainID;
         bytes   _tokenID;
+        uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
@@ -55,13 +56,14 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address      originChainTokenAddress;
         bytes memory destinationRecipientAddress;
         uint256      amount;
+        uint256      lenDestinationRecipientAddress;
 
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
             amount                         := mload(add(data, 0x40))
 
-            destinationRecipientAddress         := mload(0x40)
-            let lenDestinationRecipientAddress  := mload(add(0x60, data))
+            destinationRecipientAddress     := mload(0x40)
+            lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
             calldatacopy(
@@ -70,6 +72,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
                 sub(calldatasize(), 0xE4)    // copy size (calldatasize - 0x104)
             )
         }
+
 
         bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
         bytes memory emptyBytes;
@@ -96,6 +99,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             originChainTokenAddress,
             destinationChainID,
             tokenID,
+            lenDestinationRecipientAddress,
             destinationRecipientAddress,
             depositer,
             amount

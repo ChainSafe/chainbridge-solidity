@@ -46,7 +46,7 @@ async function erc20Transfer(cfg) {
         const depositer = constants.relayerAddresses[0];
         const depositerPriv = constants.relayerPrivKeys[0];
         const depositerWallet = new ethers.Wallet(depositerPriv, cfg.provider);
-        const recipient = constants.relayerAddresses[1];
+        const recipient = cfg.recipient || constants.relayerAddresses[1]
 
         // Instances
         const erc20Instance = new ethers.Contract(cfg.erc20Address || constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);

@@ -57,12 +57,14 @@ cli.command("transfer")
     .option('--dest <value>', "destination chain", 1)
     .option('--erc20Address <address>', 'Custom erc20 address')
     .option('--bridgeAddress <address>', 'Custom bridge address')
+    .option(`--recipient <address>`, 'Destination recipient address')
     .action(async function () {
         setupCli(cli)
         cli.value = Number(cli.commands[2].value);
         cli.dest = Number(cli.commands[2].dest);
         cli.erc20Address = cli.commands[2].erc20Address;
         cli.bridgeAddress = cli.commands[2].bridgeAddress;
+        cli.recipient = cli.commands[2].recipient
         await transfer.erc20Transfer(cli);
     })
 

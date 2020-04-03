@@ -40,7 +40,7 @@ cb-sol-cli mint --port <port> --value <n>
 
 Initiate a transfer of erc20 to some destination chain.
 ```
-cb-sol-cli transfer --port <port> --value <n> --dest <n>
+cb-sol-cli transfer --port <port> --value <n> --dest <n> --recipient <addr>
 ```
 
 # ChainBridge-Solidity Data Layout

@@ -146,39 +146,34 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         tokenID = abi.encode(tokenChainID, tokenAddress);
 
+        bytes20 recipientAddress;
+        assembly {
+            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+        }
+
+
         if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {
             // token exists
-
-            address recipientAddress;
-            assembly {
-                recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            }
-
             IBridge bridge = IBridge(_bridgeAddress);
             uint256 chainID = bridge._chainID();
 
             if (tokenChainID == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, recipientAddress, amount);
+                releaseERC20(tokenAddress, address(recipientAddress), amount);
             } else {
                 // token is not from chain
 
-                mintERC20(tokenAddress, recipientAddress, amount);
+                mintERC20(tokenAddress, address(recipientAddress), amount);
             }
         } else {
             // Token doesn't exist
             ERC20Mintable erc20 = new ERC20Mintable();
-            address recipientAddress;
-
-            assembly {
-                recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            }
-
+            
             // Create a relationship between the originAddress and the synthetic
             _tokenIDToTokenContractAddress[tokenID] = address(erc20);
             _tokenContractAddressToTokenID[address(erc20)] = tokenID;
 
-            mintERC20(address(erc20), recipientAddress, amount);
+            mintERC20(address(erc20), address(recipientAddress), amount);
         }
     }
 

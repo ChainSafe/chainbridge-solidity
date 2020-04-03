@@ -25,6 +25,7 @@ async function assetTestTransfer(cfg) {
         console.log("[Deploy Asset] Tx hash: ", tx.hash);
     } catch (e) {
         console.log({ e })
+        process.exit(1)
     }
 }
 
@@ -37,6 +38,7 @@ async function mintErc20(cfg) {
         console.log(`Successfully minted ${cfg.value} tokens to ${depositer}`);
     } catch (e) {
         console.log({ e })
+        process.exit(1)
     }
 }
 
@@ -86,6 +88,7 @@ async function erc20Transfer(cfg) {
         console.log("[ERC20 Transfer] Handler token balance: ", handlerPostBal.toNumber());
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 
@@ -137,6 +140,7 @@ async function erc721Transfer(cfg) {
         console.log("[ERC721 Transfer] Deposit Hash", d.hash);
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 
@@ -159,6 +163,7 @@ async function depositTest(cfg) {
         );
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 

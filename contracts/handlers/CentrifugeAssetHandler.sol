@@ -33,6 +33,10 @@ contract CentrifugeAssetHandler is IDepositHandler {
         return _depositRecords[depositID];
     }
 
+    function getHash(bytes32 hash) public view returns (bool) {
+        return _assetDepositStatuses[hash];
+    }
+
     function deposit(uint256 originChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address originChainContractAddress;
         address destinationChainHandlerAddress;
@@ -68,9 +72,5 @@ contract CentrifugeAssetHandler is IDepositHandler {
 
         require(_assetDepositStatuses[metaDataHash] == false, "asset hasn't been deposited or has already been finalized");
         _assetDepositStatuses[metaDataHash] = true;
-    }
-    
-    function getHash(bytes32 hash) public view returns (bool) {
-        return _assetDepositStatuses[hash];
     }
 }

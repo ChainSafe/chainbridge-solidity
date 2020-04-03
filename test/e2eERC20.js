@@ -44,17 +44,17 @@ contract('E2E ERC20 - Same Chain', async accounts => {
                   Ethers.utils.hexZeroPad(Ethers.utils.hexlify(ERC20MintableInstance.address), 32).substr(2);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);
+            Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
 
         depositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(recipientAddress), 32).substr(2);
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(tokenID)          (32 bytes)
+            tokenID +                                                                       // tokenID               (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
     });

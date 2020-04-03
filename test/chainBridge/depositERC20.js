@@ -41,10 +41,10 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);
+            Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +  // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +             // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexlify(recipientAddress).substr(2);                             // recipientAddress      (?? bytes)
     });
 
     it("[sanity] test depositerAddress' balance", async () => {

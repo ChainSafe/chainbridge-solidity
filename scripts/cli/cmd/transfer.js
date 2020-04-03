@@ -61,11 +61,16 @@ async function erc20Transfer(cfg) {
         console.log(`[ERC20 Transfer] Depositer token balance: ${depositerPreBal.toNumber()} Address: ${depositer}`);
         console.log(`[ERC20 Transfer] Handler token balance: ${handlerPreBal.toNumber()} Address: ${cfg.erc20HandlerAddress}`);
 
+        // const data = '0x' +
+        //     ethers.utils.hexZeroPad(erc20Instance.address, 20).substr(2) +
+        //     ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 20).substr(2) +
+        //     ethers.utils.hexZeroPad(recipient, 32).substr(2);
         const data = '0x' +
-            ethers.utils.hexZeroPad(erc20Instance.address, 20).substr(2) +
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 20).substr(2) +
-            ethers.utils.hexZeroPad(recipient, 32).substr(2);
-
+            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+            ethers.utils.hexZeroPad(recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+        
         // Make the deposit
         await bridgeInstance.deposit(
             cfg.dest, // destination chain id

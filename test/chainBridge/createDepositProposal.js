@@ -12,6 +12,7 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayerThreshold = 1]', async (accounts) => {
+    const AbiCoder = new Ethers.utils.AbiCoder();
     const originChainRelayerAddress = accounts[1];
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
@@ -28,14 +29,19 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let DestinationERC20MintableInstance;
     let data = '';
     let dataHash = '';
+    let initialTokenIDs;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         DestBridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, []);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+
+        initialTokenIDs = [];
+        initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]));
+
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
@@ -134,6 +140,8 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
 });
 
 contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayerThreshold > 1]', async (accounts) => {
+    const AbiCoder = new Ethers.utils.AbiCoder();
+    
     // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
     const depositerAddress = accounts[2];
@@ -151,14 +159,20 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let DestinationERC20HandlerInstance;
     let data = '';
     let dataHash = '';
+    let initialTokenAmount;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([originChainRelayerAddress], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
         DestBridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, []);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        
+        initialTokenIDs = [
+            AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address])
+        ];
+
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +

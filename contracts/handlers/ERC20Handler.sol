@@ -37,13 +37,13 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialTokenIDs.length; i++) {
-            address tokenAddress = parseTokenID(initialTokenIDs[i]);
+            address tokenAddress = parseAddressFromTokenID(initialTokenIDs[i]);
             _tokenIDToTokenContractAddress[initialTokenIDs[i]] = tokenAddress;
             _tokenContractAddressToTokenID[tokenAddress] = initialTokenIDs[i];
         }
     }
 
-    function parseTokenID(bytes memory tokenID) internal pure returns (address tokenAddress) {
+    function parseAddressFromTokenID(bytes memory tokenID) internal pure returns (address tokenAddress) {
         assembly {
             tokenAddress := mload(add(tokenID, 0x40))
         }
@@ -117,7 +117,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) public pure returns (bytes memory) {
+    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
         return abi.encode(chainID, originChainTokenAddress);
     }
 

@@ -24,7 +24,7 @@ jobs:
         - sudo apt-get install ethereum
       script:
         - make install-deps
-        - make start-geth &
+        - QUIET=true make start-geth &
         - truffle test --network geth
     - name: "Verify contract deployment and binding creation"
       env: CI=true

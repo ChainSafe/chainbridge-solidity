@@ -13,6 +13,7 @@ contract Bridge {
     IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
+    uint256                  public _totalDepositProposals;
 
     enum Vote {No, Yes}
     enum RelayerThresholdProposalStatus {Inactive, Active}
@@ -46,10 +47,9 @@ contract Bridge {
     event RelayerThresholdProposalVote(Vote vote);
     event RelayerThresholdChanged(uint indexed newThreshold);
     event Deposit(
-        uint256 indexed originChainID,
         uint256 indexed destinationChainID,
         address indexed originChainHandlerAddress,
-        uint256         depositNonce
+        uint256 indexed depositNonce
     );
     event DepositProposalCreated(
         uint256 indexed originChainID,
@@ -114,7 +114,7 @@ contract Bridge {
         IDepositHandler depositHandler = IDepositHandler(originChainHandlerAddress);
         depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
 
-        emit Deposit(_chainID, destinationChainID, originChainHandlerAddress, depositNonce);
+        emit Deposit(destinationChainID, originChainHandlerAddress, depositNonce);
     }
 
     function voteDepositProposal(
@@ -128,6 +128,7 @@ contract Bridge {
         require(!_hasVotedOnDepositProposal[originChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
         if (uint(depositProposal._status) == 0) {
+            ++_totalDepositProposals;
             _depositProposals[originChainID][depositNonce] = DepositProposal({
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),

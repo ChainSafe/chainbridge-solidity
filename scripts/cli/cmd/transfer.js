@@ -25,18 +25,20 @@ async function assetTestTransfer(cfg) {
         console.log("[Deploy Asset] Tx hash: ", tx.hash);
     } catch (e) {
         console.log({ e })
+        process.exit(1)
     }
 }
 
 async function mintErc20(cfg) {
     const depositer = constants.relayerAddresses[0];
-    const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20MintableContract.abi, cfg.mainWallet);
+    const erc20Instance = new ethers.Contract(cfg.erc20Address, ERC20MintableContract.abi, cfg.mainWallet);
     
     try {
         await erc20Instance.mint(depositer, cfg.value);
         console.log(`Successfully minted ${cfg.value} tokens to ${depositer}`);
     } catch (e) {
         console.log({ e })
+        process.exit(1)
     }
 }
 
@@ -46,41 +48,47 @@ async function erc20Transfer(cfg) {
         const depositer = constants.relayerAddresses[0];
         const depositerPriv = constants.relayerPrivKeys[0];
         const depositerWallet = new ethers.Wallet(depositerPriv, cfg.provider);
-        const recipient = constants.relayerAddresses[1];
+        const recipient = cfg.recipient || constants.relayerAddresses[1]
 
         // Instances
-        const erc20Instance = new ethers.Contract(constants.ERC20_ADDRESS, ERC20Contract.abi, depositerWallet);
-        const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, depositerWallet);
+        const erc20Instance = new ethers.Contract(cfg.erc20Address, ERC20Contract.abi, depositerWallet);
+        const bridgeInstance = new ethers.Contract(cfg.bridgeAddress, BridgeContract.abi, depositerWallet);
 
         // Approve tokens
-        await erc20Instance.approve(constants.ERC20_HANDLER_ADDRESS, cfg.value);
+        await erc20Instance.approve(cfg.erc20HandlerAddress, cfg.value);
         console.log("[ERC20 Transfer] Approved tokens!");
 
         const depositerPreBal = await erc20Instance.balanceOf(depositer);
-        const handlerPreBal = await erc20Instance.balanceOf(constants.ERC20_HANDLER_ADDRESS);
+        const handlerPreBal = await erc20Instance.balanceOf(cfg.erc20HandlerAddress);
         console.log(`[ERC20 Transfer] Depositer token balance: ${depositerPreBal.toNumber()} Address: ${depositer}`);
-        console.log(`[ERC20 Transfer] Handler token balance: ${handlerPreBal.toNumber()} Address: ${constants.ERC20_HANDLER_ADDRESS}`);
+        console.log(`[ERC20 Transfer] Handler token balance: ${handlerPreBal.toNumber()} Address: ${cfg.erc20HandlerAddress}`);
 
+        // const data = '0x' +
+        //     ethers.utils.hexZeroPad(erc20Instance.address, 20).substr(2) +
+        //     ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 20).substr(2) +
+        //     ethers.utils.hexZeroPad(recipient, 32).substr(2);
         const data = '0x' +
-            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +
-            ethers.utils.hexZeroPad(recipient, 32).substr(2) +
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 32).substr(2);
-
+            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(cfg.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+            ethers.utils.hexZeroPad(recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+        
         // Make the deposit
         await bridgeInstance.deposit(
             cfg.dest, // destination chain id
-            constants.ERC20_HANDLER_ADDRESS,
+            cfg.erc20HandlerAddress,
             data,
         );
         console.log("[ERC20 Transfer] Created deposit!");
 
         // Check the balance after the deposit
         const depositerPostBal = await erc20Instance.balanceOf(depositer);
-        const handlerPostBal = await erc20Instance.balanceOf(constants.ERC20_HANDLER_ADDRESS);
+        const handlerPostBal = await erc20Instance.balanceOf(cfg.erc20HandlerAddress);
         console.log("[ERC20 Transfer] Depositer token balance: ", depositerPostBal.toNumber());
         console.log("[ERC20 Transfer] Handler token balance: ", handlerPostBal.toNumber());
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 
@@ -132,6 +140,7 @@ async function erc721Transfer(cfg) {
         console.log("[ERC721 Transfer] Deposit Hash", d.hash);
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 
@@ -154,6 +163,7 @@ async function depositTest(cfg) {
         );
     } catch (e) {
         console.log({ e });
+        process.exit(1)
     }
 }
 

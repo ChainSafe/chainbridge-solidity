@@ -71,8 +71,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
+            return event.destinationChainID.toNumber() === destinationChainID &&
                 event.originChainHandlerAddress === GenericHandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });

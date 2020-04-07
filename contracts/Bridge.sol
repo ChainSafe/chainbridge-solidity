@@ -47,10 +47,9 @@ contract Bridge {
     event RelayerThresholdProposalVote(Vote vote);
     event RelayerThresholdChanged(uint indexed newThreshold);
     event Deposit(
-        uint256 indexed originChainID,
         uint256 indexed destinationChainID,
         address indexed originChainHandlerAddress,
-        uint256         depositNonce
+        uint256 indexed depositNonce
     );
     event DepositProposalCreated(
         uint256 indexed originChainID,
@@ -115,7 +114,7 @@ contract Bridge {
         IDepositHandler depositHandler = IDepositHandler(originChainHandlerAddress);
         depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
 
-        emit Deposit(_chainID, destinationChainID, originChainHandlerAddress, depositNonce);
+        emit Deposit(destinationChainID, originChainHandlerAddress, depositNonce);
     }
 
     function voteDepositProposal(

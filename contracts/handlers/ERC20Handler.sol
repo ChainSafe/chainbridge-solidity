@@ -33,14 +33,25 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress) public {
+    constructor(address bridgeAddress, bytes[] memory initialTokenIDs) public {
         _bridgeAddress = bridgeAddress;
+
+        for (uint256 i = 0; i < initialTokenIDs.length; i++) {
+            address tokenAddress = parseTokenID(initialTokenIDs[i]);
+            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = tokenAddress;
+            _tokenContractAddressToTokenID[tokenAddress] = initialTokenIDs[i];
+        }
+    }
+
+    function parseTokenID(bytes memory tokenID) internal pure returns (address tokenAddress) {
+        assembly {
+            tokenAddress := mload(add(tokenID, 0x40))
+        }
     }
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
     }
-
 
     // Make a deposit
     // bytes memory data is laid out as following:
@@ -106,7 +117,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
+    function createTokenID(uint256 chainID, address originChainTokenAddress) public pure returns (bytes memory) {
         return abi.encode(chainID, originChainTokenAddress);
     }
 
@@ -166,7 +177,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
                 releaseERC20(tokenAddress, address(recipientAddress), amount);
             } else {
                 // token is not from chain
-
                 mintERC20(tokenAddress, address(recipientAddress), amount);
             }
         } else {

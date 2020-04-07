@@ -38,8 +38,9 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, []);
         DestinationERC20MintableInstance = await ERC20MintableContract.new();
 
-        initialTokenIDs = [];
-        initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]));
+        initialTokenIDs = [
+            AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address])
+        ];
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
 

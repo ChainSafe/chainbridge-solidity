@@ -49,6 +49,18 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
+    function setTokenIDAndContractAddress(bytes memory tokenID, address contractAddress) public {
+        require(_tokenIDToTokenContractAddress[tokenID] == address(0), "tokenID already has a corresponding contract address");
+
+        bytes memory currentTokenID = _tokenContractAddressToTokenID[contractAddress];
+        bytes memory emptyBytes;
+        require(keccak256(abi.encodePacked((currentTokenID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding tokenID");
+
+        _tokenIDToTokenContractAddress[tokenID] = contractAddress;
+        _tokenContractAddressToTokenID[contractAddress] = tokenID;
+    }
+
     // Make a deposit
     // bytes memory data is laid out as following:
     // originChainTokenAddress     address   - @0x20

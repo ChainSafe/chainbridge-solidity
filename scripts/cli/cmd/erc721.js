@@ -20,8 +20,8 @@ const transferCmd = new Command("transfer")
     .option('--id <id>', "ERC721 token id", 1)
     .option('--dest <value>', "destination chain", 1)
     .option(`--recipient <address>`, 'Destination recipient address', constants.relayerAddresses[4])
-    .option('--erc721Address <address>', 'Custom erc721 contract')
-    .option('--erc721HandlerAddress <address>', 'Custom erc721 handler')
+    .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
+    .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
         try {

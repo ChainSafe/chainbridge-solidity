@@ -38,7 +38,7 @@ const transferHashCmd = new Command('transferHash')
             const hash = ethers.utils.hexZeroPad(args.hash, 32)
             let tx = await bridgeInstance.voteDepositProposal(
                 args.destId,
-                cli.centAddress,
+                args.centAddress,
                 hash
             )
             console.log(`Proposal created, hash: ${tx.hash}`);

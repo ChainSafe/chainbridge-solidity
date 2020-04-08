@@ -9,7 +9,7 @@ const BridgeContract = require("../../../build/contracts/Bridge.json");
 
 const getHashCmd = new Command('getHash')
     .description('Returns if a the given hash exists')
-    .requiredOption('--hash <value>', 'A hash to lookup')
+    .requiredOption('--hash <value>', 'A hash to lookup', '0x0000000000000000000000000000000000000000000000000000000000000001')
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .action(async function (args) {
         try {
@@ -26,7 +26,7 @@ const getHashCmd = new Command('getHash')
 
 const transferHashCmd = new Command('transferHash')
     .description('Submits a hash as a deposit')
-    .requiredOption('--hash <value>', 'The hash that will be transferred', '0x0000000000000000000000000000000000000000000000000000000000000000')
+    .requiredOption('--hash <value>', 'The hash that will be transferred', '0x0000000000000000000000000000000000000000000000000000000000000001')
     .option('--dest-id <value>', 'The cahin where the deposit will finalize', 1)
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)

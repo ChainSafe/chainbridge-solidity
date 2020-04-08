@@ -57,7 +57,7 @@ const transferCmd = new Command("transfer")
         }
     })
 
-const erc721Cmd = new Command("erc20")
+const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
 erc721Cmd.addCommand(transferCmd)

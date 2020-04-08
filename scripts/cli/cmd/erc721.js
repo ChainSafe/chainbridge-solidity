@@ -8,7 +8,7 @@ const BridgeContract = require("../../../build/contracts/Bridge.json");
 const ERC721Contract = require("../../../build/contracts/ERC721Mintable.json");
 
 const mintCmd = new Command("mint")
-    .option('--erc721Address <address>', 'Custom erc721 contract')
+    .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .action(async function(args) {
         setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, ERC721Contract.abi, args.wallet);
@@ -43,8 +43,17 @@ const transferCmd = new Command("transfer")
             console.log(`[ERC721 Transfer] Depositer ${args.wallet.address} owns ${depositerPreBal.toNumber()} tokens `);
             console.log(`[ERC721 Transfer] Handler ${args.erc721HandlerAddress} owns ${handlerPreBal.toNumber()}`);
 
+            const data = '0x' +
+                ethers.utils.hexZeroPad(erc721Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
+                ethers.utils.hexZeroPad(ethers.utils.hexlify(args.id), 32).substr(2) +    // NFT tokenId        (32 bytes)
+                ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+                ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+
             // // Perform deposit
-            const d = await bridgeInstance.deposit(cfg.dest, constants.relayerAddresses[1], erc721Instance.address, 1, "0x");
+            await bridgeInstance.deposit(
+                args.dest, // destination chain id
+                args.erc721HandlerAddress,
+                data,);
             console.log("[ERC721 Transfer] Created deposit to initiate transfer!")
 
             const depositerPostBal = await erc721Instance.balanceOf(args.wallet.address);

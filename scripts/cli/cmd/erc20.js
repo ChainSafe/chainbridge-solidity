@@ -17,7 +17,7 @@ const mintCmd = new Command("mint")
             setupParentArgs(args, args.parent.parent)
             const erc20Instance = new ethers.Contract(args.erc20Address, ERC20MintableContract.abi, args.wallet);
             await erc20Instance.mint(args.wallet.address, args.value);
-            console.log(`Successfully minted ${args.value} tokens to ${args.wallet.address}`);
+            console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
         } catch (e) {
             console.log({e})
             process.exit(1)
@@ -75,9 +75,27 @@ const transferCmd = new Command("transfer")
         }
     })
 
+const balanceCmd = new Command("balance")
+    .description("Get the balance for an account")
+    .option(`--address <address>`, 'Address to query', constants.deployerAddress)
+    .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
+    .action(async function(args) {
+        try {
+            setupParentArgs(args, args.parent.parent)
+
+            const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
+            const balance = await erc20Instance.balanceOf(args.address)
+            console.log(`[ERC20 Balance] Account ${args.address} has a balance of ${balance}` )
+        } catch (e) {
+            console.log({e});
+            process.exit(1)
+        }
+    })
+
 const erc20Cmd = new Command("erc20")
 
 erc20Cmd.addCommand(mintCmd)
 erc20Cmd.addCommand(transferCmd)
+erc20Cmd.addCommand(balanceCmd)
 
 module.exports = erc20Cmd

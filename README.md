@@ -47,7 +47,7 @@ Options:
 
 ### `erc20`
 
-#### `mint` 
+#### - `mint` 
 Mint default erc20 tokens.
 
 ```
@@ -58,23 +58,33 @@ Options:
   --erc20Address <address>  Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
 ```
 
-#### `transfer`
+#### - `transfer`
 Initiate a transfer of erc20 to some destination chain.
 ```
 $ cb-sol-cli erc20 transfer
 
+Options:
   --value <amount>                 Amount to transfer (default: 1)
   --dest <value>                   destination chain (default: 1)
   --recipient <address>            Destination recipient address (default: "0x4CEEf6139f00F9F4535Ad19640Ff7A0137708485")
   --erc20Address <address>         Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
   --erc20HandlerAddress <address>  Custom erc20Handler contract (default: "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07")
   --bridgeAddress <address>        Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
+```
 
+#### - `balance`
+Check the balance of an account.
+```
+$ cb-sol-cli erc20 balance
+
+Options:
+  --address <address>       Address to query (default: "0xff93B45308FD417dF303D6515aB04D9e89a750Ca")
+  --erc20Address <address>  Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
 ```
 
 ### `erc721`
 
-#### `mint`
+#### - `mint`
 Mint default erc721 tokens.
 
 ```
@@ -84,7 +94,7 @@ Options:
   --erc721Address <address>  Custom erc721 contract
 ```
 
-#### `transfer`
+#### - `transfer`
 Initiate a transfer of erc721 to some destination chain.
 ```
 $ cb-sol-cli erc721 transfer
@@ -95,12 +105,11 @@ $ cb-sol-cli erc721 transfer
   --erc721Address <address>         Custom erc721 contract
   --erc721HandlerAddress <address>  Custom erc721 handler
   --bridgeAddress <address>         Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
-
 ```
 
 ### Centrifuge (`cent`)
 
-####`transferHash`
+#### - `transferHash`
 Initiate transfer of a hash.
 
 ```
@@ -111,10 +120,9 @@ Options:
   --dest-id <value>        The cahin where the deposit will finalize (default: 1)
   --centAddress <value>    Centrifuge handler contract address (default: "0xc279648CE5cAa25B9bA753dAb0Dfef44A069BaF4")
   --bridgeAddress <value>  Bridge contract address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
-
 ```
 
-####`getHash`
+#### - `getHash`
 Verify transfer of hash:
 
 ```

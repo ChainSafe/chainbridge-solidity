@@ -35,6 +35,7 @@ jobs:
         - cb-sol-cli deploy
         - cb-sol-cli erc20 mint
         - cb-sol-cli erc20 transfer
+        - cb-sol-cli erc20 balance
         # TODO: Add when chainbridge-solidity#39 is closed
         # - cb-sol-cli erc721 mint
         # - cb-sol-cli erc721 transfer

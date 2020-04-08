@@ -12,6 +12,8 @@ Requires `nodejs` and `npm`.
 
 `PORT=<port> SILENT=<bool> make start-ganache`: Starts a ganache instance, default `PORT=8545 SILENT=false`
 
+`QUIET=<bool> make start-geth`: Starts a geth instance with test keys
+
 `PORT=<port> make deploy`: Deploys all contract instances, default `PORT=8545`
 
 `make test`: Runs truffle tests.

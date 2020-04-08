@@ -21,6 +21,10 @@ start-ganache:
 	@echo " > \033[32mStarting ganache... \033[0m "
 	./scripts/start_ganache.sh
 
+start-geth:
+	@echo " > \033[32mStarting geth... \033[0m "
+	./scripts/geth/start_geth.sh
+
 deploy:
 	@echo " > \033[32mDeploying evm contracts... \033[0m "
 	./scripts/cli/index.js deploy --port=${PORT}

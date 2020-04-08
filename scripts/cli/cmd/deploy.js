@@ -19,7 +19,7 @@ const deployCmd = new Command("deploy")
     .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async (args, a) => {
         try {
-            setupParentArgs(args)
+            setupParentArgs(args, args.parent)
             await deployRelayerContract(args);
             await deployBridgeContract(args);
             await deployERC20(args)

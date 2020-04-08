@@ -30,15 +30,20 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositProposalDataHash;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold);
+        await Promise.all([
+            RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => ERC20MintableInstance = instance)
+        ]);
+
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC20MintableInstance = await ERC20MintableContract.new();
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await ERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
+        await Promise.all([
+            ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
+            ERC20MintableInstance.addMinter(ERC20HandlerInstance.address)
+        ]);
 
-        await ERC20MintableInstance.addMinter(ERC20HandlerInstance.address);
+        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
 
         tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(chainID), 32).substr(2) + 
                   Ethers.utils.hexZeroPad(Ethers.utils.hexlify(ERC20MintableInstance.address), 32).substr(2);
@@ -55,8 +60,6 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             tokenID +                                                                       // tokenID               (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
-
-        console.log(depositProposalData)
             
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
     });

@@ -33,6 +33,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     let depositDataHash = '';
     let tokenID = '';
     let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([
@@ -44,8 +45,9 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
         tokenID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
         initialTokenIDs = [tokenID];
+        initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +

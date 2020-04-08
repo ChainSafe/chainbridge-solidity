@@ -31,6 +31,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositProposalData;
     let depositProposalDataHash;
     let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold);
@@ -39,8 +40,9 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         tokenID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance.address]);
         initialTokenIDs = [tokenID];
+        initialContractAddresses = [ERC20MintableInstance.address];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
 
         await ERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });

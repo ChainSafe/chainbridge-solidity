@@ -23,6 +23,7 @@ contract('ERC20Handler - [constructor]', async () => {
     let ERC20MintableInstance2;
     let ERC20MintableInstance3;
     let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], relayerThreshold);
@@ -35,14 +36,15 @@ contract('ERC20Handler - [constructor]', async () => {
         initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address]));
         initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]));
         initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance3.address]));
+        initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address, ERC20MintableInstance3.address];
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs));
+        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses));
     });
 
     it('initialTokenIDs should be parsed correctly and corresponding tokenID mappings should have expected values', async () => {
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
         
         for (const tokenID of initialTokenIDs) {
             const tokenAddress = '0x' + tokenID.substr(90);

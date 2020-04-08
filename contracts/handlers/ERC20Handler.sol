@@ -33,19 +33,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress, bytes[] memory initialTokenIDs) public {
+    constructor(address bridgeAddress, bytes[] memory initialTokenIDs, address[] memory initialContractAddresses) public {
+        require(initialTokenIDs.length == initialContractAddresses.length,
+            "mismatch length between initialTokenIDs and initialContractAddresses");
+
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialTokenIDs.length; i++) {
-            address tokenAddress = parseAddressFromTokenID(initialTokenIDs[i]);
-            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = tokenAddress;
-            _tokenContractAddressToTokenID[tokenAddress] = initialTokenIDs[i];
-        }
-    }
-
-    function parseAddressFromTokenID(bytes memory tokenID) internal pure returns (address tokenAddress) {
-        assembly {
-            tokenAddress := mload(add(tokenID, 0x40))
+            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = initialContractAddresses[i];
+            _tokenContractAddressToTokenID[initialContractAddresses[i]] = initialTokenIDs[i];
         }
     }
 

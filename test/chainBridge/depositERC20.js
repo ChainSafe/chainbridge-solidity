@@ -26,6 +26,8 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
     let depositData;
+    let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         const AbiCoder = new Ethers.utils.AbiCoder();
@@ -36,8 +38,9 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         tokenID = AbiCoder.encode(['uint256', 'address'], [originChainID, OriginERC20MintableInstance.address]);
         initialTokenIDs = [tokenID];
+        initialContractAddresses = [OriginERC20MintableInstance.address];
 
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });

@@ -4,6 +4,7 @@ const constants = require('../constants');
 const { Command } = require('commander');
 const { setupParentArgs } = require("./utils")
 
+const BridgeContract = require("../../../build/contracts/Bridge.json");
 const ERC721Contract = require("../../../build/contracts/ERC721Mintable.json");
 
 const mintCmd = new Command("mint")

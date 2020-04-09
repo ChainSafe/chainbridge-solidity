@@ -7,6 +7,8 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Same Chain', async accounts => {
+    const AbiCoder = new Ethers.utils.AbiCoder();
+
     const relayerThreshold = 2;
     const chainID = 1;
 
@@ -28,6 +30,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositData;
     let depositProposalData;
     let depositProposalDataHash;
+    let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -36,17 +40,19 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         ]);
 
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+
+        tokenID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance.address]);
+        initialTokenIDs = [tokenID];
+        initialContractAddresses = [ERC20MintableInstance.address];
+
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
 
         await Promise.all([
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
             ERC20MintableInstance.addMinter(ERC20HandlerInstance.address)
         ]);
-
+        
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
-
-        tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(chainID), 32).substr(2) + 
-                  Ethers.utils.hexZeroPad(Ethers.utils.hexlify(ERC20MintableInstance.address), 32).substr(2);
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
@@ -57,7 +63,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(tokenID)          (32 bytes)
-            tokenID +                                                                       // tokenID               (64 bytes) for now
+            tokenID.substr(2) +                                                             // tokenID               (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             
@@ -74,7 +80,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         assert.strictEqual(handlerAllowance.toNumber(), depositAmount);
     });
 
-    it("depositAmount of Destination ERC20 should be minted for recipientAddress", async () => {
+    it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
         // depositerAddress makes initial deposit of depositAmount
         TruffleAssert.passes(await BridgeInstance.deposit(
             chainID,

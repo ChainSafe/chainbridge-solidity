@@ -62,7 +62,7 @@ async function deployERC20Handler(cfg) {
     try {
         const handlerFactory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, cfg.mainWallet);
         const erc20MintableFactory = new ethers.ContractFactory(ERC20MintableContract.abi, ERC20MintableContract.bytecode, cfg.mainWallet);
-        const handlerContract = await handlerFactory.deploy(constants.BRIDGE_ADDRESS);
+        const handlerContract = await handlerFactory.deploy(constants.BRIDGE_ADDRESS, [], []);
         const erc20MintableContract = await erc20MintableFactory.deploy();
 
         console.log("[ERC20 Handler] Contract address: ", handlerContract.address);

@@ -12,6 +12,8 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (accounts) => {
+    const AbiCoder = new Ethers.utils.AbiCoder();
+    
     const originChainID = 1;
     const destinationChainID = 1;
     const originChainRelayerAddress = accounts[0];
@@ -30,6 +32,8 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     let depositData = '';
     let depositDataHash = '';
     let tokenID = '';
+    let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -41,16 +45,17 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         ]);
             
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        
-        tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) + 
-                  Ethers.utils.hexZeroPad(Ethers.utils.hexlify(DestinationERC20MintableInstance.address), 32).substr(2);
 
-        
+        tokenID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
+        initialTokenIDs = [tokenID];
+        initialContractAddresses = [DestinationERC20MintableInstance.address];
+
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+
         depositData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID +
+            tokenID.substr(4) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));

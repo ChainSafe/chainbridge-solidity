@@ -45,7 +45,6 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         ]);
             
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         resourceID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
         initialResourceIDs = [resourceID];

@@ -22,7 +22,7 @@ contract('ERC20Handler - [constructor]', async () => {
     let ERC20MintableInstance1;
     let ERC20MintableInstance2;
     let ERC20MintableInstance3;
-    let initialTokenIDs;
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -32,28 +32,28 @@ contract('ERC20Handler - [constructor]', async () => {
         ERC20MintableInstance2 = await ERC20MintableContract.new();
         ERC20MintableInstance3 = await ERC20MintableContract.new();
 
-        initialTokenIDs = [];
-        initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address]));
-        initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]));
-        initialTokenIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance3.address]));
+        initialResourceIDs = [];
+        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address]));
+        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]));
+        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance3.address]));
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address, ERC20MintableInstance3.address];
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses));
+        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses));
     });
 
-    it('initialTokenIDs should be parsed correctly and corresponding tokenID mappings should have expected values', async () => {
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+    it('initialResourceIDs should be parsed correctly and corresponding resourceID mappings should have expected values', async () => {
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
         
-        for (const tokenID of initialTokenIDs) {
-            const tokenAddress = '0x' + tokenID.substr(90);
+        for (const resourceID of initialResourceIDs) {
+            const tokenAddress = '0x' + resourceID.substr(90);
             
-            const retrievedTokenAddress = await ERC20HandlerInstance._tokenIDToTokenContractAddress.call(tokenID);
+            const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(resourceID);
             assert.strictEqual(Ethers.utils.getAddress(tokenAddress), retrievedTokenAddress);
 
-            const retrievedTokenID = await ERC20HandlerInstance._tokenContractAddressToTokenID.call(tokenAddress);
-            assert.strictEqual(tokenID, retrievedTokenID);
+            const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(tokenAddress);
+            assert.strictEqual(resourceID, retrievedResourceID);
         }
     });
 });

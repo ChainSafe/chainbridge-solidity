@@ -33,15 +33,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress, bytes[] memory initialTokenIDs, address[] memory initialContractAddresses) public {
-        require(initialTokenIDs.length == initialContractAddresses.length,
-            "mismatch length between initialTokenIDs and initialContractAddresses");
+    constructor(address bridgeAddress, bytes[] memory initialResourceIDs, address[] memory initialContractAddresses) public {
+        require(initialResourceIDs.length == initialContractAddresses.length,
+            "mismatch length between initialResourceIDs and initialContractAddresses");
 
         _bridgeAddress = bridgeAddress;
 
-        for (uint256 i = 0; i < initialTokenIDs.length; i++) {
-            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = initialContractAddresses[i];
-            _tokenContractAddressToTokenID[initialContractAddresses[i]] = initialTokenIDs[i];
+        for (uint256 i = 0; i < initialResourceIDs.length; i++) {
+            _resourceIDToTokenContractAddress[initialResourceIDs[i]] = initialContractAddresses[i];
+            _tokenContractAddressToResourceID[initialContractAddresses[i]] = initialResourceIDs[i];
         }
     }
 
@@ -49,16 +49,16 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function setTokenIDAndContractAddress(bytes memory tokenID, address contractAddress) public {
-        require(_tokenIDToTokenContractAddress[tokenID] == address(0), "tokenID already has a corresponding contract address");
+    function setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) public {
+        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
-        bytes memory currentTokenID = _tokenContractAddressToTokenID[contractAddress];
+        bytes memory currentResourceID = _tokenContractAddressToResourceID[contractAddress];
         bytes memory emptyBytes;
-        require(keccak256(abi.encodePacked((currentTokenID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding tokenID");
+        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding resourceID");
 
-        _tokenIDToTokenContractAddress[tokenID] = contractAddress;
-        _tokenContractAddressToTokenID[contractAddress] = tokenID;
+        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
+        _tokenContractAddressToResourceID[contractAddress] = resourceID;
     }
 
     // Make a deposit

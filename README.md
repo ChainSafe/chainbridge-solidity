@@ -87,14 +87,14 @@ destinationRecipientAddress           - @0x60 - END
 ```
 function executeDeposit(bytes memory data) public override _onlyBridge
 ```
-`bytes memory data` is laid out as following (since we know `len(tokenID) = 64`):
+`bytes memory data` is laid out as following (since we know `len(resourceID) = 64`):
 
 ```
 amount                      uint256   - @0x20 - 0x40
-tokenID                               - @0x40 - 0xC0
+resourceID                            - @0x40 - 0xC0
 -----------------------------------------------------
-tokenID len                 uint256   - @0x40 - 0x60
-tokenID                     bytes     - @0x60 - 0xA0
+resourceID len              uint256   - @0x40 - 0x60
+resourceID                  bytes     - @0x60 - 0xA0
 -----------------------------------------------------
 destinationRecipientAddress           - @0xA0 - END
 -----------------------------------------------------
@@ -103,9 +103,9 @@ destinationRecipientAddress     bytes   - @0xC0 - END
 
 ```
 
-### tokenID in ERC20Handler is different from other tokenIDs
+### resourceID in ERC20Handler is different from other resourceIDs
 
-`tokenID` is a `bytes` array laid out as follows:
+`resourceID` is a `bytes` array laid out as follows:
 
 ```
 chainID                     uint256   - @0x00 - 0x20
@@ -131,7 +131,7 @@ function deposit(
 originChainTokenAddress        address   - @0x20 - 0x40
 destinationChainTokenAddress   address   - @0x40 - 0x60
 destinationRecipientAddress    address   - @0x80 - 0xA0
-tokenID                        uint256   - @0xA0 - 0xC0
+resourceID                     uint256   - @0xA0 - 0xC0
 metaData                                 - @0xC0 - END
 ------------------------------------------------------
 metaData length declaration    uint256   - @0xC0 - 0xE0
@@ -148,7 +148,7 @@ function executeDeposit(bytes memory data) public override _onlyBridge
 ```
 destinationChainTokenAddress   address   - @0x20 - 0x40
 destinationRecipientAddress    address   - @0x40 - 0x60
-tokenID                        uint256   - @0x60 - 0x80
+resourceID                     uint256   - @0x60 - 0x80
 metaData                                 - @0x80 - END
 ------------------------------------------------------
 metaData length declaration    uint256   - @0x80 - 0xA0

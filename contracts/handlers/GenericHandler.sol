@@ -14,7 +14,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         bytes   _metaData;
     }
 
-    // DepositID => Deposit Record
+    // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
 
     modifier _onlyBridge() {
@@ -26,8 +26,8 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         _bridgeAddress = bridgeAddress;
     }
 
-    function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
-        return _depositRecords[depositID];
+    function getDepositRecord(uint256 depositNonce) public view returns (DepositRecord memory) {
+        return _depositRecords[depositNonce];
     }
 
     function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {

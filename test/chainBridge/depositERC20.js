@@ -32,9 +32,12 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     beforeEach(async () => {
         const AbiCoder = new Ethers.utils.AbiCoder();
 
-        RelayerInstance = await RelayerContract.new([], relayerThreshold);
+        await Promise.all([
+            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance)
+        ]);
+        
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20MintableInstance = await ERC20MintableContract.new();
 
         tokenID = AbiCoder.encode(['uint256', 'address'], [originChainID, OriginERC20MintableInstance.address]);
         initialTokenIDs = [tokenID];

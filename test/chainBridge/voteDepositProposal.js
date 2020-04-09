@@ -36,12 +36,15 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     let initialContractAddresses;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([
-            originChainRelayerAddress,
-            originChainRelayer2Address,
-            originChainRelayer3Address], relayerThreshold);
+        await Promise.all([
+            RelayerContract.new([
+                originChainRelayerAddress,
+                originChainRelayer2Address,
+                originChainRelayer3Address], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+        ]);
+            
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        DestinationERC20MintableInstance = await ERC20MintableContract.new();
 
         tokenID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
         initialTokenIDs = [tokenID];
@@ -57,13 +60,14 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
-        await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
-
-        await BridgeInstance.voteDepositProposal(
-            destinationChainID,
-            expectedDepositNonce,
-            depositDataHash,
-            { from: originChainRelayerAddress });
+        await Promise.all([
+            DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address),
+            BridgeInstance.voteDepositProposal(
+                destinationChainID,
+                expectedDepositNonce,
+                depositDataHash,
+                { from: originChainRelayerAddress })
+        ]);
     });
 
     it('[sanity] depositProposal should be created with expected values', async () => {

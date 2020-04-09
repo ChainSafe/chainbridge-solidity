@@ -16,8 +16,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     
     const destinationRelayerThreshold = 2;
     const destinationChainID = 2;
-    const destinationRelayer1Address = accounts[5];
-    const destinationRelayer2Address = accounts[6];
+    const destinationRelayer1Address = accounts[3];
+    const destinationRelayer2Address = accounts[4];
     
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];

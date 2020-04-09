@@ -19,15 +19,12 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     const originChainRelayer3Address = accounts[4];
     const depositerAddress = accounts[2];
     const destinationChainRecipientAddress = accounts[3];
-    const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 2;
 
     let RelayerInstance;
     let BridgeInstance;
-    let OriginERC20MintableInstance;
-    let OriginERC20HandlerInstance;
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
     let depositData = '';
@@ -35,14 +32,15 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     let tokenID = '';
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([
-            originChainRelayerAddress,
-            originChainRelayer2Address,
-            originChainRelayer3Address], relayerThreshold);
+        await Promise.all([
+            RelayerContract.new([
+                originChainRelayerAddress,
+                originChainRelayer2Address,
+                originChainRelayer3Address], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+        ]);
+            
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20MintableInstance = await ERC20MintableContract.new();
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        DestinationERC20MintableInstance = await ERC20MintableContract.new();
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         
         tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) + 
@@ -57,13 +55,14 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
-        await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
-
-        await BridgeInstance.voteDepositProposal(
-            destinationChainID,
-            expectedDepositNonce,
-            depositDataHash,
-            { from: originChainRelayerAddress });
+        await Promise.all([
+            DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address),
+            BridgeInstance.voteDepositProposal(
+                destinationChainID,
+                expectedDepositNonce,
+                depositDataHash,
+                { from: originChainRelayerAddress })
+        ]);
     });
 
     it('[sanity] depositProposal should be created with expected values', async () => {

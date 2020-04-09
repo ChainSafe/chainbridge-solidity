@@ -90,24 +90,24 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         originDepositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(resourceID)       (32 bytes)
-            destinationResourceID.substr(2) +                                                    // resourceID            (64 bytes) for now
+            destinationResourceID.substr(2) +                                               // resourceID            (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = '0x' +
-            Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
+            Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +       // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +                  // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);                           // recipientAddress      (?? bytes)
 
         destinationDepositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(resourceID)          (32 bytes)
-            originResourceID.substr(2) +                                                                       // resourceID               (64 bytes) for now
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexlify(depositerAddress).substr(2);                               // recipientAddress      (?? bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +      // Deposit Amount        (32 bytes) 
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +                 // len(resourceID)       (32 bytes)
+            originResourceID.substr(2) +                                                      // resourceID            (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +                 // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexlify(depositerAddress).substr(2);                                 // recipientAddress      (?? bytes)
             
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC20HandlerInstance.address + destinationDepositProposalData.substr(2));
     });

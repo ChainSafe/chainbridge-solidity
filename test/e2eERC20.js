@@ -26,11 +26,11 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let ERC20MintableInstance;
     let ERC20HandlerInstance;
 
-    let tokenID;
+    let resourceID;
     let depositData;
     let depositProposalData;
     let depositProposalDataHash;
-    let initialTokenIDs;
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -41,11 +41,11 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
-        tokenID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance.address]);
-        initialTokenIDs = [tokenID];
+        resourceID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance.address]);
+        initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         await Promise.all([
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
@@ -62,8 +62,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(tokenID)          (32 bytes)
-            tokenID.substr(2) +                                                             // tokenID               (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(resourceID)          (32 bytes)
+            resourceID.substr(2) +                                                          // resourceID               (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             

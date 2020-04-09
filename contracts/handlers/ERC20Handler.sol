@@ -12,20 +12,20 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
-        bytes   _tokenID;
+        bytes   _resourceID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
     }
 
-    // tokenID => token contract address
-    mapping (bytes => address) public _tokenIDToTokenContractAddress;
+    // resourceID => token contract address
+    mapping (bytes => address) public _resourceIDToTokenContractAddress;
 
-    // token contract address => tokenID
-    mapping (address => bytes) public _tokenContractAddressToTokenID;
+    // token contract address => resourceID
+    mapping (address => bytes) public _tokenContractAddressToResourceID;
 
-    // DepositID => Deposit Record
+    // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
 
     modifier _onlyBridge() {
@@ -33,15 +33,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress, bytes[] memory initialTokenIDs, address[] memory initialContractAddresses) public {
-        require(initialTokenIDs.length == initialContractAddresses.length,
-            "mismatch length between initialTokenIDs and initialContractAddresses");
+    constructor(address bridgeAddress, bytes[] memory initialResourceIDs, address[] memory initialContractAddresses) public {
+        require(initialResourceIDs.length == initialContractAddresses.length,
+            "mismatch length between initialResourceIDs and initialContractAddresses");
 
         _bridgeAddress = bridgeAddress;
 
-        for (uint256 i = 0; i < initialTokenIDs.length; i++) {
-            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = initialContractAddresses[i];
-            _tokenContractAddressToTokenID[initialContractAddresses[i]] = initialTokenIDs[i];
+        for (uint256 i = 0; i < initialResourceIDs.length; i++) {
+            _resourceIDToTokenContractAddress[initialResourceIDs[i]] = initialContractAddresses[i];
+            _tokenContractAddressToResourceID[initialContractAddresses[i]] = initialResourceIDs[i];
         }
     }
 
@@ -49,16 +49,16 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function setTokenIDAndContractAddress(bytes memory tokenID, address contractAddress) public {
-        require(_tokenIDToTokenContractAddress[tokenID] == address(0), "tokenID already has a corresponding contract address");
+    function setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) public {
+        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
-        bytes memory currentTokenID = _tokenContractAddressToTokenID[contractAddress];
+        bytes memory currentResourceID = _tokenContractAddressToResourceID[contractAddress];
         bytes memory emptyBytes;
-        require(keccak256(abi.encodePacked((currentTokenID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding tokenID");
+        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding resourceID");
 
-        _tokenIDToTokenContractAddress[tokenID] = contractAddress;
-        _tokenContractAddressToTokenID[contractAddress] = tokenID;
+        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
+        _tokenContractAddressToResourceID[contractAddress] = resourceID;
     }
 
     // Make a deposit
@@ -93,10 +93,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
 
-        bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
+        bytes memory resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
         bytes memory emptyBytes;
 
-        if (keccak256(abi.encodePacked((tokenID))) == keccak256(abi.encodePacked((emptyBytes)))) {
+        if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
             // The case where we have never seen this token address before
 
             // If we have never seen this token and someone was able to perform a deposit,
@@ -105,10 +105,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             IBridge bridge = IBridge(_bridgeAddress);
             uint chainID = bridge._chainID();
 
-            tokenID = createTokenID(chainID, originChainTokenAddress);
+            resourceID = createResourceID(chainID, originChainTokenAddress);
 
-             _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
-             _tokenIDToTokenContractAddress[tokenID] = originChainTokenAddress;
+             _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
+             _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
 
         }
 
@@ -117,7 +117,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
             destinationChainID,
-            tokenID,
+            resourceID,
             lenDestinationRecipientAddress,
             destinationRecipientAddress,
             depositer,
@@ -125,17 +125,17 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
+    function createResourceID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
         return abi.encode(chainID, originChainTokenAddress);
     }
 
     // execute a deposit
     // bytes memory data is laid out as following:
     // amount                      uint256   - @0x20 - 0x40
-    // tokenID                               - @0x40 - 0xC0
+    // resourceID                            - @0x40 - 0xC0
     // -----------------------------------------------------
-    // tokenID len                 uint256   - @0x40 - 0x60
-    // tokenID                     bytes     - @0x60 - 0xA0
+    // resourceID len              uint256   - @0x40 - 0x60
+    // resourceID                  bytes     - @0x60 - 0xA0
     // -----------------------------------------------------
     // destinationRecipientAddress           - @0xA0 - END
     // -----------------------------------------------------
@@ -143,7 +143,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // destinationRecipientAddress     bytes   - @0xC0 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
-        bytes  memory tokenID;
+        bytes  memory resourceID;
         bytes  memory destinationRecipientAddress;
         uint256 tokenChainID;
         address tokenAddress;
@@ -167,7 +167,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         }
 
-        tokenID = abi.encode(tokenChainID, tokenAddress);
+        resourceID = abi.encode(tokenChainID, tokenAddress);
 
         bytes20 recipientAddress;
         assembly {
@@ -175,7 +175,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
 
-        if (_tokenIDToTokenContractAddress[tokenID] != address(0)) {
+        if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
             // token exists
             IBridge bridge = IBridge(_bridgeAddress);
             uint256 chainID = bridge._chainID();
@@ -192,8 +192,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             ERC20Mintable erc20 = new ERC20Mintable();
             
             // Create a relationship between the originAddress and the synthetic
-            _tokenIDToTokenContractAddress[tokenID] = address(erc20);
-            _tokenContractAddressToTokenID[address(erc20)] = tokenID;
+            _resourceIDToTokenContractAddress[resourceID] = address(erc20);
+            _tokenContractAddressToResourceID[address(erc20)] = resourceID;
 
             mintERC20(address(erc20), address(recipientAddress), amount);
         }

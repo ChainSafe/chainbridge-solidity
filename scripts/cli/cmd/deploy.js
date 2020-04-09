@@ -18,20 +18,15 @@ const deployCmd = new Command("deploy")
     .option('--relayers <value>', 'List of initial relayers', splitCommaList, constants.relayerAddresses)
     .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async (args, a) => {
-        try {
-            setupParentArgs(args, args.parent)
-            await deployRelayerContract(args);
-            await deployBridgeContract(args);
-            await deployERC20(args)
-            await deployERC20Handler(args);
-            await deployERC721(args)
-            await deployERC721Handler(args)
-            await deployCentrifugeHandler(args);
-            displayLog(args)
-        } catch (e) {
-            console.log(e)
-            process.exit(1)
-        }
+        setupParentArgs(args, args.parent)
+        await deployRelayerContract(args);
+        await deployBridgeContract(args);
+        await deployERC20(args)
+        await deployERC20Handler(args);
+        await deployERC721(args)
+        await deployERC721Handler(args)
+        await deployCentrifugeHandler(args);
+        displayLog(args)
     })
 
 

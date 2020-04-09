@@ -13,15 +13,10 @@ const mintCmd = new Command("mint")
     .option('--value <amount>', 'Amount to mint', 100)
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .action(async function (args) {
-        try {
-            setupParentArgs(args, args.parent.parent)
-            const erc20Instance = new ethers.Contract(args.erc20Address, ERC20MintableContract.abi, args.wallet);
-            await erc20Instance.mint(args.wallet.address, args.value);
-            console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
-        } catch (e) {
-            console.log({e})
-            process.exit(1)
-        }
+        setupParentArgs(args, args.parent.parent)
+        const erc20Instance = new ethers.Contract(args.erc20Address, ERC20MintableContract.abi, args.wallet);
+        await erc20Instance.mint(args.wallet.address, args.value);
+        console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
     })
 
 const transferCmd = new Command("transfer")
@@ -33,46 +28,41 @@ const transferCmd = new Command("transfer")
     .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
-        try {
-            setupParentArgs(args, args.parent.parent)
+        setupParentArgs(args, args.parent.parent)
 
-            // Instances
-            const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
-            const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
+        // Instances
+        const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
+        const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
 
-            // Log pre balance
-            const depositerPreBal = await erc20Instance.balanceOf(args.wallet.address);
-            const handlerPreBal = await erc20Instance.balanceOf(args.erc20HandlerAddress);
-            console.log(`[ERC20 Transfer] Initial Depositer token balance: ${depositerPreBal.toNumber()} Address: ${args.wallet.address}`);
-            console.log(`[ERC20 Transfer] Initial Handler token balance: ${handlerPreBal.toNumber()} Address: ${args.erc20HandlerAddress}`);
+        // Log pre balance
+        const depositerPreBal = await erc20Instance.balanceOf(args.wallet.address);
+        const handlerPreBal = await erc20Instance.balanceOf(args.erc20HandlerAddress);
+        console.log(`[ERC20 Transfer] Initial Depositer token balance: ${depositerPreBal.toNumber()} Address: ${args.wallet.address}`);
+        console.log(`[ERC20 Transfer] Initial Handler token balance: ${handlerPreBal.toNumber()} Address: ${args.erc20HandlerAddress}`);
 
-            // Approve tokens
-            await erc20Instance.approve(args.erc20HandlerAddress, args.value);
-            console.log(`[ERC20 Transfer] Approved ${args.erc20HandlerAddress} to spend ${args.value} tokens from ${args.wallet.address}!`);
+        // Approve tokens
+        await erc20Instance.approve(args.erc20HandlerAddress, args.value);
+        console.log(`[ERC20 Transfer] Approved ${args.erc20HandlerAddress} to spend ${args.value} tokens from ${args.wallet.address}!`);
 
-            const data = '0x' +
-                ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
-                ethers.utils.hexZeroPad(ethers.utils.hexlify(args.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
-                ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
-                ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+        const data = '0x' +
+            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(args.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+            ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
 
-            // Make the deposit
-            await bridgeInstance.deposit(
-                args.dest, // destination chain id
-                args.erc20HandlerAddress,
-                data,
-            );
-            console.log("[ERC20 Transfer] Created deposit to initiate transfer!");
+        // Make the deposit
+        await bridgeInstance.deposit(
+            args.dest, // destination chain id
+            args.erc20HandlerAddress,
+            data,
+        );
+        console.log("[ERC20 Transfer] Created deposit to initiate transfer!");
 
-            // Check the balance after the deposit
-            const depositerPostBal = await erc20Instance.balanceOf(args.wallet.address);
-            const handlerPostBal = await erc20Instance.balanceOf(args.erc20HandlerAddress);
-            console.log("[ERC20 Transfer] New Depositer token balance: ", depositerPostBal.toNumber());
-            console.log("[ERC20 Transfer] New Handler token balance: ", handlerPostBal.toNumber());
-        } catch (e) {
-            console.log({e});
-            process.exit(1)
-        }
+        // Check the balance after the deposit
+        const depositerPostBal = await erc20Instance.balanceOf(args.wallet.address);
+        const handlerPostBal = await erc20Instance.balanceOf(args.erc20HandlerAddress);
+        console.log("[ERC20 Transfer] New Depositer token balance: ", depositerPostBal.toNumber());
+        console.log("[ERC20 Transfer] New Handler token balance: ", handlerPostBal.toNumber());
     })
 
 const balanceCmd = new Command("balance")
@@ -80,16 +70,11 @@ const balanceCmd = new Command("balance")
     .option(`--address <address>`, 'Address to query', constants.deployerAddress)
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .action(async function(args) {
-        try {
-            setupParentArgs(args, args.parent.parent)
+        setupParentArgs(args, args.parent.parent)
 
-            const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
-            const balance = await erc20Instance.balanceOf(args.address)
-            console.log(`[ERC20 Balance] Account ${args.address} has a balance of ${balance}` )
-        } catch (e) {
-            console.log({e});
-            process.exit(1)
-        }
+        const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
+        const balance = await erc20Instance.balanceOf(args.address)
+        console.log(`[ERC20 Balance] Account ${args.address} has a balance of ${balance}` )
     })
 
 const erc20Cmd = new Command("erc20")

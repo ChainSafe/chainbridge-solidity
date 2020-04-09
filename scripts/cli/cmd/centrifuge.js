@@ -12,17 +12,12 @@ const getHashCmd = new Command('getHash')
     .requiredOption('--hash <value>', 'A hash to lookup', '0x0000000000000000000000000000000000000000000000000000000000000001')
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .action(async function (args) {
-        try {
-            setupParentArgs(args, args.parent.parent);
-            const centHandler = new ethers.Contract(args.centAddress, CentrifugeHandlerContract.abi, args.wallet);
-            const res = await centHandler.getHash(ethers.utils.hexZeroPad(args.hash, 32));
-            console.log(`The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
-        } catch (e) {
-            console.log({e});
-            process.exit(1)
-        }
-    })
+        setupParentArgs(args, args.parent.parent);
+        const centHandler = new ethers.Contract(args.centAddress, CentrifugeHandlerContract.abi, args.wallet);
+        const res = await centHandler.getHash(ethers.utils.hexZeroPad(args.hash, 32));
+        console.log(`The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
 
+    })
 
 const transferHashCmd = new Command('transferHash')
     .description('Submits a hash as a deposit')
@@ -31,21 +26,16 @@ const transferHashCmd = new Command('transferHash')
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
-        try {
-            setupParentArgs(args, args.parent.parent)
-            const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
+        setupParentArgs(args, args.parent.parent)
+        const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
 
-            const hash = ethers.utils.hexZeroPad(args.hash, 32)
-            let tx = await bridgeInstance.voteDepositProposal(
-                args.destId,
-                args.centAddress,
-                hash
-            )
-            console.log(`Proposal created, hash: ${tx.hash}`);
-        } catch (e) {
-            console.log({e});
-            process.exit(1)
-        }
+        const hash = ethers.utils.hexZeroPad(args.hash, 32)
+        let tx = await bridgeInstance.voteDepositProposal(
+            args.destId,
+            args.centAddress,
+            hash
+        )
+        console.log(`Proposal created, hash: ${tx.hash}`);
     })
 
 const centCmd = new Command("cent")

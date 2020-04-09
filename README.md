@@ -91,7 +91,8 @@ Mint default erc721 tokens.
 $ cb-sol-cli erc721 mint
 
 Options:
-  --erc721Address <address>  Custom erc721 contract
+  --erc721Address <address>  Custom erc721 contract (default: "0x21605f71845f372A9ed84253d2D024B7B10999f4")
+  --id <id>                  ERC721 token id (default: 1)
 ```
 
 #### - `transfer`

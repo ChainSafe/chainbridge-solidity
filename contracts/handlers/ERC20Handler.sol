@@ -33,14 +33,33 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress) public {
+    constructor(address bridgeAddress, bytes[] memory initialTokenIDs, address[] memory initialContractAddresses) public {
+        require(initialTokenIDs.length == initialContractAddresses.length,
+            "mismatch length between initialTokenIDs and initialContractAddresses");
+
         _bridgeAddress = bridgeAddress;
+
+        for (uint256 i = 0; i < initialTokenIDs.length; i++) {
+            _tokenIDToTokenContractAddress[initialTokenIDs[i]] = initialContractAddresses[i];
+            _tokenContractAddressToTokenID[initialContractAddresses[i]] = initialTokenIDs[i];
+        }
     }
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
     }
 
+    function setTokenIDAndContractAddress(bytes memory tokenID, address contractAddress) public {
+        require(_tokenIDToTokenContractAddress[tokenID] == address(0), "tokenID already has a corresponding contract address");
+
+        bytes memory currentTokenID = _tokenContractAddressToTokenID[contractAddress];
+        bytes memory emptyBytes;
+        require(keccak256(abi.encodePacked((currentTokenID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding tokenID");
+
+        _tokenIDToTokenContractAddress[tokenID] = contractAddress;
+        _tokenContractAddressToTokenID[contractAddress] = tokenID;
+    }
 
     // Make a deposit
     // bytes memory data is laid out as following:
@@ -166,7 +185,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
                 releaseERC20(tokenAddress, address(recipientAddress), amount);
             } else {
                 // token is not from chain
-
                 mintERC20(tokenAddress, address(recipientAddress), amount);
             }
         } else {

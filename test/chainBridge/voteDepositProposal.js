@@ -12,6 +12,8 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (accounts) => {
+    const AbiCoder = new Ethers.utils.AbiCoder();
+    
     const originChainID = 1;
     const destinationChainID = 1;
     const originChainRelayerAddress = accounts[0];
@@ -19,51 +21,53 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     const originChainRelayer3Address = accounts[4];
     const depositerAddress = accounts[2];
     const destinationChainRecipientAddress = accounts[3];
-    const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 2;
 
     let RelayerInstance;
     let BridgeInstance;
-    let OriginERC20MintableInstance;
-    let OriginERC20HandlerInstance;
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
     let depositData = '';
     let depositDataHash = '';
     let tokenID = '';
+    let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([
-            originChainRelayerAddress,
-            originChainRelayer2Address,
-            originChainRelayer3Address], relayerThreshold);
+        await Promise.all([
+            RelayerContract.new([
+                originChainRelayerAddress,
+                originChainRelayer2Address,
+                originChainRelayer3Address], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+        ]);
+            
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20MintableInstance = await ERC20MintableContract.new();
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        DestinationERC20MintableInstance = await ERC20MintableContract.new();
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        
-        tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainID), 32).substr(2) + 
-                  Ethers.utils.hexZeroPad(Ethers.utils.hexlify(DestinationERC20MintableInstance.address), 32).substr(2);
 
-        
+        tokenID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
+        initialTokenIDs = [tokenID];
+        initialContractAddresses = [DestinationERC20MintableInstance.address];
+
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+
         depositData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID +
+            tokenID.substr(4) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
-        await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
-
-        await BridgeInstance.voteDepositProposal(
-            destinationChainID,
-            expectedDepositNonce,
-            depositDataHash,
-            { from: originChainRelayerAddress });
+        await Promise.all([
+            DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address),
+            BridgeInstance.voteDepositProposal(
+                destinationChainID,
+                expectedDepositNonce,
+                depositDataHash,
+                { from: originChainRelayerAddress })
+        ]);
     });
 
     it('[sanity] depositProposal should be created with expected values', async () => {

@@ -12,6 +12,8 @@ Requires `nodejs` and `npm`.
 
 `PORT=<port> SILENT=<bool> make start-ganache`: Starts a ganache instance, default `PORT=8545 SILENT=false`
 
+`QUIET=<bool> make start-geth`: Starts a geth instance with test keys
+
 `PORT=<port> make deploy`: Deploys all contract instances, default `PORT=8545`
 
 `make test`: Runs truffle tests.
@@ -22,25 +24,41 @@ Requires `nodejs` and `npm`.
 
 This is a small CLI application to deploy the contracts and interact with the chain. To install run `make install-cli`.
 
+#### Global Flags
+```
+-h, --host <host> default: localhost (127.0.0.1)
+-p, --port <port> default: 8545
+```
 #### deploy
 
 Deploy contracts with configurable constructor arguments. Relayers will be added from default keys (max 5).
 ```
-cb-sol-cli deploy --port <port> --validator-threshold <n> --relayers <n>
+cb-sol-cli deploy --validator-threshold <n> --relayers <n>
 ```
 
 #### mint
 
 Mint default erc20 tokens.
 ```
-cb-sol-cli mint --port <port> --value <n>
+cb-sol-cli mint --value <n>
 ```
 
 #### transfer
 
 Initiate a transfer of erc20 to some destination chain.
 ```
-cb-sol-cli transfer --port <port> --value <n> --dest <n>
+cb-sol-cli transfer --value <n> --dest <n> --recipient <addr>
+```
+
+#### Transfering and verifying a Centrifuge hash
+
+Initiate a transfer of a hash to some destination chain.
+```
+cb-sol-cli sendCentHash --hash <hash> --originChain <chainId> --destChain <chianId>
+```
+Verify the hash was deposited
+```
+cb-sol-cli getCentHash --hash <hash> --centAddress <address>
 ```
 
 # ChainBridge-Solidity Data Layout
@@ -69,14 +87,14 @@ destinationRecipientAddress           - @0x60 - END
 ```
 function executeDeposit(bytes memory data) public override _onlyBridge
 ```
-`bytes memory data` is laid out as following (since we know `len(tokenID) = 64`):
+`bytes memory data` is laid out as following (since we know `len(resourceID) = 64`):
 
 ```
 amount                      uint256   - @0x20 - 0x40
-tokenID                               - @0x40 - 0xC0
+resourceID                            - @0x40 - 0xC0
 -----------------------------------------------------
-tokenID len                 uint256   - @0x40 - 0x60
-tokenID                     bytes     - @0x60 - 0xA0
+resourceID len              uint256   - @0x40 - 0x60
+resourceID                  bytes     - @0x60 - 0xA0
 -----------------------------------------------------
 destinationRecipientAddress           - @0xA0 - END
 -----------------------------------------------------
@@ -85,9 +103,9 @@ destinationRecipientAddress     bytes   - @0xC0 - END
 
 ```
 
-### tokenID in ERC20Handler is different from other tokenIDs
+### resourceID in ERC20Handler is different from other resourceIDs
 
-`tokenID` is a `bytes` array laid out as follows:
+`resourceID` is a `bytes` array laid out as follows:
 
 ```
 chainID                     uint256   - @0x00 - 0x20
@@ -113,7 +131,7 @@ function deposit(
 originChainTokenAddress        address   - @0x20 - 0x40
 destinationChainTokenAddress   address   - @0x40 - 0x60
 destinationRecipientAddress    address   - @0x80 - 0xA0
-tokenID                        uint256   - @0xA0 - 0xC0
+resourceID                     uint256   - @0xA0 - 0xC0
 metaData                                 - @0xC0 - END
 ------------------------------------------------------
 metaData length declaration    uint256   - @0xC0 - 0xE0
@@ -130,7 +148,7 @@ function executeDeposit(bytes memory data) public override _onlyBridge
 ```
 destinationChainTokenAddress   address   - @0x20 - 0x40
 destinationRecipientAddress    address   - @0x40 - 0x60
-tokenID                        uint256   - @0x60 - 0x80
+resourceID                     uint256   - @0x60 - 0x80
 metaData                                 - @0x80 - END
 ------------------------------------------------------
 metaData length declaration    uint256   - @0x80 - 0xA0

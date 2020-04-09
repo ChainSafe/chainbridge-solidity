@@ -79,8 +79,7 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
+            return event.destinationChainID.toNumber() === destinationChainID &&
                 event.originChainHandlerAddress === CentrifugeAssetHandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositID
         });

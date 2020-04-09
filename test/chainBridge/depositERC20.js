@@ -25,20 +25,28 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     let BridgeInstance;
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
-    let DestinationERC20MintableInstance;
-    let DestinationERC20HandlerInstance;
     let depositData;
+    let initialTokenIDs;
+    let initialContractAddresses;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], relayerThreshold);
+        const AbiCoder = new Ethers.utils.AbiCoder();
+
+        await Promise.all([
+            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance)
+        ]);
+        
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        OriginERC20MintableInstance = await ERC20MintableContract.new();
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        DestinationERC20MintableInstance = await ERC20MintableContract.new();
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+
+        tokenID = AbiCoder.encode(['uint256', 'address'], [originChainID, OriginERC20MintableInstance.address]);
+        initialTokenIDs = [tokenID];
+        initialContractAddresses = [OriginERC20MintableInstance.address];
+
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
-        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
+        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
@@ -54,7 +62,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
     it("[sanity] test OriginERC20HandlerInstance.address' allowance", async () => {
         const originChainHandlerAllowance = await OriginERC20MintableInstance.allowance(depositerAddress, OriginERC20HandlerInstance.address);
-        assert.strictEqual(originChainHandlerAllowance.toNumber(), depositAmount);
+        assert.strictEqual(originChainHandlerAllowance.toNumber(), depositAmount * 2);
     });
 
     it('ERC20 deposit can be made', async () => {
@@ -106,7 +114,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     });
 
     it('Deposit event is fired with expected value', async () => {
-        const depositTx = await BridgeInstance.deposit(
+        let depositTx = await BridgeInstance.deposit(
             destinationChainID,
             OriginERC20HandlerInstance.address,
             depositData,
@@ -114,10 +122,22 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
+            return event.destinationChainID.toNumber() === destinationChainID &&
                 event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
+        });
+
+        depositTx = await BridgeInstance.deposit(
+            destinationChainID,
+            OriginERC20HandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        );
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationChainID.toNumber() === destinationChainID &&
+                event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
+                event.depositNonce.toNumber() === expectedDepositNonce + 1
         });
     });
 });

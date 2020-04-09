@@ -5,7 +5,6 @@
 
 set -e
 
-contract_binding_path="on-chain/evm-contracts/"
 base_path="./build/bindings"
 BIN_DIR="$base_path/bin"
 ABI_DIR="$base_path/abi"

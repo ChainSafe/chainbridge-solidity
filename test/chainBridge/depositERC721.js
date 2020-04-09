@@ -29,12 +29,18 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     let depositData;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], 0);
+        await Promise.all([
+            RelayerContract.new([], 0).then(instance => RelayerInstance = instance),
+            ERC721MintableContract.new().then(instance => OriginERC721MintableInstance = instance),
+            ERC721MintableContract.new().then(instance => DestinationERC721MintableInstance = instance)
+        ]);
+
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
-        OriginERC721MintableInstance = await ERC721MintableContract.new();
-        OriginERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
-        DestinationERC721MintableInstance = await ERC721MintableContract.new();
-        DestinationERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
+
+        await Promise.all([
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => DestinationERC721HandlerInstance = instance)
+        ]);
 
         await OriginERC721MintableInstance.safeMint(depositerAddress, originChainTokenID, genericBytes);
         await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositerAddress });
@@ -124,8 +130,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
+            return event.destinationChainID.toNumber() === destinationChainID &&
                 event.originChainHandlerAddress === OriginERC721HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });

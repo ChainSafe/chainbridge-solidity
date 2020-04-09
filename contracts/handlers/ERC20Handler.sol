@@ -12,7 +12,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
-        bytes   _tokenID;
+        bytes   _resourceID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
@@ -20,10 +20,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // resourceID => token contract address
-    mapping (bytes => address) public _tokenIDToTokenContractAddress;
+    mapping (bytes => address) public _resourceIDToTokenContractAddress;
 
     // token contract address => resourceID
-    mapping (address => bytes) public _tokenContractAddressToTokenID;
+    mapping (address => bytes) public _tokenContractAddressToResourceID;
 
     // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
@@ -74,7 +74,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
 
-        bytes memory resourceID = _tokenContractAddressToTokenID[originChainTokenAddress];
+        bytes memory resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
         bytes memory emptyBytes;
 
         if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
@@ -86,10 +86,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             IBridge bridge = IBridge(_bridgeAddress);
             uint chainID = bridge._chainID();
 
-            resourceID = createTokenID(chainID, originChainTokenAddress);
+            resourceID = createResourceID(chainID, originChainTokenAddress);
 
-             _tokenContractAddressToTokenID[originChainTokenAddress] = resourceID;
-             _tokenIDToTokenContractAddress[resourceID] = originChainTokenAddress;
+             _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
+             _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
 
         }
 
@@ -106,7 +106,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
+    function createResourceID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
         return abi.encode(chainID, originChainTokenAddress);
     }
 
@@ -156,7 +156,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
 
-        if (_tokenIDToTokenContractAddress[resourceID] != address(0)) {
+        if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
             // token exists
             IBridge bridge = IBridge(_bridgeAddress);
             uint256 chainID = bridge._chainID();
@@ -174,8 +174,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             ERC20Mintable erc20 = new ERC20Mintable();
             
             // Create a relationship between the originAddress and the synthetic
-            _tokenIDToTokenContractAddress[resourceID] = address(erc20);
-            _tokenContractAddressToTokenID[address(erc20)] = resourceID;
+            _resourceIDToTokenContractAddress[resourceID] = address(erc20);
+            _tokenContractAddressToResourceID[address(erc20)] = resourceID;
 
             mintERC20(address(erc20), address(recipientAddress), amount);
         }

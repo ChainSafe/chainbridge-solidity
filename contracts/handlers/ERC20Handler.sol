@@ -84,7 +84,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // it follows that the token is native to the current chain.
 
             IBridge bridge = IBridge(_bridgeAddress);
-            uint chainID = bridge._chainID();
+            uint8 chainID = uint8(bridge._chainID());
 
             tokenID = createTokenID(chainID, originChainTokenAddress);
 
@@ -106,49 +106,37 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
-        return abi.encode(chainID, originChainTokenAddress);
+    function createTokenID(uint8 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
+        return abi.encodePacked(chainID, originChainTokenAddress);
     }
 
-    // execute a deposit
-    // bytes memory data is laid out as following:
-    // amount                      uint256   - @0x20 - 0x40
-    // tokenID                               - @0x40 - 0xC0
-    // -----------------------------------------------------
-    // tokenID len                 uint256   - @0x40 - 0x60
-    // tokenID                     bytes     - @0x60 - 0xA0
-    // -----------------------------------------------------
-    // destinationRecipientAddress           - @0xA0 - END
-    // -----------------------------------------------------
-    // destinationRecipientAddress len uint256 - @0xA0 - 0xC0
-    // destinationRecipientAddress     bytes   - @0xC0 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
         bytes  memory tokenID;
         bytes  memory destinationRecipientAddress;
-        uint256 tokenChainID;
+        uint8   tokenChainID;
         address tokenAddress;
 
 
         assembly {
             amount                      := mload(add(data, 0x20))
-            tokenChainID                := mload(add(data, 0x60))
-            tokenAddress                := mload(add(data, 0x80))
+            tokenChainID                := mload(add(data, 0x40))
+            tokenAddress                := mload(add(data, 0x41))
 
             destinationRecipientAddress         := mload(0x40)
-            let lenDestinationRecipientAddress  := mload(add(0xA0, data))
+            let lenDestinationRecipientAddress  := mload(add(0x61, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
             
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
                 destinationRecipientAddress,        // copy to destinationRecipientAddress
-                0xC4,                               // copy from calldata @ 0x84
-                sub(calldatasize(), 0xC4)           // copy size to the end of calldata
+                0x85,                               // copy from calldata @ 0x84
+                sub(calldatasize(), 0x85)           // copy size to the end of calldata
             )
 
         }
 
-        tokenID = abi.encode(tokenChainID, tokenAddress);
+        tokenID = createTokenID(tokenChainID, tokenAddress);
 
         bytes20 recipientAddress;
         assembly {

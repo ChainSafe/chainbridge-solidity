@@ -9,7 +9,7 @@ import "./interfaces/IBridge.sol";
 contract Bridge {
     using SafeMath for uint;
 
-    uint256                  public _chainID;
+    uint8                    public _chainID;
     IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
@@ -80,7 +80,7 @@ contract Bridge {
         _;
     }
 
-    constructor (uint256 chainID, address relayerContract, uint initialRelayerThreshold) public {
+    constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;

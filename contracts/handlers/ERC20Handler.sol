@@ -12,7 +12,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     struct DepositRecord {
         address _originChainTokenAddress;
         uint    _destinationChainID;
-        bytes   _tokenID;
+        bytes32 _tokenID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
@@ -20,10 +20,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // tokenID => token contract address
-    mapping (bytes => address) public _tokenIDToTokenContractAddress;
+    mapping (bytes32 => address) public _tokenIDToTokenContractAddress;
 
     // token contract address => tokenID
-    mapping (address => bytes) public _tokenContractAddressToTokenID;
+    mapping (address => bytes32) public _tokenContractAddressToTokenID;
 
     // DepositID => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
@@ -61,7 +61,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
             amount                         := mload(add(data, 0x40))
-
             destinationRecipientAddress     := mload(0x40)
             lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
@@ -74,7 +73,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
 
-        bytes memory tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
+        bytes32      tokenID = _tokenContractAddressToTokenID[originChainTokenAddress];
         bytes memory emptyBytes;
 
         if (keccak256(abi.encodePacked((tokenID))) == keccak256(abi.encodePacked((emptyBytes)))) {
@@ -86,7 +85,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             IBridge bridge = IBridge(_bridgeAddress);
             uint8 chainID = uint8(bridge._chainID());
 
-            tokenID = createTokenID(chainID, originChainTokenAddress);
+            tokenID = createTokenID(originChainTokenAddress,chainID);
 
              _tokenContractAddressToTokenID[originChainTokenAddress] = tokenID;
              _tokenIDToTokenContractAddress[tokenID] = originChainTokenAddress;
@@ -106,41 +105,45 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createTokenID(uint8 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
-        return abi.encodePacked(chainID, originChainTokenAddress);
+    function createTokenID(address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
+        bytes memory encodedTokenID = abi.encode(abi.encodePacked(originChainTokenAddress, chainID));
+        bytes32 tokenID;
+
+        assembly {
+            tokenID := mload(add(encodedTokenID, 0x20))
+        }
+
+        return tokenID;
     }
 
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
-        bytes  memory tokenID;
+        bytes32       tokenID;
         bytes  memory destinationRecipientAddress;
-        uint8   tokenChainID;
-        address tokenAddress;
 
 
         assembly {
             amount                      := mload(add(data, 0x20))
-            tokenChainID                := mload(add(data, 0x40))
-            tokenAddress                := mload(add(data, 0x41))
+            tokenID                     := mload(add(data, 0x40))
 
             destinationRecipientAddress         := mload(0x40)
-            let lenDestinationRecipientAddress  := mload(add(0x61, data))
+            let lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
             
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
                 destinationRecipientAddress,        // copy to destinationRecipientAddress
-                0x85,                               // copy from calldata @ 0x84
-                sub(calldatasize(), 0x85)           // copy size to the end of calldata
+                0x84,                               // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84)           // copy size to the end of calldata
             )
 
         }
 
-        tokenID = createTokenID(tokenChainID, tokenAddress);
-
         bytes20 recipientAddress;
+        bytes20 tokenAddress;
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+            tokenAddress := mload(add(data, 0x4B))
         }
 
 
@@ -149,13 +152,13 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             IBridge bridge = IBridge(_bridgeAddress);
             uint256 chainID = bridge._chainID();
 
-            if (tokenChainID == chainID) {
+            if (uint8(tokenID[31]) == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, address(recipientAddress), amount);
+                releaseERC20(address(tokenAddress), address(recipientAddress), amount);
             } else {
                 // token is not from chain
 
-                mintERC20(tokenAddress, address(recipientAddress), amount);
+                mintERC20(address(tokenAddress), address(recipientAddress), amount);
             }
         } else {
             // Token doesn't exist

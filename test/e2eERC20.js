@@ -45,8 +45,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
 
-        tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(chainID), 1).substr(2) + 
-                  Ethers.utils.hexZeroPad(Ethers.utils.hexlify(ERC20MintableInstance.address), 32).substr(2);
+        tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(chainID).substr(2) + Ethers.utils.hexlify(ERC20MintableInstance.address).substr(2), 32);
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
@@ -56,7 +55,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            tokenID +                                                                       // tokenID               (33 bytes) for now
+            tokenID +                                                                       // tokenID               (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             

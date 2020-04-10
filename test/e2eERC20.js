@@ -47,6 +47,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         tokenID = Ethers.utils.hexZeroPad(Ethers.utils.hexlify(chainID).substr(2) + Ethers.utils.hexlify(ERC20MintableInstance.address).substr(2), 32);
 
+        console.log(tokenID);
+
         depositData = '0x' +
             Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)

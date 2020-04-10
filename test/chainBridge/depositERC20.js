@@ -39,8 +39,8 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
 
-        tokenID = AbiCoder.encode(['uint256', 'address'], [originChainID, OriginERC20MintableInstance.address]);
-        initialTokenIDs = [tokenID];
+        resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
+        initialTokenIDs = [ResourceID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
 
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);

@@ -44,7 +44,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         ]);
 
         initialTokenIDs = [
-            AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address])
+            Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
@@ -180,7 +180,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         ]);
         
         initialTokenIDs = [
-            AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address])
+            Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 

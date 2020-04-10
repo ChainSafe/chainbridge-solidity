@@ -53,7 +53,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes memory emptyBytes;
+        bytes32 emptyBytes;
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 

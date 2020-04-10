@@ -49,13 +49,13 @@ contract('ERC20Handler - [constructor]', async () => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
         
         for (const resourceID of initialResourceIDs) {
-            const tokenAddress = '0x' + resourceID.substr(90);
+            const tokenAddress = `0x` + resourceID.substr(24,40);
             
             const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(resourceID);
-            assert.strictEqual(Ethers.utils.getAddress(tokenAddress), retrievedTokenAddress);
+            assert.strictEqual(Ethers.utils.getAddress(tokenAddress).toLowerCase(), retrievedTokenAddress.toLowerCase());
 
             const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(tokenAddress);
-            assert.strictEqual(resourceID, retrievedResourceID);
+            assert.strictEqual(resourceID.toLowerCase(), retrievedResourceID.toLowerCase());
         }
     });
 });

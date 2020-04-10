@@ -126,14 +126,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
         bytes memory encodedResourceID = abi.encode(abi.encodePacked(originChainTokenAddress, chainID));
-        bytes32 ResourceID;
+        bytes32 resourceID;
 
         assembly {
-            ResourceID := mload(add(encodedResourceID, 0x20))
+            resourceID := mload(add(encodedResourceID, 0x20))
         }
 
-        return ResourceID;
+        return resourceID;
     }
+
 
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
@@ -143,7 +144,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         assembly {
             amount                      := mload(add(data, 0x20))
-            resourceID                     := mload(add(data, 0x40))
+            resourceID                  := mload(add(data, 0x40))
 
             destinationRecipientAddress         := mload(0x40)
             let lenDestinationRecipientAddress  := mload(add(0x60, data))
@@ -169,7 +170,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
             // token exists
             IBridge bridge = IBridge(_bridgeAddress);
-            uint256 chainID = bridge._chainID();
+            uint8 chainID = bridge._chainID();
 
             if (uint8(resourceID[31]) == chainID) {
                 // token is from same chain

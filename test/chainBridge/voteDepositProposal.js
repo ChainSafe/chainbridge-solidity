@@ -15,7 +15,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     const AbiCoder = new Ethers.utils.AbiCoder();
     
     const originChainID = 1;
-    const destinationChainID = 1;
+    const destinationChainID = 2;
     const originChainRelayerAddress = accounts[0];
     const originChainRelayer2Address = accounts[3];
     const originChainRelayer3Address = accounts[4];
@@ -44,9 +44,9 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
         ]);
             
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
 
-        resourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
+        resourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
 
         initialResourceIDs = [resourceID];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
@@ -63,7 +63,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         await Promise.all([
             DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address),
             BridgeInstance.voteDepositProposal(
-                destinationChainID,
+                originChainID,
                 expectedDepositNonce,
                 depositDataHash,
                 { from: originChainRelayerAddress })
@@ -79,13 +79,13 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         };
 
         const depositProposal = await BridgeInstance.getDepositProposal(
-            destinationChainID, expectedDepositNonce);
+            originChainID, expectedDepositNonce);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
     });
 
     it('should vote on depositProposal successfully', async () => {
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
@@ -94,7 +94,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it('should revert because depositerAddress is not a relayer', async () => {
         await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: depositerAddress }
@@ -103,14 +103,14 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it("depositProposal shouldn't be voted on if it has a Passed status", async () => {
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
         ));
 
         await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer3Address }
@@ -121,7 +121,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
 
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
@@ -135,7 +135,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
         ));
 
         await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer3Address }
@@ -145,7 +145,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it("relayer shouldn't be able to vote on a depositProposal more than once", async () => {
         await TruffleAssert.reverts(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayerAddress }
@@ -154,20 +154,20 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it("Relayer's vote should be recorded correctly - yes vote", async () => {
         const depositProposalBeforeSecondVote = await BridgeInstance.getDepositProposal(
-            destinationChainID, expectedDepositNonce);
+            originChainID, expectedDepositNonce);
         assert.strictEqual(depositProposalBeforeSecondVote._yesVotes.length, 1);
         assert.deepEqual(depositProposalBeforeSecondVote._yesVotes, [originChainRelayerAddress]);
         assert.strictEqual(depositProposalBeforeSecondVote._noVotes.length, 0);
 
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
         ));
 
         const depositProposalAfterSecondVote = await BridgeInstance.getDepositProposal(
-            destinationChainID, expectedDepositNonce);
+            originChainID, expectedDepositNonce);
         assert.strictEqual(depositProposalAfterSecondVote._yesVotes.length, 2);
         assert.deepEqual(depositProposalAfterSecondVote._yesVotes, [originChainRelayerAddress, originChainRelayer2Address]);
         assert.strictEqual(depositProposalAfterSecondVote._noVotes.length, 0);
@@ -175,33 +175,33 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it("Relayer's address should be marked as voted for proposal", async () => {
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
         ));
 
         const hasVoted = await BridgeInstance._hasVotedOnDepositProposal.call(
-            destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+            originChainID, expectedDepositNonce, originChainRelayerAddress);
         assert.isTrue(hasVoted);
     });
 
     it('Proposal status should be updated to passed after numYes >= relayerThreshold', async () => {
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
         ));
 
         const depositProposal = await BridgeInstance._depositProposals(
-            destinationChainID, expectedDepositNonce);
+            originChainID, expectedDepositNonce);
         assert.strictEqual(depositProposal._status.toNumber(), 2);
     });
 
     it('DepositProposalFinalized event should be emitted when proposal status updated to passed after numYes >= relayerThreshold', async () => {
         const voteTx = await BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
@@ -216,7 +216,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it('DepositProposalVote event fired when proposal vote made', async () => {
         const voteTx = await BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
@@ -232,7 +232,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
     it('Execution successful', async () => {
         const voteTx = await BridgeInstance.voteDepositProposal(
-            destinationChainID,
+            originChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }

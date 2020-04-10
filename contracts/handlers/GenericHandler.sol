@@ -9,6 +9,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
 
     struct DepositRecord {
         uint256 _destinationChainID;
+        bytes32 _resourceID;
         address _destinationRecipientAddress;
         address _depositer;
         bytes   _metaData;
@@ -32,30 +33,33 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
 
     function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address       destinationRecipientAddress;
+        bytes32       resourceID;
         bytes memory  metaData;
 
         assembly {
             // These are all fixed 32 bytes
             // first 32 bytes of bytes is the length
             destinationRecipientAddress    := mload(add(data, 0x20))
+            resourceID                     := mload(add(data, 0x40))
 
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x40, data))
-            mstore(0x40, add(0x40, add(metaData, lenMeta)))
+            let lenMeta := mload(add(0x60, data))
+            mstore(0x40, add(0x60, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 3 previous params
             calldatacopy(
                 metaData,                     // copy to metaData
-                0xC4,                        // copy from calldata after data length declaration at 0xC4
-                sub(calldatasize(), 0xC4)   // copy size (calldatasize - 0xC4)
+                0xE4,                        // copy from calldata after data length declaration at 0xC4
+                sub(calldatasize(), 0xE4)   // copy size (calldatasize - 0xC4)
             )
         }
 
         _depositRecords[depositNonce] = DepositRecord(
             destinationChainID,
+            resourceID,
             destinationRecipientAddress,
             depositer,
             metaData

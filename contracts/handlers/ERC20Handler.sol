@@ -148,7 +148,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
             destinationRecipientAddress         := mload(0x40)
             let lenDestinationRecipientAddress  := mload(add(0x60, data))
-            mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
             
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(

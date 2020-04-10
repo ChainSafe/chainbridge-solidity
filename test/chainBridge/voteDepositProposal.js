@@ -55,7 +55,6 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
             resourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
@@ -119,13 +118,15 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     });
 
     it("depositProposal shouldn't be voted on if it has a Transferred status", async () => {
+
+
         await TruffleAssert.passes(BridgeInstance.voteDepositProposal(
             destinationChainID,
             expectedDepositNonce,
             depositDataHash,
             { from: originChainRelayer2Address }
         ));
-        
+
         await TruffleAssert.passes(BridgeInstance.executeDepositProposal(
             originChainID,
             expectedDepositNonce,
@@ -139,6 +140,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             depositDataHash,
             { from: originChainRelayer3Address }
         ), 'proposal has already been passed or transferred');
+
     });
 
     it("relayer shouldn't be able to vote on a depositProposal more than once", async () => {

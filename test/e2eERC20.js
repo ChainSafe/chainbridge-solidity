@@ -7,7 +7,7 @@ const ERC20MintableContract = artifacts.require("ERC20Mintable");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Same Chain', async accounts => {
-    const AbiCoder = new Ethers.utils.AbiCoder();
+    // const AbiCoder = new Ethers.utils.AbiCoder();
 
     const relayerThreshold = 2;
     const chainID = 1;
@@ -41,7 +41,11 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
-        resourceID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance.address]);
+        resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID)), 32)
+        
+        
+        
+        AbiCoder.encodePacked(['address', 'uint8'], [ERC20MintableInstance.address, chainID]);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
 
@@ -62,8 +66,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(resourceID)          (32 bytes)
-            resourceID.substr(2) +                                                          // resourceID               (64 bytes) for now
+            Ethers.utils.hexZeroPad(resourceID.substr(2),32) +                                                          // resourceID            (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             

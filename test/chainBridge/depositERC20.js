@@ -43,7 +43,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         initialTokenIDs = [tokenID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
 
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });

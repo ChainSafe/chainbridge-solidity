@@ -26,8 +26,7 @@ This is a small CLI application to deploy the contracts and interact with the ch
 
 #### Global Flags
 ```
-  -p, --port <value>     Port of RPC instance (default: 8545)
-  -h, --host <value>     Host of RPC instance (default: "127.0.0.1")
+  --url <value>          URL to connect to (default: "http://localhost:8545")
   --private-key <value>  Private key to use (default: "0x000000000000000000000000000000000000000000000000000000616c696365")
   -h, --help             display help for command
 ```

@@ -13,8 +13,7 @@ const {
 const constants = require('./constants');
 
 
-program.option('-p, --port <value>', 'Port of RPC instance', 8545);
-program.option('-h, --host <value>', 'Host of RPC instance', "127.0.0.1");
+program.option('--url <value>', 'URL to connect to', "http://localhost:8545");
 program.option('--private-key <value>', 'Private key to use', constants.deployerPrivKey);
 
 program.addCommand(deploy)

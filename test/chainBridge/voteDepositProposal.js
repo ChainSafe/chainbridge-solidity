@@ -31,8 +31,8 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
     let DestinationERC20HandlerInstance;
     let depositData = '';
     let depositDataHash = '';
-    let tokenID = '';
-    let initialTokenIDs;
+    let resourceID = '';
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -46,16 +46,16 @@ contract('Bridge - [voteDepositProposal with relayerThreshold > 1]', async (acco
             
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
 
-        tokenID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
-        initialTokenIDs = [tokenID];
+        resourceID = AbiCoder.encode(['uint256', 'address'], [destinationChainID, DestinationERC20MintableInstance.address]);
+        initialResourceIDs = [resourceID];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) + // length of next arg in bytes
-            tokenID.substr(4) +
+            resourceID.substr(4) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));

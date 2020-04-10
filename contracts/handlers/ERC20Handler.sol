@@ -93,7 +93,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
 
         bytes32      resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        bytes memory emptyBytes;
+        bytes32      emptyBytes;
 
         if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
             // The case where we have never seen this token address before

@@ -47,9 +47,6 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new();
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
-        console.log(secondERC20ResourceID);
-        console.log(initialResourceIDs[0])
-
         await ERC20HandlerInstance.setResourceIDAndContractAddress(secondERC20ResourceID, ERC20MintableInstance2.address);
 
         const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(secondERC20ResourceID);

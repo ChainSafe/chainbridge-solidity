@@ -1,72 +1,46 @@
 const ethers = require('ethers');
+const {Command} = require('commander');
+
+const {setupParentArgs} = require("./utils")
 
 const constants = require('../constants');
 const CentrifugeHandlerContract = require("../../../build/contracts/CentrifugeAssetHandler.json");
 const BridgeContract = require("../../../build/contracts/Bridge.json");
 
-async function getHash(cli) {
-    const centHandler = new ethers.Contract(cli.centAddress, CentrifugeHandlerContract.abi, cli.mainWallet);
-    
-    try {
-        const res = await centHandler.getHash(ethers.utils.hexZeroPad(cli.hash, 32));
-        console.log(`The hash ${cli.hash} was ${res ? "found!" : "NOT found!"}`);
-    } catch (e) {
-        console.log({ e });
-        process.exit(1)
-    }
-}
+const getHashCmd = new Command('getHash')
+    .description('Returns if a the given hash exists')
+    .requiredOption('--hash <value>', 'A hash to lookup', '0x0000000000000000000000000000000000000000000000000000000000000001')
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
+    .action(async function (args) {
+        setupParentArgs(args, args.parent.parent);
+        const centHandler = new ethers.Contract(args.centAddress, CentrifugeHandlerContract.abi, args.wallet);
+        const res = await centHandler.getHash(ethers.utils.hexZeroPad(args.hash, 32));
+        console.log(`The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
 
-async function submitCentHash(cli) {
-    const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, cli.mainWallet);
-    
-    // MainWallet is already a voter, thus reduce by 1
-    const threshold = (await bridgeInstance._relayerThreshold()).toNumber() - 1;
-    
-    const relayers = [];
-    // start at index 1 because mainwWallet is index 0 of relayerPrivKeys
-    for (let i=0;i < threshold; i++) {
-        relayers.push(constants.relayerPrivKeys[i + 1]);
-    }
-    
-    const nonce = (await bridgeInstance._totalDepositProposals()).toNumber() + 1;
-    console.log("Nonce: ", nonce)
-    
-    const hash = ethers.utils.hexZeroPad(cli.hash, 32)
-    const keccakHash = ethers.utils.keccak256(cli.centAddress + hash.substr(2));
+    })
 
-    try {
+const transferHashCmd = new Command('transferHash')
+    .description('Submits a hash as a deposit')
+    .requiredOption('--hash <value>', 'The hash that will be transferred', '0x0000000000000000000000000000000000000000000000000000000000000001')
+    .option('--dest-id <value>', 'The cahin where the deposit will finalize', 1)
+    .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
+    .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
+    .action(async function (args) {
+        setupParentArgs(args, args.parent.parent)
+        const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
+
+        const hash = ethers.utils.hexZeroPad(args.hash, 32)
         let tx = await bridgeInstance.voteDepositProposal(
-            cli.originChain,
-            nonce,
-            keccakHash
-        )
-        console.log(`Proposal created, hash: ${tx.hash}`);
-        // Make sure to pass the threshold
-        for( let i=0; i < relayers.length; i++){
-            const wallet = new ethers.Wallet(relayers[i], cli.mainWallet.provider);
-            const bridgeInstance = new ethers.Contract(constants.BRIDGE_ADDRESS, BridgeContract.abi, wallet);
-            let tx = await bridgeInstance.voteDepositProposal(
-                cli.originChain,
-                nonce,
-                keccakHash
-            )
-            console.log(`Vote casted, hash: ${tx.hash}`);
-        }
-
-        tx = await bridgeInstance.executeDepositProposal(
-            cli.originChain,
-            nonce,
-            cli.centAddress,
+            args.destId,
+            args.centAddress,
             hash
         )
-        console.log(`Proposal executed, hash: ${tx.hash}`);
-    } catch (e) {
-        console.log({e});
-        process.exit(1)
-    }
-}
+        console.log(`Proposal created, hash: ${tx.hash}`);
+    })
 
-module.exports = {
-    getHash,
-    submitCentHash,
-}
+const centCmd = new Command("cent")
+
+centCmd.addCommand(getHashCmd)
+centCmd.addCommand(transferHashCmd)
+
+module.exports = centCmd

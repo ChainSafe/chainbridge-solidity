@@ -19,6 +19,7 @@ const deployCmd = new Command("deploy")
     .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async (args, a) => {
         setupParentArgs(args, args.parent)
+        let startBal = await args.provider.getBalance(args.wallet.address)
         await deployRelayerContract(args);
         await deployBridgeContract(args);
         await deployERC20(args)
@@ -26,6 +27,7 @@ const deployCmd = new Command("deploy")
         await deployERC721(args)
         await deployERC721Handler(args)
         await deployCentrifugeHandler(args);
+        args.cost = startBal.sub((await args.provider.getBalance(args.wallet.address)))
         displayLog(args)
     })
 
@@ -38,6 +40,7 @@ Deployer:   ${args.wallet.address}
 Chain Id:   ${args.chainId}
 Threshold:  ${args.relayerThreshold}
 Relayers:   ${args.relayers}
+Cost:       ${ethers.utils.formatEther(args.cost)}
 
 Contract Addresses
 ================================================================

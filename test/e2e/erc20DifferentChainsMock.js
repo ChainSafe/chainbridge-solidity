@@ -70,9 +70,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         destinationInitialContractAddresses = [OriginERC20MintableInstance.address];
 
         await Promise.all([
-            ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses)
+            ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, false)
                 .then(instance => OriginERC20HandlerInstance = instance),
-            ERC20HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses)
+            ERC20HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, false)
                 .then(instance => DestinationERC20HandlerInstance = instance)
         ]);
 

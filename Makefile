@@ -1,4 +1,4 @@
-PORT?=8545
+URL?=http://localhost:8545
 
 install-deps:
 	@echo " > \033[32mInstalling dependencies... \033[0m "
@@ -27,7 +27,7 @@ start-geth:
 
 deploy:
 	@echo " > \033[32mDeploying evm contracts... \033[0m "
-	./scripts/cli/index.js deploy --port=${PORT}
+	./scripts/cli/index.js deploy --url=${URL}
 
 bindings: compile
 	@echo " > \033[32mCreating go bindings for ethereum contracts... \033[0m "

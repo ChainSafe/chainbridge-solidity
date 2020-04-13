@@ -1,9 +1,11 @@
-const deploy = require("./deployment");
-const transfer = require("./transfer");
+const deploy = require("./deploy");
+const erc20 = require("./erc20");
+const erc721 = require("./erc721");
 const centrifuge = require("./centrifuge");
 
 module.exports = {
     deploy,
-    transfer,
+    erc20,
+    erc721,
     centrifuge,
 }

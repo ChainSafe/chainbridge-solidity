@@ -28,7 +28,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let DestinationERC20MintableInstance;
     let data = '';
     let dataHash = '';
-    let initialTokenIDs;
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -43,12 +43,12 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
             BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
         ]);
 
-        initialTokenIDs = [
+        initialResourceIDs = [
             Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
@@ -165,7 +165,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let DestinationERC20HandlerInstance;
     let data = '';
     let dataHash = '';
-    let initialTokenIDs;
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -179,12 +179,12 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
             BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
         ]);
         
-        initialTokenIDs = [
+        initialResourceIDs = [
             Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +

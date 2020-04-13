@@ -8,6 +8,7 @@ import "../interfaces/IBridge.sol";
 
 contract ERC20Handler is IDepositHandler, ERC20Safe {
     address public _bridgeAddress;
+    bool    public _useContractWhitelist;
 
     struct DepositRecord {
         address _originChainTokenAddress;
@@ -25,6 +26,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // token contract address => resourceID
     mapping (address => bytes) public _tokenContractAddressToResourceID;
 
+    // token contract address => is whitelisted
+    mapping (address => bool) public _contractWhitelist;
+
     // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
 
@@ -33,20 +37,42 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         _;
     }
 
-    constructor(address bridgeAddress, bytes[] memory initialResourceIDs, address[] memory initialContractAddresses) public {
+    constructor(
+        address          bridgeAddress,
+        bytes[]   memory initialResourceIDs,
+        address[] memory initialContractAddresses,
+        bool             useContractWhitelist
+    ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
 
         _bridgeAddress = bridgeAddress;
+        _useContractWhitelist = useContractWhitelist;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _resourceIDToTokenContractAddress[initialResourceIDs[i]] = initialContractAddresses[i];
-            _tokenContractAddressToResourceID[initialContractAddresses[i]] = initialResourceIDs[i];
+            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
         }
     }
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
+    }
+
+    function isWhitelisted(address contractAddress) internal view returns (bool) {
+        if (_useContractWhitelist) {
+            return _contractWhitelist[contractAddress];
+        }
+
+        return true;
+    }
+
+    function _setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) internal {
+        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
+        _tokenContractAddressToResourceID[contractAddress] = resourceID;
+
+        if (_useContractWhitelist) {
+            _contractWhitelist[contractAddress] = true;
+        }
     }
 
     function setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) public {
@@ -57,8 +83,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
-        _tokenContractAddressToResourceID[contractAddress] = resourceID;
+        _setResourceIDAndContractAddress(resourceID, contractAddress);
     }
 
     // Make a deposit
@@ -92,6 +117,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             )
         }
 
+        require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
         bytes memory resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
         bytes memory emptyBytes;
@@ -166,6 +192,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             )
 
         }
+
+        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
         resourceID = abi.encode(tokenChainID, tokenAddress);
 

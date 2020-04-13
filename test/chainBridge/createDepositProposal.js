@@ -48,7 +48,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
@@ -184,7 +184,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +

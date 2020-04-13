@@ -62,10 +62,12 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // Make a deposit
-    // bytes memory data is laid out as following:
-    // originChainTokenAddress     address   - @0x20
-    // amount                      uint256   - @0x40
-    // destinationRecipientAddress           - @0x60 - END
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // originChainTokenAddress                address     bytes   0 - 32
+    // amount                                 uint256     bytes  32 - 64
+    // destinationRecipientAddress length     uint256     bytes  64 - 96
+    // destinationRecipientAddress            bytes       bytes  96 - END
     function deposit(
         uint256 destinationChainID,
         uint256 depositNonce,
@@ -136,6 +138,14 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
 
+    // execute a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+
+    // amount                                 uint256     bytes   0 - 32
+    // resourceID                             bytes32     bytes  32 - 64
+    // --------------------------------------------------------------------
+    // destinationRecipientAddress length     uint256     bytes  64 - 96
+    // destinationRecipientAddress            bytes       bytes  96 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
         bytes32       resourceID;

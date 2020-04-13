@@ -53,6 +53,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return resourceID;
     }
 
+
+    // originChainTokenAddress                address     bytes   0 - 32
+    // amount                                 uint256     bytes  32 - 64
+    // destinationRecipientAddress length     uint256     bytes  64 - 96
+    // destinationRecipientAddress            bytes       bytes  96 - END
     function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address      originChainTokenAddress;
         uint         lenDestinationRecipientAddress;

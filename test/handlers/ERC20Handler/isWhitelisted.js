@@ -34,7 +34,8 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
         initialResourceIDs = [];
-        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address]));
+        resourceID1 = Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        initialResourceIDs.push(resourceID1);
         initialContractAddresses = [ERC20MintableInstance1.address];
     });
 

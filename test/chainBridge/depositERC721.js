@@ -47,10 +47,9 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(OriginERC721MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(DestinationERC721HandlerInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(DestinationERC721MintableInstance.address, 32).substr(2) +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(originChainTokenID), 32).substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
             Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
     });

@@ -135,23 +135,47 @@ Options:
 
 # ChainBridge-Solidity Data Layout
 
+## resourceID
+
+`resourceID` is a `bytes32` array laid out as follows:
+
+```
+tokenAddress                address   - bytes 11 - 32 
+chainID                     uint256   - byte  32      
+
+```
+
 ## ERC20Handler.sol
 
 ### deposit
 
 ```   
 function deposit(
-    uint256 destinationChainID,
+    uint8 destinationChainID,
     uint256 depositNonce,
     address depositer,
     bytes memory data
     ) public override _onlyBridge
 ```
-`bytes memory data` is laid out as following:
+
+`bytes memory data` passed into the function should be constructed as follows:
+
 ```
-originChainTokenAddress     address   - @0x20
-amount                      uint256   - @0x40
-destinationRecipientAddress           - @0x60 - END
+originChainTokenAddress                address     bytes   0 - 32
+amount                                 uint256     bytes  32 - 64
+destinationRecipientAddress length     uint256     bytes  64 - 96
+destinationRecipientAddress            bytes       bytes  96 - END
+```
+
+When retriving the calldata of the function call, it is laid out as follows:
+
+```
+originChainTokenAddress                address     - @0x84 - 0xA4
+amount                                 uint256     - @0xA4 - 0xC4
+------------------------------------------------------------------
+destinationRecipientAddress length     uint256     - @0xC4 - 0xE4
+destinationRecipientAddress            bytes       - @0xE4 - END
+
 ```
 
 ### executeDeposit
@@ -159,30 +183,26 @@ destinationRecipientAddress           - @0x60 - END
 ```
 function executeDeposit(bytes memory data) public override _onlyBridge
 ```
-`bytes memory data` is laid out as following (since we know `len(resourceID) = 64`):
+
+`bytes memory data` passed into the function should be constructed as follows:
+
 
 ```
-amount                      uint256   - @0x20 - 0x40
-resourceID                            - @0x40 - 0xC0
------------------------------------------------------
-resourceID len              uint256   - @0x40 - 0x60
-resourceID                  bytes     - @0x60 - 0xA0
------------------------------------------------------
-destinationRecipientAddress           - @0xA0 - END
------------------------------------------------------
-destinationRecipientAddress len uint256 - @0xA0 - 0xC0
-destinationRecipientAddress     bytes   - @0xC0 - END
-
+amount                                 uint256     bytes   0 - 32
+resourceID                             bytes32     bytes  32 - 64
+--------------------------------------------------------------------
+destinationRecipientAddress length     uint256     bytes  64 - 96
+destinationRecipientAddress            bytes       bytes  96 - END
 ```
 
-### resourceID in ERC20Handler is different from other resourceIDs
-
-`resourceID` is a `bytes` array laid out as follows:
+When retriving the calldata of the function call, it is laid out as follows:
 
 ```
-chainID                     uint256   - @0x00 - 0x20
-tokenAddress                address   - @0x20 - 0x40
-
+amount                          uint256     - @0x24 - 0x44
+resourceID                      uint256     - @0x44 - 0x64
+--------------------------------------------------------------------
+destinationRecipientAddress len uint256     - @0x64 - 0x84
+destinationRecipientAddress     bytes       - @0x84 - END
 ```
 
 ## ERC721Handler.sol
@@ -191,23 +211,143 @@ tokenAddress                address   - @0x20 - 0x40
 
 ```
 function deposit(
-    uint256 destinationChainID, 
+    uint8 destinationChainID, 
     uint256 depositNonce, 
     address depositer, 
     bytes memory data
     ) public override _onlyBridge
 ```
 
-`bytes memory data` is laid out as following:
+`bytes memory data` passed into the function should be constructed as follows:
+
 ```
-originChainTokenAddress        address   - @0x20 - 0x40
-destinationChainTokenAddress   address   - @0x40 - 0x60
-destinationRecipientAddress    address   - @0x80 - 0xA0
-resourceID                     uint256   - @0xA0 - 0xC0
-metaData                                 - @0xC0 - END
-------------------------------------------------------
-metaData length declaration    uint256   - @0xC0 - 0xE0
-metaData                       bytes     - @0xE0 - END
+originChainTokenAddress                     address    bytes     0 - 32
+tokenID                                     uint256    bytes    32 - 64
+--------------------------------------------------------------------------------------------------------------------
+destinationRecipientAddress     length      uint256    bytes    64 - 96
+destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+--------------------------------------------------------------------------------------------------------------------
+metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
+```
+
+When retriving the calldata of the function call, it is laid out as follows:
+
+```
+originChainTokenAddress                address     - @0x84 - 0xA4
+tokenID                                uint256     - @0xA4 - 0xC4
+------------------------------------------------------------------
+destinationRecipientAddress length     uint256     - @0xC4 - 0xE4
+destinationRecipientAddress            bytes       - @0xE4 - (0xE4 + len(destinationRecipientAddress))
+------------------------------------------------------------------
+metadata                    length     uint256     - @(0xE4 + len(destinationRecipientAddress)) - (0xE4 + len(destinationRecipientAddress) + 0x20)
+metadata                               bytes       - @(0xE4 + len(destinationRecipientAddress) + 0x20) - END
+
+```
+
+
+### executeDeposit
+
+```
+function executeDeposit(bytes memory data) public override _onlyBridge
+```
+
+`bytes memory data` passed into the function should be constructed as follows:
+```
+tokenID                                     uint256    bytes     0 - 32
+resourceID                                  bytes32    bytes    32 - 64
+--------------------------------------------------------------------------------------------------------------------
+destinationRecipientAddress     length      uint256    bytes    64 - 96
+destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+--------------------------------------------------------------------------------------------------------------------
+metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
+```
+
+When retriving the calldata of the function call, it is laid out as follows:
+```
+tokenID                                     uint256    bytes  - @0x24 - 0x44
+resourceID                                  bytes32    bytes  - @0x44 - 0x64
+---------------------------------------------------------------------------------------------------------------------
+destinationRecipientAddress     length      uint256    bytes  - @0x64 - 0x84
+destinationRecipientAddress                   bytes    bytes  - @0x84 - (0x84 + len(destinationRecipientAddress))
+---------------------------------------------------------------------------------------------------------------------
+metadata                        length      uint256    bytes  - @(0x84 + len(destinationRecipientAddress)) - (0x84 + len(destinationRecipientAddress) + 0x20)  
+metadata                                      bytes    bytes  - @(0x84 + len(destinationRecipientAddress) + 0x20) - END  
+```
+
+
+## GenericHandler.sol
+
+### deposit
+
+```
+function deposit(
+    uint8 destinationChainID, 
+    uint256 depositNonce, 
+    address depositer, 
+    bytes memory data
+    ) public override _onlyBridge
+```
+
+`bytes memory data` passed into the function should be constructed as follows:
+
+```
+
+destinationRecipientAddress                address   bytes     0 - 32
+resourceID                                 bytes32   bytes    32 - 64
+----------------------------------------------------------------------------
+metadata                     length        uint256   bytes    64 - 96
+metadata                                   bytes     bytes    96 - END
+```
+
+When retriving the calldata of the function call, it is laid out as follows:
+
+```
+
+destinationRecipientAddress                address     - @0x84 - 0xA4
+resourceID                                 uint256     - @0xA4 - 0xC4
+------------------------------------------------------------------
+metadata                      length       uint256     - @0xC4 - 0xE4
+metadata                                   bytes       - @0xE4 - END
+
+```
+
+
+
+
+### executeDeposit
+
+Currently unimplemented.
+
+## CentrifugeAssetHandler.sol
+
+### deposit
+
+```
+function deposit(
+    uint8 destinationChainID, 
+    uint256 depositNonce, 
+    address depositer, 
+    bytes memory data
+    ) public override _onlyBridge
+```
+`bytes memory data` passed into the function should be constructed as follows:
+
+```
+originChainContractAddress                 address   bytes     0 - 32
+destinationRecipientAddress                bytes32   bytes    32 - 64
+metadataHash                               bytes     bytes    64 - 96
+```
+
+When retriving the calldata of the function call, it is laid out as follows:
+
+```
+
+originChainContractAddress                 address     - @0x84 - 0xA4
+destinationRecipientAddress                address     - @0xA4 - 0xC4
+metadataHash                               uint256     - @0xC4 - 0xE4
+
 ```
 
 ### executeDeposit
@@ -216,44 +356,13 @@ metaData                       bytes     - @0xE0 - END
 function executeDeposit(bytes memory data) public override _onlyBridge
 ```
 
-`bytes memory data` is laid out as following:
-```
-destinationChainTokenAddress   address   - @0x20 - 0x40
-destinationRecipientAddress    address   - @0x40 - 0x60
-resourceID                     uint256   - @0x60 - 0x80
-metaData                                 - @0x80 - END
-------------------------------------------------------
-metaData length declaration    uint256   - @0x80 - 0xA0
-metaData                       bytes     - @0xA0 - END
-```
-
-## GenericHandler.sol
-
-### deposit
+`bytes memory data` passed into the function should be constructed as follows:
 
 ```
-function deposit(
-    uint256 destinationChainID, 
-    uint256 depositNonce, 
-    address depositer, 
-    bytes memory data
-    ) public override _onlyBridge
+metadataHash                               bytes     bytes    0 - 32
 ```
 
-`bytes memory data` is laid out as following:
+When retriving the calldata of the function call, it is laid out as follows:
 ```
-
-destinationRecipientAddress    address   - @0x20 - 0x40
-metaData                                 - @0x40 - END
-------------------------------------------------------
-metaData length declaration    uint256   - @0x40 - 0x60
-metaData                       bytes     - @0x60 - END
+metadataHash                               bytes    bytes  - @0x24 - 0x44
 ```
-
-### executeDeposit
-
-Currently unimplemented.
-
-
-
-

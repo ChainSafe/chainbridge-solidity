@@ -20,45 +20,117 @@ Requires `nodejs` and `npm`.
 
 `make compile`: Compile contracts.
 
-### cb-sol-cli (JS CLI)
+## cb-sol-cli (JS CLI)
 
-This is a small CLI application to deploy the contracts and interact with the chain. To install run `make install-cli`.
+This is a small CLI application to deploy the contracts and interact with the chain. It consists of four main sub-commands `deploy`, `erc20`, `erc721`, and `cent`. To install run `make install-cli`.
 
 #### Global Flags
 ```
--h, --host <host> default: localhost (127.0.0.1)
--p, --port <port> default: 8545
+  --url <value>          URL to connect to (default: "http://localhost:8545")
+  --private-key <value>  Private key to use (default: "0x000000000000000000000000000000000000000000000000000000616c696365")
+  -h, --help             display help for command
 ```
-#### deploy
+### `deploy`
 
 Deploy contracts with configurable constructor arguments. Relayers will be added from default keys (max 5).
+
+
 ```
-cb-sol-cli deploy --validator-threshold <n> --relayers <n>
+$ cb-sol-cli deploy
+
+Options:
+  --chain-id <value>           Chain ID for the instance (default: 0)
+  --relayers <value>           List of initial relayers (default: ["0xff93B45308FD417dF303D6515aB04D9e89a750Ca","0x8e0a907331554AF72563Bd8D43051C2E64Be5d35","0x24962717f8fA5BA3b931bACaF9ac03924EB475a0","0x148FfB2074A9e59eD58142822b3eB3fcBffb0cd7","0x4CEEf6139f00F9F4535Ad19640Ff7A0137708485"])
+  --relayer-threshold <value>  Number of votes required for a proposal to pass (default: 2)
 ```
 
-#### mint
+### `erc20`
 
+#### - `mint` 
 Mint default erc20 tokens.
+
 ```
-cb-sol-cli mint --value <n>
+$ cb-sol-cli erc20 mint
+
+Options:
+  --value <amount>          Amount to mint (default: 100)
+  --erc20Address <address>  Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
 ```
 
-#### transfer
-
+#### - `transfer`
 Initiate a transfer of erc20 to some destination chain.
 ```
-cb-sol-cli transfer --value <n> --dest <n> --recipient <addr>
+$ cb-sol-cli erc20 transfer
+
+Options:
+  --value <amount>                 Amount to transfer (default: 1)
+  --dest <value>                   destination chain (default: 1)
+  --recipient <address>            Destination recipient address (default: "0x4CEEf6139f00F9F4535Ad19640Ff7A0137708485")
+  --erc20Address <address>         Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
+  --erc20HandlerAddress <address>  Custom erc20Handler contract (default: "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07")
+  --bridgeAddress <address>        Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
 ```
 
-#### Transfering and verifying a Centrifuge hash
+#### - `balance`
+Check the balance of an account.
+```
+$ cb-sol-cli erc20 balance
 
-Initiate a transfer of a hash to some destination chain.
+Options:
+  --address <address>       Address to query (default: "0xff93B45308FD417dF303D6515aB04D9e89a750Ca")
+  --erc20Address <address>  Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
 ```
-cb-sol-cli sendCentHash --hash <hash> --originChain <chainId> --destChain <chianId>
+
+### `erc721`
+
+#### - `mint`
+Mint default erc721 tokens.
+
 ```
-Verify the hash was deposited
+$ cb-sol-cli erc721 mint
+
+Options:
+  --erc721Address <address>  Custom erc721 contract (default: "0x21605f71845f372A9ed84253d2D024B7B10999f4")
+  --id <id>                  ERC721 token id (default: 1)
 ```
-cb-sol-cli getCentHash --hash <hash> --centAddress <address>
+
+#### - `transfer`
+Initiate a transfer of erc721 to some destination chain.
+```
+$ cb-sol-cli erc721 transfer
+
+  --id <id>                         ERC721 token id (default: 1)
+  --dest <value>                    destination chain (default: 1)
+  --recipient <address>             Destination recipient address (default: "0x4CEEf6139f00F9F4535Ad19640Ff7A0137708485")
+  --erc721Address <address>         Custom erc721 contract
+  --erc721HandlerAddress <address>  Custom erc721 handler
+  --bridgeAddress <address>         Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
+```
+
+### Centrifuge (`cent`)
+
+#### - `transferHash`
+Initiate transfer of a hash.
+
+```
+$ cb-sol-cli cent transferHash
+
+Options:
+  --hash <value>           The hash that will be transferred (default: "0x0000000000000000000000000000000000000000000000000000000000000001")
+  --dest-id <value>        The cahin where the deposit will finalize (default: 1)
+  --centAddress <value>    Centrifuge handler contract address (default: "0xc279648CE5cAa25B9bA753dAb0Dfef44A069BaF4")
+  --bridgeAddress <value>  Bridge contract address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
+```
+
+#### - `getHash`
+Verify transfer of hash:
+
+```
+$ cb-sol-cli cent getHash
+
+Options:
+  --hash <value>         A hash to lookup (default: "0x0000000000000000000000000000000000000000000000000000000000000001")
+  --centAddress <value>  Centrifuge handler contract address (default: "0xc279648CE5cAa25B9bA753dAb0Dfef44A069BaF4")
 ```
 
 # ChainBridge-Solidity Data Layout

@@ -8,7 +8,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
     address public _bridgeAddress;
 
     struct DepositRecord {
-        uint256 _destinationChainID;
+        uint8   _destinationChainID;
         bytes32 _resourceID;
         address _destinationRecipientAddress;
         address _depositer;
@@ -39,7 +39,7 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
     // ----------------------------------------------------------------------------
     // metadata                     length        uint256   bytes    64 - 96
     // metadata                                   bytes     bytes    96 - END
-    function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address       destinationRecipientAddress;
         bytes32       resourceID;
         bytes memory  metaData;

@@ -11,7 +11,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
     struct DepositRecord {
         address _originChainTokenAddress;
-        uint256 _destinationChainID;
+        uint8   _destinationChainID;
         bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
@@ -54,11 +54,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     }
 
 
-    // originChainTokenAddress                address     bytes   0 - 32
-    // amount                                 uint256     bytes  32 - 64
-    // destinationRecipientAddress length     uint256     bytes  64 - 96
-    // destinationRecipientAddress            bytes       bytes  96 - END
-    function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address      originChainTokenAddress;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
@@ -127,7 +123,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
-            destinationChainID,
+            uint8(destinationChainID),
             resourceID,
             lenDestinationRecipientAddress,
             destinationRecipientAddress,

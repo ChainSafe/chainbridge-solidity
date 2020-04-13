@@ -12,7 +12,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     struct DepositRecord {
         address _originChainTokenAddress;
-        uint    _destinationChainID;
+        uint8   _destinationChainID;
         bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
@@ -94,7 +94,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // destinationRecipientAddress length     uint256     bytes  64 - 96
     // destinationRecipientAddress            bytes       bytes  96 - END
     function deposit(
-        uint256 destinationChainID,
+        uint8 destinationChainID,
         uint256 depositNonce,
         address depositer,
         bytes memory data

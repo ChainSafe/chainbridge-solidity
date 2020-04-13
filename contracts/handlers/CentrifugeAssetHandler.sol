@@ -9,7 +9,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
 
     struct DepositRecord {
         address originChainContractAddress;
-        uint256 destinationChainID;
+        uint8 destinationChainID;
         bytes32 resourceID;
         address destinationRecipientAddress;
         address depositer;
@@ -61,7 +61,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
     // originChainContractAddress                 address   bytes     0 - 32
     // destinationRecipientAddress                bytes32   bytes    32 - 64
     // metadataHash                               bytes     bytes    64 - 96
-    function deposit(uint256 originChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint8 originChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address originChainContractAddress;
         address destinationRecipientAddress;
         bytes32 metaDataHash;

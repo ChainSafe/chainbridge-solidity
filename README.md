@@ -151,7 +151,7 @@ chainID                     uint256   - byte  32
 
 ```   
 function deposit(
-    uint256 destinationChainID,
+    uint8 destinationChainID,
     uint256 depositNonce,
     address depositer,
     bytes memory data
@@ -211,7 +211,7 @@ destinationRecipientAddress     bytes       - @0x84 - END
 
 ```
 function deposit(
-    uint256 destinationChainID, 
+    uint8 destinationChainID, 
     uint256 depositNonce, 
     address depositer, 
     bytes memory data
@@ -283,7 +283,7 @@ metadata                                      bytes    bytes  - @(0x84 + len(des
 
 ```
 function deposit(
-    uint256 destinationChainID, 
+    uint8 destinationChainID, 
     uint256 depositNonce, 
     address depositer, 
     bytes memory data
@@ -326,7 +326,7 @@ Currently unimplemented.
 
 ```
 function deposit(
-    uint256 destinationChainID, 
+    uint8 destinationChainID, 
     uint256 depositNonce, 
     address depositer, 
     bytes memory data

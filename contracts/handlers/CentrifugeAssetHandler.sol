@@ -55,6 +55,12 @@ contract CentrifugeAssetHandler is IDepositHandler {
         return resourceID;
     }
 
+    // make a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+
+    // originChainContractAddress                 address   bytes     0 - 32
+    // destinationRecipientAddress                bytes32   bytes    32 - 64
+    // metadataHash                               bytes     bytes    64 - 96
     function deposit(uint256 originChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address originChainContractAddress;
         address destinationRecipientAddress;
@@ -98,6 +104,10 @@ contract CentrifugeAssetHandler is IDepositHandler {
         );
     }
 
+    // execute a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+
+    // metadataHash                               bytes     bytes    0 - 32
     function executeDeposit(bytes memory data) public override _onlyBridge {
         // bytes32 resourceID;
         bytes32 metaDataHash;

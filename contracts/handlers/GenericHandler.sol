@@ -31,6 +31,14 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositNonce];
     }
 
+    // make a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // destinationRecipientAddress                address   bytes     0 - 32
+    // resourceID                                 bytes32   bytes    32 - 64
+    // ----------------------------------------------------------------------------
+    // metadata                     length        uint256   bytes    64 - 96
+    // metadata                                   bytes     bytes    96 - END
     function deposit(uint256 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         address       destinationRecipientAddress;
         bytes32       resourceID;

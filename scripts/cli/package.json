@@ -18,5 +18,9 @@
   "homepage": "https://github.com/ChainSafe/chainbridge-solidity#readme",
   "bin": {
     "cb-sol-cli": "./index.js"
+  },
+  "dependencies": {
+    "commander": "^5.0.0",
+    "ethers": "^4.0.46"
   }
 }

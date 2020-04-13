@@ -102,6 +102,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         assembly {
 
             // originChainTokenAddress     := mload(add(data, 0x20))
+            resourceID                    := mload(add(data, 0x20))
             tokenID                       := mload(add(data, 0x40))
 
             // set up destinationRecipientAddress

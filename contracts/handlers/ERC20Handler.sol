@@ -59,7 +59,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function isWhitelisted(address contractAddress) internal view returns (bool) {
+    function isWhitelisted(address contractAddress) public view returns (bool) {
         // we are currently requiring a whitelist
         // if (_useContractWhitelist) {
         return _contractWhitelist[contractAddress];

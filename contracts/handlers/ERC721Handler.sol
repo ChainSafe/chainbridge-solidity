@@ -102,7 +102,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         }
 
         bytes32 resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        bytes memory emptyBytes;
+        bytes32 emptyBytes;
 
         if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
             // The case where we have never seen this token address before
@@ -117,7 +117,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
              _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
              _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
-
         }
 
         lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
@@ -188,7 +187,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             tokenAddress := mload(add(data, 0x4B))
         }
 
-
         if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
             // token exists
             IBridge bridge = IBridge(_bridgeAddress);
@@ -211,7 +209,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             _resourceIDToTokenContractAddress[resourceID] = address(erc721);
             _tokenContractAddressToResourceID[address(erc721)] = resourceID;
 
-            erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            // erc721.safeMint(address(recipientAddress), tokenID, metaData);
         }
     }
 

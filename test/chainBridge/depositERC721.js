@@ -37,16 +37,24 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
 
+        originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        originInitialResourceIDs = [originResourceID];
+        originInitialContractAddresses = [OriginERC721MintableInstance.address];
+
+        destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC721MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
+        destinationInitialResourceIDs = [destinationResourceID];
+        destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
+
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address).then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(BridgeInstance.address).then(instance => DestinationERC721HandlerInstance = instance)
+            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
         await OriginERC721MintableInstance.safeMint(depositerAddress, originChainTokenID, genericBytes);
         await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositerAddress });
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(OriginERC721MintableInstance.address, 32).substr(2) +
+            originResourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(originChainTokenID), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +

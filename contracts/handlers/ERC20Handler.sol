@@ -92,7 +92,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // Make a deposit
     // bytes memory data passed into the function should be constructed as follows:
     //
-    // originChainTokenAddress                address     bytes   0 - 32
+    // resourceID                             bytes32     bytes   0 - 32
     // amount                                 uint256     bytes  32 - 64
     // destinationRecipientAddress length     uint256     bytes  64 - 96
     // destinationRecipientAddress            bytes       bytes  96 - END

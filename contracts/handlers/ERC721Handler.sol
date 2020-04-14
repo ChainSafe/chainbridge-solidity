@@ -90,7 +90,17 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         _setResourceIDAndContractAddress(resourceID, contractAddress);
     }
 
-
+    // Make a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // resourceID                                  bytes32    bytes     0 - 32
+    // tokenID                                     uint256    bytes    32 - 64
+    // --------------------------------------------------------------------------------------------------------------------
+    // destinationRecipientAddress     length      uint256    bytes    64 - 96
+    // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+    // --------------------------------------------------------------------------------------------------------------------
+    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         // address      originChainTokenAddress;
         bytes32      resourceID;
@@ -178,6 +188,17 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         );
     }
 
+    // execute a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // tokenID                                     uint256    bytes     0 - 32
+    // resourceID                                  bytes32    bytes    32 - 64
+    // --------------------------------------------------------------------------------------------------------------------
+    // destinationRecipientAddress     length      uint256    bytes    64 - 96
+    // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+    // --------------------------------------------------------------------------------------------------------------------
+    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;

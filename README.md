@@ -161,7 +161,7 @@ function deposit(
 `bytes memory data` passed into the function should be constructed as follows:
 
 ```
-originChainTokenAddress                address     bytes   0 - 32
+resourceID                             bytes32     bytes   0 - 32
 amount                                 uint256     bytes  32 - 64
 destinationRecipientAddress length     uint256     bytes  64 - 96
 destinationRecipientAddress            bytes       bytes  96 - END
@@ -170,7 +170,7 @@ destinationRecipientAddress            bytes       bytes  96 - END
 When retriving the calldata of the function call, it is laid out as follows:
 
 ```
-originChainTokenAddress                address     - @0x84 - 0xA4
+resourceID                             bytes32     - @0x84 - 0xA4
 amount                                 uint256     - @0xA4 - 0xC4
 ------------------------------------------------------------------
 destinationRecipientAddress length     uint256     - @0xC4 - 0xE4
@@ -221,7 +221,7 @@ function deposit(
 `bytes memory data` passed into the function should be constructed as follows:
 
 ```
-originChainTokenAddress                     address    bytes     0 - 32
+resourceID                                  bytes32    bytes     0 - 32
 tokenID                                     uint256    bytes    32 - 64
 --------------------------------------------------------------------------------------------------------------------
 destinationRecipientAddress     length      uint256    bytes    64 - 96
@@ -234,7 +234,7 @@ metadata                                      bytes    bytes    (96 + len(destin
 When retriving the calldata of the function call, it is laid out as follows:
 
 ```
-originChainTokenAddress                address     - @0x84 - 0xA4
+resourceID                             bytes32     - @0x84 - 0xA4
 tokenID                                uint256     - @0xA4 - 0xC4
 ------------------------------------------------------------------
 destinationRecipientAddress length     uint256     - @0xC4 - 0xE4

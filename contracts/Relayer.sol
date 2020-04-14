@@ -149,9 +149,9 @@ contract Relayer is IRelayer {
     }
 
     function voteRelayerThresholdProposal(Vote vote) public override _onlyRelayers {
+        require(uint8(vote) <= 1, "vote out of the vote enum range");
         require(_currentRelayerThresholdProposal._status == VoteStatus.Active, "no proposal is currently active");
         require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
-        require(uint8(vote) <= 1, "vote out of the vote enum range");
 
         // Cast vote
         if (vote == Vote.Yes) {

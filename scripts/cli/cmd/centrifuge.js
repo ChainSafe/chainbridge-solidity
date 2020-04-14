@@ -30,6 +30,9 @@ const transferHashCmd = new Command('transferHash')
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
 
         const hash = ethers.utils.hexZeroPad(args.hash, 32)
+
+        resourceID = Ethers.utils.hexZeroPad((ethers.utils.hexZeroPad('0x1', 20) + ethers.utils.hexlify(args.destID).substr(2)), 32)
+
         let tx = await bridgeInstance.voteDepositProposal(
             args.destId,
             args.centAddress,

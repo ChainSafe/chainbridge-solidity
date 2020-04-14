@@ -2,10 +2,11 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs} = require("./utils")
+const {setupParentArgs, splitCommaList} = require("./utils")
 
 const BridgeContract = require("../../../build/contracts/Bridge.json");
 const ERC20MintableContract = require("../../../build/contracts/ERC20Mintable.json");
+const ERC20HandlerContract = require("../../../build/contracts/ERC20Handler.json");
 const ERC20Contract = require("../../../build/contracts/ERC20Mintable.json");
 
 const mintCmd = new Command("mint")
@@ -27,19 +28,25 @@ const transferCmd = new Command("transfer")
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
+    .option(`--whitelist <address>`, `Custom addresses to be whitelisted`, splitCommaList, constants.ERC20_WHITELIST)
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
-        // const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerContract, ERC20HandlerContract.abi, args.wallet);
+        const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, ERC20HandlerContract.abi, args.wallet);
 
-        // Whitelist address and add resourceID
-        resourceID = ethers.utils.hexZeroPad((constants.ERC20_ADDRESS + ethers.utils.hexlify(constants.DEFAULT_SOURCE_ID).substr(2)), 32)
-        console.log(resourceID)
-        // await erc20HandlerInstance.setResourceIDAndContractAddress(resourceID, erc20Instance.address)
-        console.log("whitelisted erc20Instance Address")
+        // Whitelisting Addresses
+        chainID = await bridgeInstance._chainID()
+
+        for (let i = 0; i < args.whitelist.length; i++) {
+            resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32)
+            console.log(resourceID)
+            await erc20HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i])
+        }
+
+        console.log("[ERC20 Transfer] whitelisted ERC20 token contracts!");
 
         // Log pre balance
         const depositerPreBal = await erc20Instance.balanceOf(args.wallet.address);

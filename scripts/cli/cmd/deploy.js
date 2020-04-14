@@ -96,9 +96,6 @@ async function deployERC20(args) {
     const contract = await factory.deploy();
     await contract.deployed();
 
-    args.erc20Contract = contract.address
-    args.erc20ResourceID = ethers.utils.hexZeroPad((args.erc20Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32)
-
     console.log("✓ ERC20 contract deployed")
 }
 
@@ -107,13 +104,9 @@ async function deployERC20Handler(args) {
     const factory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, args.wallet);
 
 
-    const contract = await factory.deploy(args.bridgeContract, [args.erc20ResourceID], [args.erc20Contract]);
+    const contract = await factory.deploy(args.bridgeContract, [], []);
     await contract.deployed();
-    
-    let whitelisted = await contract.isWhitelisted(args.erc20Contract);
-    if (whitelisted) {
-        console.log("WHITELISTED")
-    }
+        
     args.erc20HandlerContract = contract.address
     console.log("✓ ERC20Handler contract deployed")
 }
@@ -122,13 +115,14 @@ async function deployERC721(args) {
     const factory = new ethers.ContractFactory(ERC721MintableContract.abi, ERC721MintableContract.bytecode, args.wallet);
     const contract = await factory.deploy();
     await contract.deployed();
+
     args.erc721Contract = contract.address
     console.log("✓ ERC721 contract deployed")
 }
 
 async function deployERC721Handler(args) {
     const factory = new ethers.ContractFactory(ERC721HandlerContract.abi, ERC721HandlerContract.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract,[ethers.utils.hexZeroPad((args.erc721Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32)],[args.erc721Contract]);
+    const contract = await factory.deploy(args.bridgeContract,[],[]);
     await contract.deployed();
     args.erc721HandlerContract = contract.address
     console.log("✓ ERC721Handler contract deployed")

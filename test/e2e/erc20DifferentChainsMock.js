@@ -134,9 +134,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         let depositerBalance;
         let recipientBalance;
 
-
-        console.log(1)
-
         // depositerAddress makes initial deposit of depositAmount
         TruffleAssert.passes(await OriginBridgeInstance.deposit(
             destinationChainID,
@@ -146,14 +143,10 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
 
-        console.log(2)
-
         // Handler should have a balance of depositAmount
         handlerBalance = await OriginERC20MintableInstance.balanceOf(OriginERC20HandlerInstance.address);
         assert.strictEqual(handlerBalance.toNumber(), depositAmount, "OriginERC20HandlerInstance.address does not have a balance of depositAmount");
 
-
-        console.log(3)
 
         // destinationRelayer1 creates the deposit proposal
         TruffleAssert.passes(await DestinationBridgeInstance.voteDepositProposal(
@@ -163,8 +156,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             { from: destinationRelayer1Address }
         ));
 
-
-        console.log(4)
 
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
@@ -177,8 +168,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
 
-        console.log(5)
-
         // destinationRelayer1 will execute the deposit proposal
         TruffleAssert.passes(await DestinationBridgeInstance.executeDepositProposal(
             originChainID,
@@ -188,21 +177,15 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
 
-        console.log(6)
-
         // Assert ERC20 balance was transferred from depositerAddress
         depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
         assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount, "depositAmount wasn't transferred from depositerAddress");
 
-
-        console.log(7)
         
         // Assert ERC20 balance was transferred to recipientAddress
         recipientBalance = await DestinationERC20MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientBalance.toNumber(), depositAmount, "depositAmount wasn't transferred to recipientAddress");
 
-
-        console.log(8)
 
         // At this point a representation of OriginERC20Mintable has been transferred from
         // depositer to the recipient using Both Bridges and DestinationERC20Mintable.

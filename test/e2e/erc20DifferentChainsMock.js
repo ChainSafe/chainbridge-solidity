@@ -69,7 +69,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         
         // AbiCoder.encode(['uint256', 'address'], [originChainID, DestinationERC20MintableInstance.address]);
         destinationInitialResourceIDs = [destinationResourceID];
-        destinationInitialContractAddresses = [OriginERC20MintableInstance.address];
+        destinationInitialContractAddresses = [DestinationERC20MintableInstance.address];
 
         await Promise.all([
             ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses)
@@ -82,8 +82,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
         
         await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
-        await OriginERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
-
 
         originDepositData = '0x' +
             // Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +    // OriginHandlerAddress  (32 bytes)

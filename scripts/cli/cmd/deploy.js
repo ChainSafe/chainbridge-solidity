@@ -95,16 +95,21 @@ async function deployERC20(args) {
     const factory = new ethers.ContractFactory(ERC20MintableContract.abi, ERC20MintableContract.bytecode, args.wallet);
     const contract = await factory.deploy();
     await contract.deployed();
-    args.erc20Contract = contract.address
+
+    args.erc20Contract1 = contract.address
+    args.erc20ResourceID1 = ethers.utils.hexZeroPad((args.erc20Contract1 + ethers.utils.hexlify(args.chainId).substr(2)), 32)
+
+    
+    console.log("constantss")
+    args.erc20Contract2 = constants.ERC20_ADDRESS
+    args.erc20ResourceID2 = ethers.utils.hexZeroPad((constants.ERC20_ADDRESS + ethers.utils.hexlify(constants.DEFAULT_SOURCE_ID).substr(2)), 32)
     console.log("✓ ERC20 contract deployed")
 }
 
 async function deployERC20Handler(args) {
 
-    console.log(args.erc20Contract)
-    console.log(ethers.utils.hexZeroPad((args.erc20Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32))
     const factory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract, [ethers.utils.hexZeroPad((args.erc20Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32)], [args.erc20Contract]);
+    const contract = await factory.deploy(args.bridgeContract, [args.erc20ResourceID1, args.erc20ResourceID2 ], [args.erc20Contract1, args.erc20Contract2]);
     await contract.deployed();
     args.erc20HandlerContract = contract.address
     console.log("✓ ERC20Handler contract deployed")

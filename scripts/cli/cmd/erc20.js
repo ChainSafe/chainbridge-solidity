@@ -33,6 +33,13 @@ const transferCmd = new Command("transfer")
         // Instances
         const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
+        // const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerContract, ERC20HandlerContract.abi, args.wallet);
+
+        // Whitelist address and add resourceID
+        resourceID = ethers.utils.hexZeroPad((constants.ERC20_ADDRESS + ethers.utils.hexlify(constants.DEFAULT_SOURCE_ID).substr(2)), 32)
+        console.log(resourceID)
+        // await erc20HandlerInstance.setResourceIDAndContractAddress(resourceID, erc20Instance.address)
+        console.log("whitelisted erc20Instance Address")
 
         // Log pre balance
         const depositerPreBal = await erc20Instance.balanceOf(args.wallet.address);
@@ -43,9 +50,10 @@ const transferCmd = new Command("transfer")
         // Approve tokens
         await erc20Instance.approve(args.erc20HandlerAddress, args.value);
         console.log(`[ERC20 Transfer] Approved ${args.erc20HandlerAddress} to spend ${args.value} tokens from ${args.wallet.address}!`);
-
+        
+        console.log(args.chainId)
         const data = '0x' +
-            ethers.utils.hexZeroPad(erc20Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
+            resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(args.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)

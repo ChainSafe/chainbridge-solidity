@@ -10,6 +10,13 @@ contract ERC20Safe {
     // ERC20 contract => amount of tokens owned by Safe
     mapping(address => uint) public _balances;
 
+    function fundERC20(address tokenAddress, address owner, uint amount) public {
+        IERC20 erc20 = IERC20(tokenAddress);
+        erc20.transferFrom(owner, address(this), amount);
+
+        _balances[tokenAddress] = _balances[tokenAddress].add(amount);
+    }
+
     function lockERC20(address tokenAddress, address owner, address recipient, uint amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         erc20.transferFrom(owner, recipient, amount);

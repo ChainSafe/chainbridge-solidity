@@ -29,7 +29,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
         ERC20MintableInstance1 = await ERC20MintableContract.new();
 
-        initialResourceIDs = [AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address])];
+        initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         initialContractAddresses = [ERC20MintableInstance1.address];
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, false);
@@ -40,20 +40,20 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         assert.strictEqual(Ethers.utils.getAddress(ERC20MintableInstance1.address), retrievedTokenAddress);
 
         const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance1.address);
-        assert.strictEqual(initialResourceIDs[0], retrievedResourceID);
+        assert.strictEqual(initialResourceIDs[0].toLowerCase(), retrievedResourceID.toLowerCase());
     });
 
     it('new resourceID and corresponding contract address should be set correctly', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new();
-        const secondERC20ResourceID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]);
+        const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
         await ERC20HandlerInstance.setResourceIDAndContractAddress(secondERC20ResourceID, ERC20MintableInstance2.address);
 
         const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(secondERC20ResourceID);
-        assert.strictEqual(Ethers.utils.getAddress(ERC20MintableInstance2.address), retrievedTokenAddress);
+        assert.strictEqual(Ethers.utils.getAddress(ERC20MintableInstance2.address).toLowerCase(), retrievedTokenAddress.toLowerCase());
 
         const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance2.address);
-        assert.strictEqual(secondERC20ResourceID, retrievedResourceID);
+        assert.strictEqual(secondERC20ResourceID.toLowerCase(), retrievedResourceID.toLowerCase());
     });
 
     it('should revert because resourceID should already be set', async () => {
@@ -64,7 +64,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
 
     it('should revert because contract address should already be set', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new();
-        const secondERC20ResourceID = AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]);
+        const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
         await TruffleAssert.reverts(ERC20HandlerInstance.setResourceIDAndContractAddress(
             secondERC20ResourceID, ERC20MintableInstance1.address),

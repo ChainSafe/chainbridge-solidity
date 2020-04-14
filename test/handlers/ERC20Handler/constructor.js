@@ -33,9 +33,11 @@ contract('ERC20Handler - [constructor]', async () => {
         ERC20MintableInstance3 = await ERC20MintableContract.new();
 
         initialResourceIDs = [];
-        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance1.address]));
-        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance2.address]));
-        initialResourceIDs.push(AbiCoder.encode(['uint256', 'address'], [chainID, ERC20MintableInstance3.address]));
+
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance3.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
+
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address, ERC20MintableInstance3.address];
     });
 
@@ -47,13 +49,13 @@ contract('ERC20Handler - [constructor]', async () => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, false);
         
         for (const resourceID of initialResourceIDs) {
-            const tokenAddress = '0x' + resourceID.substr(90);
+            const tokenAddress = `0x` + resourceID.substr(24,40);
             
             const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(resourceID);
-            assert.strictEqual(Ethers.utils.getAddress(tokenAddress), retrievedTokenAddress);
+            assert.strictEqual(Ethers.utils.getAddress(tokenAddress).toLowerCase(), retrievedTokenAddress.toLowerCase());
 
             const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(tokenAddress);
-            assert.strictEqual(resourceID, retrievedResourceID);
+            assert.strictEqual(resourceID.toLowerCase(), retrievedResourceID.toLowerCase());
         }
     });
 });

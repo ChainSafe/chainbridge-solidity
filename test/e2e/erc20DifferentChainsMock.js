@@ -61,11 +61,12 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             BridgeContract.new(destinationChainID, DestinationRelayerInstance.address, destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance)
         ]);
 
-        originResourceID = AbiCoder.encode(['uint256', 'address'], [originChainID, OriginERC20MintableInstance.address]);
+        originResourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC20MintableInstance.address];
 
-        destinationResourceID = AbiCoder.encode(['uint256', 'address'], [originChainID, DestinationERC20MintableInstance.address]);
+        destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [OriginERC20MintableInstance.address];
 
@@ -89,7 +90,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
         originDepositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +               // len(resourceID)       (32 bytes)
             destinationResourceID.substr(2) +                                               // resourceID            (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
@@ -104,7 +104,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
         destinationDepositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +      // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(64), 32).substr(2) +                 // len(resourceID)       (32 bytes)
             originResourceID.substr(2) +                                                      // resourceID            (64 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +                 // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(depositerAddress).substr(2);                                 // recipientAddress      (?? bytes)

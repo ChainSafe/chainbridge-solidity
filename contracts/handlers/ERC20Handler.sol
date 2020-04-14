@@ -12,8 +12,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     struct DepositRecord {
         address _originChainTokenAddress;
-        uint    _destinationChainID;
-        bytes   _resourceID;
+        uint8   _destinationChainID;
+        bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
@@ -21,10 +21,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // resourceID => token contract address
-    mapping (bytes => address) public _resourceIDToTokenContractAddress;
+    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
     // token contract address => resourceID
-    mapping (address => bytes) public _tokenContractAddressToResourceID;
+    mapping (address => bytes32) public _tokenContractAddressToResourceID;
 
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
@@ -39,7 +39,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     constructor(
         address          bridgeAddress,
-        bytes[]   memory initialResourceIDs,
+        bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses,
         bool             useContractWhitelist
     ) public {
@@ -66,7 +66,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return true;
     }
 
-    function _setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) internal {
+    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
@@ -75,11 +75,11 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
     }
 
-    function setResourceIDAndContractAddress(bytes memory resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
-        bytes memory currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes memory emptyBytes;
+        bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
+        bytes32 emptyBytes;
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
@@ -87,12 +87,14 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     // Make a deposit
-    // bytes memory data is laid out as following:
-    // originChainTokenAddress     address   - @0x20
-    // amount                      uint256   - @0x40
-    // destinationRecipientAddress           - @0x60 - END
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // originChainTokenAddress                address     bytes   0 - 32
+    // amount                                 uint256     bytes  32 - 64
+    // destinationRecipientAddress length     uint256     bytes  64 - 96
+    // destinationRecipientAddress            bytes       bytes  96 - END
     function deposit(
-        uint256 destinationChainID,
+        uint8 destinationChainID,
         uint256 depositNonce,
         address depositer,
         bytes memory data
@@ -105,7 +107,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         assembly {
             originChainTokenAddress        := mload(add(data, 0x20))
             amount                         := mload(add(data, 0x40))
-
             destinationRecipientAddress     := mload(0x40)
             lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
@@ -119,8 +120,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
-        bytes memory resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        bytes memory emptyBytes;
+        bytes32      resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
+        bytes32      emptyBytes;
 
         if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
             // The case where we have never seen this token address before
@@ -129,9 +130,9 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             // it follows that the token is native to the current chain.
 
             IBridge bridge = IBridge(_bridgeAddress);
-            uint chainID = bridge._chainID();
+            uint8 chainID = uint8(bridge._chainID());
 
-            resourceID = createResourceID(chainID, originChainTokenAddress);
+            resourceID = createResourceID(originChainTokenAddress,chainID);
 
              _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
              _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
@@ -151,69 +152,70 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         );
     }
 
-    function createResourceID(uint256 chainID, address originChainTokenAddress) internal pure returns (bytes memory) {
-        return abi.encode(chainID, originChainTokenAddress);
+    function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
+        bytes memory encodedResourceID = abi.encode(abi.encodePacked(originChainTokenAddress, chainID));
+        bytes32 resourceID;
+
+        assembly {
+            resourceID := mload(add(encodedResourceID, 0x20))
+        }
+
+        return resourceID;
     }
 
+
     // execute a deposit
-    // bytes memory data is laid out as following:
-    // amount                      uint256   - @0x20 - 0x40
-    // resourceID                            - @0x40 - 0xC0
-    // -----------------------------------------------------
-    // resourceID len              uint256   - @0x40 - 0x60
-    // resourceID                  bytes     - @0x60 - 0xA0
-    // -----------------------------------------------------
-    // destinationRecipientAddress           - @0xA0 - END
-    // -----------------------------------------------------
-    // destinationRecipientAddress len uint256 - @0xA0 - 0xC0
-    // destinationRecipientAddress     bytes   - @0xC0 - END
+    // bytes memory data passed into the function should be constructed as follows:
+
+    // amount                                 uint256     bytes   0 - 32
+    // resourceID                             bytes32     bytes  32 - 64
+    // --------------------------------------------------------------------
+    // destinationRecipientAddress length     uint256     bytes  64 - 96
+    // destinationRecipientAddress            bytes       bytes  96 - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256       amount;
-        bytes  memory resourceID;
+        bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
-        uint256 tokenChainID;
-        address tokenAddress;
 
 
         assembly {
             amount                      := mload(add(data, 0x20))
-            tokenChainID                := mload(add(data, 0x60))
-            tokenAddress                := mload(add(data, 0x80))
+            resourceID                  := mload(add(data, 0x40))
 
             destinationRecipientAddress         := mload(0x40)
-            let lenDestinationRecipientAddress  := mload(add(0xA0, data))
+            let lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
             
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
                 destinationRecipientAddress,        // copy to destinationRecipientAddress
-                0xC4,                               // copy from calldata @ 0x84
-                sub(calldatasize(), 0xC4)           // copy size to the end of calldata
+                0x84,                               // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84)           // copy size to the end of calldata
             )
 
         }
 
-        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
-
-        resourceID = abi.encode(tokenChainID, tokenAddress);
-
         bytes20 recipientAddress;
+        bytes20 tokenAddress;
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+            tokenAddress := mload(add(data, 0x4B))
         }
 
+        require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
         if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
             // token exists
             IBridge bridge = IBridge(_bridgeAddress);
-            uint256 chainID = bridge._chainID();
+            uint8 chainID = bridge._chainID();
 
-            if (tokenChainID == chainID) {
+            if (uint8(resourceID[31]) == chainID) {
                 // token is from same chain
-                releaseERC20(tokenAddress, address(recipientAddress), amount);
+                releaseERC20(address(tokenAddress), address(recipientAddress), amount);
             } else {
                 // token is not from chain
-                mintERC20(tokenAddress, address(recipientAddress), amount);
+
+                mintERC20(address(tokenAddress), address(recipientAddress), amount);
             }
         } else {
             // Token doesn't exist

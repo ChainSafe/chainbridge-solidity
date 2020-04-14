@@ -9,7 +9,7 @@ import "./interfaces/IBridge.sol";
 contract Bridge {
     using SafeMath for uint;
 
-    uint256                  public _chainID;
+    uint8                    public _chainID;
     IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
@@ -35,42 +35,42 @@ contract Bridge {
     }
 
     // destinationChainID => number of deposits
-    mapping(uint256 => uint256) public _depositCounts;
+    mapping(uint8 => uint256) public _depositCounts;
     // destinationChainID => depositNonce => bytes
-    mapping(uint256 => mapping(uint256 => bytes)) public _depositRecords;
+    mapping(uint8 => mapping(uint256 => bytes)) public _depositRecords;
     // destinationChainID => depositNonce => depositProposal
-    mapping(uint256 => mapping(uint256 => DepositProposal)) public _depositProposals;
+    mapping(uint8 => mapping(uint256 => DepositProposal)) public _depositProposals;
     // destinationChainID => depositNonce => relayerAddress => bool
-    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public _hasVotedOnDepositProposal;
+    mapping(uint8 => mapping(uint256 => mapping(address => bool))) public _hasVotedOnDepositProposal;
 
     event RelayerThresholdProposalCreated(uint indexed proposedValue);
     event RelayerThresholdProposalVote(Vote vote);
     event RelayerThresholdChanged(uint indexed newThreshold);
     event Deposit(
-        uint256 indexed destinationChainID,
+        uint8   indexed destinationChainID,
         address indexed originChainHandlerAddress,
         uint256 indexed depositNonce
     );
     event DepositProposalCreated(
-        uint256 indexed originChainID,
-        uint256 indexed destinationChainID,
+        uint8   indexed originChainID,
+        uint8   indexed destinationChainID,
         uint256 indexed depositNonce,
         bytes32         dataHash
     );
     event DepositProposalVote(
-        uint256 indexed       originChainID,
-        uint256 indexed       destinationChainID,
+        uint8   indexed       originChainID,
+        uint8   indexed       destinationChainID,
         uint256 indexed       depositNonce,
         DepositProposalStatus status
     );
     event DepositProposalFinalized(
-        uint256 indexed originChainID,
-        uint256 indexed destinationChainID,
+        uint8   indexed originChainID,
+        uint8   indexed destinationChainID,
         uint256 indexed depositNonce
     );
     event DepositProposalExecuted(
-        uint256 indexed originChainID,
-        uint256 indexed destinationChainID,
+        uint8   indexed originChainID,
+        uint8   indexed destinationChainID,
         uint256 indexed depositNonce
     );
 
@@ -80,7 +80,7 @@ contract Bridge {
         _;
     }
 
-    constructor (uint256 chainID, address relayerContract, uint initialRelayerThreshold) public {
+    constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
@@ -97,14 +97,14 @@ contract Bridge {
     }
 
     function getDepositProposal(
-        uint256 destinationChainID,
+        uint8 destinationChainID,
         uint256 depositNonce
     ) public view returns (DepositProposal memory) {
         return _depositProposals[destinationChainID][depositNonce];
     }
 
     function deposit(
-        uint256      destinationChainID,
+        uint8        destinationChainID,
         address      originChainHandlerAddress,
         bytes memory data
     ) public {
@@ -118,11 +118,11 @@ contract Bridge {
     }
 
     function voteDepositProposal(
-        uint256 originChainID,
+        uint8   originChainID,
         uint256 depositNonce,
         bytes32 dataHash
     ) public _onlyRelayers {
-        DepositProposal storage depositProposal = _depositProposals[originChainID][depositNonce];
+        DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(uint(depositProposal._status) <= 1, "proposal has already been passed or transferred");
         require(!_hasVotedOnDepositProposal[originChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
@@ -154,12 +154,12 @@ contract Bridge {
     }
 
     function executeDepositProposal(
-        uint256      originChainID,
+        uint8        originChainID,
         uint256      depositNonce,
         address      destinationChainHandlerAddress,
         bytes memory data
     ) public {
-        DepositProposal storage depositProposal = _depositProposals[originChainID][depositNonce];
+        DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(depositProposal._status != DepositProposalStatus.Inactive, "proposal is not active");
         require(depositProposal._status == DepositProposalStatus.Passed, "proposal was not passed or has already been transferred");

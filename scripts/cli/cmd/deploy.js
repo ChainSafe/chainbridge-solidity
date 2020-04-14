@@ -109,7 +109,7 @@ async function deployERC20(args) {
 async function deployERC20Handler(args) {
 
     const factory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract, [args.erc20ResourceID1, args.erc20ResourceID2 ], [args.erc20Contract1, args.erc20Contract2]);
+    const contract = await factory.deploy(args.bridgeContract, [args.erc20ResourceID1, args.erc20ResourceID2], [args.erc20Contract1, args.erc20Contract2]);
     await contract.deployed();
     args.erc20HandlerContract = contract.address
     console.log("✓ ERC20Handler contract deployed")

@@ -100,8 +100,11 @@ async function deployERC20(args) {
 }
 
 async function deployERC20Handler(args) {
+
+    console.log(args.erc20Contract)
+    console.log(ethers.utils.hexZeroPad((args.erc20Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32))
     const factory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract, [], []);
+    const contract = await factory.deploy(args.bridgeContract, [ethers.utils.hexZeroPad((args.erc20Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32)], [args.erc20Contract]);
     await contract.deployed();
     args.erc20HandlerContract = contract.address
     console.log("✓ ERC20Handler contract deployed")
@@ -117,7 +120,7 @@ async function deployERC721(args) {
 
 async function deployERC721Handler(args) {
     const factory = new ethers.ContractFactory(ERC721HandlerContract.abi, ERC721HandlerContract.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract,[],[]);
+    const contract = await factory.deploy(args.bridgeContract,[ethers.utils.hexZeroPad((args.erc721Contract + ethers.utils.hexlify(args.chainId).substr(2)), 32)],[args.erc721Contract]);
     await contract.deployed();
     args.erc721HandlerContract = contract.address
     console.log("✓ ERC721Handler contract deployed")

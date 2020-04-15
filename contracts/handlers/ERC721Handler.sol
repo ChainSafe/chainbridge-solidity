@@ -209,7 +209,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             _resourceIDToTokenContractAddress[resourceID] = address(erc721);
             _tokenContractAddressToResourceID[address(erc721)] = resourceID;
 
-            // erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            erc721.safeMint(address(recipientAddress), tokenID, metaData);
         }
     }
 

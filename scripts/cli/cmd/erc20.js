@@ -29,7 +29,6 @@ const whitelistCmd = new Command("whitelist")
         setupParentArgs(args, args.parent.parent)
 
         // Instances
-        const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
         const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, ERC20HandlerContract.abi, args.wallet);
 
@@ -40,6 +39,7 @@ const whitelistCmd = new Command("whitelist")
             resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32);
             console.log(resourceID);
             await erc20HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i]);
+            console.log(`[ERC20 Mint] Successfully whitelisted ${args.whitelist[i]} on handler ${args.erc20HandlerAddress}`);
         }
     })
 
@@ -54,14 +54,13 @@ const transferCmd = new Command("transfer")
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option(`--whitelist <address>`, `Custom addresses to be whitelisted`, splitCommaList, constants.ERC20_WHITELIST)
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc20Instance = new ethers.Contract(args.erc20Address, ERC20Contract.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
-
+        const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, ERC20HandlerContract.abi, args.wallet);
 
         console.log("[ERC20 Transfer] whitelisted ERC20 token contracts!");
 
@@ -74,15 +73,18 @@ const transferCmd = new Command("transfer")
         // Approve tokens
         await erc20Instance.approve(args.erc20HandlerAddress, args.value);
         console.log(`[ERC20 Transfer] Approved ${args.erc20HandlerAddress} to spend ${args.value} tokens from ${args.wallet.address}!`);
-        
-        console.log(args.chainId)
+
+        // Compute resourceID
+        resourceID = await erc20HandlerInstance._tokenContractAddressToResourceID(args.erc20Address)
+
         const data = '0x' +
             resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(args.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
 
-        // Make the deposit
+        // Make the deposit             
+
         await bridgeInstance.deposit(
             args.dest, // destination chain id
             args.erc20HandlerAddress,
@@ -112,6 +114,7 @@ const balanceCmd = new Command("balance")
 const erc20Cmd = new Command("erc20")
 
 erc20Cmd.addCommand(mintCmd)
+erc20Cmd.addCommand(whitelistCmd)
 erc20Cmd.addCommand(transferCmd)
 erc20Cmd.addCommand(balanceCmd)
 

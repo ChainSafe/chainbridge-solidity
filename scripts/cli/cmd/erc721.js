@@ -38,6 +38,7 @@ const whitelistCmd = new Command("whitelist")
             resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32);
             console.log(resourceID);
             await erc721HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i]);
+            console.log(`[ERC721 Mint] Successfully whitelisted ${args.whitelist[i]} on handler ${args.erc721HandlerAddress}`);
         }
     })
 
@@ -69,9 +70,12 @@ const transferCmd = new Command("transfer")
         console.log(`[ERC721 Transfer] Depositer ${args.wallet.address} owns ${depositerPreBal.toNumber()} tokens `);
         console.log(`[ERC721 Transfer] Handler ${args.erc721HandlerAddress} owns ${handlerPreBal.toNumber()}`);
 
+
+        // Compute resourceID
+        resourceID = await erc721HandlerInstance._tokenContractAddressToResourceID(args.erc20Address)
+
         const data = '0x' +
-            ethers.utils.hexZeroPad(erc721Instance.address, 32).substr(2) +              // OriginHandlerAddress  (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(args.id), 32).substr(2) +    // NFT tokenId        (32 bytes)
+            resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)          
             ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
 
@@ -91,6 +95,7 @@ const transferCmd = new Command("transfer")
 const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
+erc721Cmd.addCommand(whitelistCmd)
 erc721Cmd.addCommand(transferCmd)
 
 module.exports = erc721Cmd

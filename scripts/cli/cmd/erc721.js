@@ -2,10 +2,12 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs} = require("./utils")
+const {setupParentArgs, splitCommaList} = require("./utils")
 
 const BridgeContract = require("../../../build/contracts/Bridge.json");
 const ERC721Contract = require("../../../build/contracts/ERC721Mintable.json");
+const ERC721HandlerContract = require("../../../build/contracts/ERC721Handler.json");
+
 
 const mintCmd = new Command("mint")
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
@@ -25,12 +27,25 @@ const transferCmd = new Command("transfer")
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
+    .option(`--whitelist <address>`, `Custom addresses to be whitelisted`, splitCommaList, constants.ERC721_WHITELIST)
+
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc721Instance = new ethers.Contract(args.erc721Address, ERC721Contract.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
+        const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, ERC721HandlerContract.abi, args.wallet);
+
+        // Whitelisting Addresses
+        chainID = await bridgeInstance._chainID()
+
+        for (let i = 0; i < args.whitelist.length; i++) {
+            resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32)
+            console.log(resourceID)
+            await erc721HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i])
+        }
+
 
         // Approve tokens
         await erc721Instance.approve(args.erc721HandlerAddress, args.id);

@@ -9,27 +9,20 @@ contract Relayer is IRelayer {
     uint public _relayerThreshold;
     uint public _totalRelayers;
     RelayerThresholdProposal private _currentRelayerThresholdProposal;
-    // RelayerActionType and _relayerActionTypeStrings must be kept
-    // the same length and order to function properly
-    string[] _relayerActionTypeStrings = ["remove", "add"];
-    // VoteStatus and _voteStatusStrings must be kept
-    // the same length and order to function properly
-    string[] _voteStatusStrings = ["inactive", "active"];
 
     struct RelayerProposal {
-        address                  _proposedAddress;
-        RelayerActionType      _action;
-        mapping(address => bool) _votes;
-        uint                     _numYes;
-        uint                     _numNo;
+        RelayerActionType        _action;
+        mapping(address => bool) _hasVoted;
+        address[]                _yesVotes;
+        address[]                _noVotes;
         VoteStatus               _status;
     }
 
     struct RelayerThresholdProposal {
         uint                     _proposedValue;
-        mapping(address => bool) _votes;
-        uint                     _numYes;
-        uint                     _numNo;
+        mapping(address => bool) _hasVoted;
+        address[]                _yesVotes;
+        address[]                _noVotes;
         VoteStatus               _status;
     }
 
@@ -39,11 +32,11 @@ contract Relayer is IRelayer {
     mapping(address => RelayerProposal) public _relayerProposals;
 
     event RelayerProposalCreated(address indexed proposedAddress, RelayerActionType indexed relayerActionType);
-    event RelayerProposalVote(address indexed proposedAddress, Vote vote);
+    event RelayerProposalVote(address indexed proposedAddress, VoteStatus indexed vote);
     event RelayerAdded(address indexed relayerAddress);
     event RelayerRemoved(address indexed relayerAddress);
     event RelayerThresholdProposalCreated(uint indexed proposedValue);
-    event RelayerThresholdProposalVote(Vote vote);
+    event RelayerThresholdProposalVote(Vote indexed vote);
     event RelayerThresholdChanged(uint indexed newThreshold);
 
     modifier _onlyRelayers() {
@@ -63,89 +56,73 @@ contract Relayer is IRelayer {
         return _relayers[relayerAddress];
     }
 
-    function getRelayerThreshold() public view returns (uint) {
-        return _relayerThreshold;
-    }
-
     function getTotalRelayers() public override returns (uint) {
         return _totalRelayers;
     }
 
     function getCurrentRelayerThresholdProposal() public view returns (
-        uint, uint, uint, string memory) {
+        uint, address[] memory, address[] memory, VoteStatus) {
         return (
         _currentRelayerThresholdProposal._proposedValue,
-        _currentRelayerThresholdProposal._numYes,
-        _currentRelayerThresholdProposal._numNo,
-        _voteStatusStrings[uint(_currentRelayerThresholdProposal._status)]);
+        _currentRelayerThresholdProposal._yesVotes,
+        _currentRelayerThresholdProposal._noVotes,
+        _currentRelayerThresholdProposal._status);
     }
 
     function getRelayerProposal(address proposedAddress) public view returns (
-        address, string memory, uint, uint, string memory) {
+        RelayerActionType, address[] memory, address[] memory, VoteStatus) {
         RelayerProposal memory relayerProposal = _relayerProposals[proposedAddress];
         return (
-        relayerProposal._proposedAddress,
-        _relayerActionTypeStrings[uint(relayerProposal._action)],
-        relayerProposal._numYes,
-        relayerProposal._numNo,
-        _voteStatusStrings[uint(relayerProposal._status)]);
+            relayerProposal._action,
+            relayerProposal._yesVotes,
+            relayerProposal._noVotes,
+            relayerProposal._status);
     }
 
-    function createRelayerProposal(address proposedAddress, RelayerActionType action) public override _onlyRelayers {
-        require(uint(action) <= 1, "action out of the vote enum range");
-        require(action == RelayerActionType.Remove && _relayers[proposedAddress] == true, "address is not a relayer");
-        require(action == RelayerActionType.Add && _relayers[proposedAddress] == false, "address is currently a relayer");
-        require(_relayerProposals[proposedAddress]._status == VoteStatus.Inactive, "there is already an active proposal for this address");
+    function voteRelayerProposal(address proposedAddress, RelayerActionType action) public override _onlyRelayers {
+        RelayerProposal storage relayerProposal = _relayerProposals[proposedAddress];
 
-        _relayerProposals[proposedAddress] = RelayerProposal({
-            _proposedAddress: proposedAddress,
-            _action: action,
-            _numYes: 1, // Creator always votes in favour
-            _numNo: 0,
-            _status: VoteStatus.Active
+        require(uint8(action) <= 1, "action out of the action enum range");
+        require(relayerProposal._hasVoted[msg.sender] == false, "relayer has already voted on proposal");
+
+        if (action == RelayerActionType.Remove) {
+            require(_relayers[proposedAddress], "proposed address is not a relayer");
+        } else {
+            require(!_relayers[proposedAddress], "proposed address is already a relayer");
+        }
+
+        // There is no active proposal for proposedAddress
+        if (relayerProposal._status == VoteStatus.Inactive) {
+            // Initialize new proposal
+            _relayerProposals[proposedAddress] = RelayerProposal({
+                _action: action,
+                _yesVotes: new address[](1),
+                _noVotes: new address[](0),
+                _status: VoteStatus.Active
             });
 
-        if (_relayerThreshold <= 1) {
-            _relayerProposals[proposedAddress]._status = VoteStatus.Inactive;
-            if (action == RelayerActionType.Add) {
-                _addRelayer(proposedAddress);
-            } else {
-                _removeRelayer(proposedAddress);
-            }
-        }
-        // Record vote
-        _relayerProposals[proposedAddress]._votes[msg.sender] = true;
-        emit RelayerProposalCreated(proposedAddress, action);
-    }
-
-    function voteRelayerProposal(address proposedAddress, Vote vote) public override _onlyRelayers {
-        require(_relayerProposals[proposedAddress]._status == VoteStatus.Active, "there is no active proposal for this address");
-        require(!_relayerProposals[proposedAddress]._votes[msg.sender], "relayer has already voted");
-        require(uint(vote) <= 1, "vote out of the vote enum range");
-
-        // Cast vote
-        if (vote == Vote.Yes) {
-            _relayerProposals[proposedAddress]._numYes++;
+            relayerProposal._yesVotes[0] = msg.sender;
+            emit RelayerProposalCreated(proposedAddress, action);
         } else {
-            _relayerProposals[proposedAddress]._numNo++;
+            // There is an active proposal for proposedAddress
+            relayerProposal._yesVotes.push(msg.sender);
         }
 
-        // Record vote
-        _relayerProposals[proposedAddress]._votes[msg.sender] = true;
-        emit RelayerProposalVote(proposedAddress, vote);
+        relayerProposal._hasVoted[msg.sender] = true;
+        emit RelayerProposalVote(proposedAddress, relayerProposal._status);
 
-        // Todo: Edge case if relayer threshold changes?
-        // Todo: For a proposal to pass does the number of yes votes just need to be higher than the threshold, or does it also have to be greater than the number of no votes?
-        if (_relayerProposals[proposedAddress]._numYes >= _relayerThreshold) {
-            if (_relayerProposals[proposedAddress]._action == RelayerActionType.Add) {
-                _addRelayer(proposedAddress);
-            } else {
+        // If _depositThreshold is set to 1, then auto finalize
+        // or if _relayerThreshold has been exceeded
+        if (_relayerThreshold <= 1 || relayerProposal._yesVotes.length >= _relayerThreshold) {
+            relayerProposal._status = VoteStatus.Inactive;
+
+            if (relayerProposal._action == RelayerActionType.Remove) {
                 _removeRelayer(proposedAddress);
+                emit RelayerRemoved(proposedAddress);
+            } else {
+                _addRelayer(proposedAddress);
+                emit RelayerAdded(proposedAddress);
             }
-
-            _relayerProposals[proposedAddress]._status = VoteStatus.Inactive;
-        } else if (_totalRelayers.sub(_relayerProposals[proposedAddress]._numNo) < _relayerThreshold) {
-            _relayerProposals[proposedAddress]._status = VoteStatus.Inactive;
         }
     }
 
@@ -155,8 +132,8 @@ contract Relayer is IRelayer {
 
         _currentRelayerThresholdProposal = RelayerThresholdProposal({
             _proposedValue: proposedValue,
-            _numYes: 1, // Creator always votes in favour
-            _numNo: 0,
+            _yesVotes: new address[](1),
+            _noVotes: new address[](0),
             _status: VoteStatus.Active
             });
 
@@ -166,32 +143,33 @@ contract Relayer is IRelayer {
             emit RelayerThresholdChanged(proposedValue);
         }
         // Record vote
-        _currentRelayerThresholdProposal._votes[msg.sender] = true;
+        _currentRelayerThresholdProposal._yesVotes[0] = msg.sender;
+        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
         emit RelayerThresholdProposalCreated(proposedValue);
     }
 
     function voteRelayerThresholdProposal(Vote vote) public override _onlyRelayers {
+        require(uint8(vote) <= 1, "vote out of the vote enum range");
         require(_currentRelayerThresholdProposal._status == VoteStatus.Active, "no proposal is currently active");
-        require(!_currentRelayerThresholdProposal._votes[msg.sender], "relayer has already voted");
-        require(uint(vote) <= 1, "vote out of the vote enum range");
+        require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
 
         // Cast vote
         if (vote == Vote.Yes) {
-            _currentRelayerThresholdProposal._numYes++;
+            _currentRelayerThresholdProposal._yesVotes.push(msg.sender);
         } else {
-            _currentRelayerThresholdProposal._numNo++;
+            _currentRelayerThresholdProposal._noVotes.push(msg.sender);
         }
 
-        _currentRelayerThresholdProposal._votes[msg.sender] = true;
+        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
         emit RelayerThresholdProposalVote(vote);
 
         // Todo: Edge case if relayer threshold changes?
         // Todo: For a proposal to pass does the number of yes votes just need to be higher than the threshold, or does it also have to be greater than the number of no votes?
-        if (_currentRelayerThresholdProposal._numYes >= _relayerThreshold) {
+        if (_currentRelayerThresholdProposal._yesVotes.length >= _relayerThreshold) {
             _relayerThreshold = _currentRelayerThresholdProposal._proposedValue;
             _currentRelayerThresholdProposal._status = VoteStatus.Inactive;
             emit RelayerThresholdChanged(_currentRelayerThresholdProposal._proposedValue);
-        } else if (_totalRelayers.sub(_currentRelayerThresholdProposal._numNo) < _relayerThreshold) {
+        } else if (_totalRelayers.sub(_currentRelayerThresholdProposal._noVotes.length) < _relayerThreshold) {
             _currentRelayerThresholdProposal._status = VoteStatus.Inactive;
         }
     }

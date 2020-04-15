@@ -2,6 +2,8 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+const ethers = require('ethers');
+
 
 // This is just Alice's key.
 module.exports.deployerAddress = "0xff93B45308FD417dF303D6515aB04D9e89a750Ca";
@@ -23,14 +25,6 @@ module.exports.relayerPrivKeys = [
     "0x0000000000000000000000000000000000000000000000000000000000657665", // Eve Private Key
 ]
 
-module.exports.ERC20_WHITELIST = [
-    "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E",
-]
-
-module.exports.ERC721_WHITELIST = [
-    "0x21605f71845f372A9ed84253d2D024B7B10999f4",
-]
-
 
 // These are deterministic
 module.exports.BRIDGE_ADDRESS = "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF";
@@ -43,3 +37,7 @@ module.exports.CENTRIFUGE_HANDLER = "0xc279648CE5cAa25B9bA753dAb0Dfef44A069BaF4"
 
 module.exports.DEFAULT_SOURCE_ID = 0;
 module.exports.DEFAULT_DEST_ID = 1;
+
+module.exports.ERC20_RESOURCEID = ethers.utils.hexZeroPad((this.ERC20_ADDRESS + ethers.utils.hexlify(this.DEFAULT_SOURCE_ID).substr(2)), 32);
+module.exports.ERC721_RESOURCEID = ethers.utils.hexZeroPad((this.ERC721_ADDRESS + ethers.utils.hexlify(this.DEFAULT_SOURCE_ID).substr(2)), 32);
+

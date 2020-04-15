@@ -23,7 +23,8 @@ const mintCmd = new Command("mint")
 const whitelistCmd = new Command("whitelist")
     .description("whitelists token addresses for a particular handler")
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option(`--whitelist <address>`, `Custom addresses to be whitelisted`, splitCommaList, constants.ERC20_WHITELIST)
+    .option(`--tokenContract <address>`, `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
+    .option(`--resourceID <address>`, `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
     .option('--erc20HandlerAddress <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
@@ -35,11 +36,9 @@ const whitelistCmd = new Command("whitelist")
         // Whitelisting Addresses
         chainID = await bridgeInstance._chainID()
 
-        for (let i = 0; i < args.whitelist.length; i++) {
-            resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32);
-            await erc20HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i]);
-            console.log(`[ERC20 Mint] Successfully whitelisted ${args.whitelist[i]} on handler ${args.erc20HandlerAddress}`);
-        }
+        await erc20HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
+        console.log(`[ERC20 Mint] Successfully whitelisted ${args.tokenContract} on handler ${args.erc20HandlerAddress}`);
+    
     })
 
 

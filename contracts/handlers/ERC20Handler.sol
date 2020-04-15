@@ -40,14 +40,15 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses,
-        bool             useContractWhitelist
+        address[] memory initialContractAddresses
+        // bool             useContractWhitelist
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
 
         _bridgeAddress = bridgeAddress;
-        _useContractWhitelist = useContractWhitelist;
+        // we are currently requiring a whitelist
+        // _useContractWhitelist = useContractWhitelist;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
             _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
@@ -58,21 +59,23 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         return _depositRecords[depositID];
     }
 
-    function isWhitelisted(address contractAddress) internal view returns (bool) {
-        if (_useContractWhitelist) {
-            return _contractWhitelist[contractAddress];
-        }
+    function isWhitelisted(address contractAddress) public view returns (bool) {
+        // we are currently requiring a whitelist
+        // if (_useContractWhitelist) {
+        return _contractWhitelist[contractAddress];
+        // }
 
-        return true;
+        // return true;
     }
 
     function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
-        if (_useContractWhitelist) {
-            _contractWhitelist[contractAddress] = true;
-        }
+        // we are currently requiring a whitelist
+        // if (_useContractWhitelist) {
+        _contractWhitelist[contractAddress] = true;
+        // }
     }
 
     function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
@@ -89,7 +92,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     // Make a deposit
     // bytes memory data passed into the function should be constructed as follows:
     //
-    // originChainTokenAddress                address     bytes   0 - 32
+    // resourceID                             bytes32     bytes   0 - 32
     // amount                                 uint256     bytes  32 - 64
     // destinationRecipientAddress length     uint256     bytes  64 - 96
     // destinationRecipientAddress            bytes       bytes  96 - END
@@ -99,14 +102,17 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address depositer,
         bytes memory data
     ) public override _onlyBridge {
-        address      originChainTokenAddress;
-        bytes memory destinationRecipientAddress;
-        uint256      amount;
-        uint256      lenDestinationRecipientAddress;
+        // address      originChainTokenAddress;
+        bytes32        resourceID;
+        bytes   memory destinationRecipientAddress;
+        uint256        amount;
+        uint256        lenDestinationRecipientAddress;
 
         assembly {
-            originChainTokenAddress        := mload(add(data, 0x20))
-            amount                         := mload(add(data, 0x40))
+
+            resourceID                      := mload(add(data, 0x20))
+            // originChainTokenAddress        := mload(add(data, 0x20))
+            amount                          := mload(add(data, 0x40))
             destinationRecipientAddress     := mload(0x40)
             lenDestinationRecipientAddress  := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
@@ -118,26 +124,30 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             )
         }
 
+        address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
-        bytes32      resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        bytes32      emptyBytes;
 
-        if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
-            // The case where we have never seen this token address before
+        // we are currently only allowing for interactions with whitelisted tokenContracts
+        // there should not be a case where we recieve an empty resourceID
 
-            // If we have never seen this token and someone was able to perform a deposit,
-            // it follows that the token is native to the current chain.
+        // bytes32      emptyBytes;
 
-            IBridge bridge = IBridge(_bridgeAddress);
-            uint8 chainID = uint8(bridge._chainID());
+        // if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
+        //     // The case where we have never seen this token address before
 
-            resourceID = createResourceID(originChainTokenAddress,chainID);
+        //     // If we have never seen this token and someone was able to perform a deposit,
+        //     // it follows that the token is native to the current chain.
 
-             _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
-             _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
+        //     IBridge bridge = IBridge(_bridgeAddress);
+        //     uint8 chainID = uint8(bridge._chainID());
 
-        }
+        //     resourceID = createResourceID(originChainTokenAddress,chainID);
+
+        //      _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
+        //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
+
+        // }
 
         lockERC20(originChainTokenAddress, depositer, address(this), amount);
 
@@ -196,37 +206,42 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         bytes20 recipientAddress;
-        bytes20 tokenAddress;
+        // bytes20 tokenAddress;
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            tokenAddress := mload(add(data, 0x4B))
+            // tokenAddress := mload(add(data, 0x4B))
         }
 
-        require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
+        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
-        if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
-            // token exists
-            IBridge bridge = IBridge(_bridgeAddress);
-            uint8 chainID = bridge._chainID();
+        // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
+        // token exists
+        IBridge bridge = IBridge(_bridgeAddress);
+        uint8 chainID = bridge._chainID();
 
-            if (uint8(resourceID[31]) == chainID) {
-                // token is from same chain
-                releaseERC20(address(tokenAddress), address(recipientAddress), amount);
-            } else {
-                // token is not from chain
-
-                mintERC20(address(tokenAddress), address(recipientAddress), amount);
-            }
+        if (uint8(resourceID[31]) == chainID) {
+            // token is from same chain
+            releaseERC20(tokenAddress, address(recipientAddress), amount);
         } else {
-            // Token doesn't exist
-            ERC20Mintable erc20 = new ERC20Mintable();
-            
-            // Create a relationship between the originAddress and the synthetic
-            _resourceIDToTokenContractAddress[resourceID] = address(erc20);
-            _tokenContractAddressToResourceID[address(erc20)] = resourceID;
+            // token is not from chain
 
-            mintERC20(address(erc20), address(recipientAddress), amount);
+            mintERC20(tokenAddress, address(recipientAddress), amount);
         }
+
+        // As we are only allowing for interaction with whitelisted contracts, this case no longer exists
+
+        // } else {
+        //     // Token doesn't exist
+        //     ERC20Mintable erc20 = new ERC20Mintable();
+            
+        //     // Create a relationship between the originAddress and the synthetic
+        //     _resourceIDToTokenContractAddress[resourceID] = address(erc20);
+        //     _tokenContractAddressToResourceID[address(erc20)] = resourceID;
+
+        //     mintERC20(address(erc20), address(recipientAddress), amount);
+        // }
     }
 
     function withdraw(address tokenAddress, address recipient, uint amount) public _onlyBridge {

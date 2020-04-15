@@ -29,13 +29,32 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     // token contract address => resourceID
     mapping (address => bytes32) public _tokenContractAddressToResourceID;
 
+    // token contract address => is whitelisted
+    mapping (address => bool) public _contractWhitelist;
+
     modifier _onlyBridge() {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
 
-    constructor(address bridgeAddress) public {
+    constructor(
+        address bridgeAddress,
+        bytes32[] memory initialResourceIDs,
+        address[] memory initialContractAddresses
+        
+    ) public {
+        require(initialResourceIDs.length == initialContractAddresses.length,
+            "mismatch length between initialResourceIDs and initialContractAddresses");
+
         _bridgeAddress = bridgeAddress;
+
+        for (uint256 i = 0; i < initialResourceIDs.length; i++) {
+            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
+        }
+    }
+
+    function isWhitelisted(address contractAddress) internal view returns (bool) {
+        return _contractWhitelist[contractAddress];
     }
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
@@ -53,9 +72,38 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return resourceID;
     }
 
+    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
+        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
+        _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
+        _contractWhitelist[contractAddress] = true;
+    }
+
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
+
+        bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
+        bytes32 emptyBytes;
+        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding resourceID");
+
+        _setResourceIDAndContractAddress(resourceID, contractAddress);
+    }
+
+    // Make a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // resourceID                                  bytes32    bytes     0 - 32
+    // tokenID                                     uint256    bytes    32 - 64
+    // --------------------------------------------------------------------------------------------------------------------
+    // destinationRecipientAddress     length      uint256    bytes    64 - 96
+    // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+    // --------------------------------------------------------------------------------------------------------------------
+    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
-        address      originChainTokenAddress;
+        // address      originChainTokenAddress;
+        bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
         bytes memory destinationRecipientAddress;
@@ -63,7 +111,8 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         assembly {
 
-            originChainTokenAddress     := mload(add(data, 0x20))
+            // originChainTokenAddress     := mload(add(data, 0x20))
+            resourceID                    := mload(add(data, 0x20))
             tokenID                       := mload(add(data, 0x40))
 
             // set up destinationRecipientAddress
@@ -100,24 +149,30 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             )
         }
 
-        bytes32 resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        bytes memory emptyBytes;
+        address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
-        if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
-            // The case where we have never seen this token address before
+        // we are currently only allowing for interactions with whitelisted tokenContracts
+        // there should not be a case where we recieve an empty resourceID
 
-            // If we have never seen this token and someone was able to perform a deposit,
-            // it follows that the token is native to the current chain.
+        // bytes32 resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
+        // bytes memory emptyBytes;
 
-            IBridge bridge = IBridge(_bridgeAddress);
-            uint8 chainID = bridge._chainID();
+        // if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
+        //     // The case where we have never seen this token address before
 
-            resourceID = createResourceID(originChainTokenAddress, chainID);
+        //     // If we have never seen this token and someone was able to perform a deposit,
+        //     // it follows that the token is native to the current chain.
 
-             _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
-             _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
+        //     IBridge bridge = IBridge(_bridgeAddress);
+        //     uint8 chainID = bridge._chainID();
 
-        }
+        //     resourceID = createResourceID(originChainTokenAddress, chainID);
+
+        //      _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
+        //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
+
+        // }
 
         lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
 
@@ -133,6 +188,17 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         );
     }
 
+    // execute a deposit
+    // bytes memory data passed into the function should be constructed as follows:
+    //
+    // tokenID                                     uint256    bytes     0 - 32
+    // resourceID                                  bytes32    bytes    32 - 64
+    // --------------------------------------------------------------------------------------------------------------------
+    // destinationRecipientAddress     length      uint256    bytes    64 - 96
+    // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+    // --------------------------------------------------------------------------------------------------------------------
+    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
+    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function executeDeposit(bytes memory data) public override _onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;
@@ -186,32 +252,37 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
             tokenAddress := mload(add(data, 0x4B))
         }
+        
+        require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
 
-        if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
-            // token exists
-            IBridge bridge = IBridge(_bridgeAddress);
-            uint8 chainID = bridge._chainID();
+        // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
+        // token exists
+        IBridge bridge = IBridge(_bridgeAddress);
+        uint8 chainID = bridge._chainID();
 
-            if (uint8(resourceID[31]) == chainID) {
-                // token is from same chain
-                releaseERC721(address(tokenAddress), address(this), address(recipientAddress), tokenID);
-            } else {
-                // token is not from chain
-
-                ERC721Mintable erc721 = ERC721Mintable(address(tokenAddress));
-                erc721.safeMint(address(recipientAddress), tokenID, metaData);
-            }
+        if (uint8(resourceID[31]) == chainID) {
+            // token is from same chain
+            releaseERC721(address(tokenAddress), address(this), address(recipientAddress), tokenID);
         } else {
-            // Token doesn't exist
-            ERC721Mintable erc721 = new ERC721Mintable();
-            
-            // Create a relationship between the originAddress and the synthetic
-            _resourceIDToTokenContractAddress[resourceID] = address(erc721);
-            _tokenContractAddressToResourceID[address(erc721)] = resourceID;
+            // token is not from chain
 
+            ERC721Mintable erc721 = ERC721Mintable(address(tokenAddress));
             erc721.safeMint(address(recipientAddress), tokenID, metaData);
         }
+
+        // As we are only allowing for interaction with whitelisted contracts, this case no longer exists
+
+        // } else {
+        //     // Token doesn't exist
+        //     ERC721Mintable erc721 = new ERC721Mintable();
+            
+        //     // Create a relationship between the originAddress and the synthetic
+        //     _resourceIDToTokenContractAddress[resourceID] = address(erc721);
+        //     _tokenContractAddressToResourceID[address(erc721)] = resourceID;
+
+        //     erc721.safeMint(address(recipientAddress), tokenID, metaData);
+        // }
     }
 
     function withdraw(address tokenAddress, address recipient, uint tokenID) public _onlyBridge {

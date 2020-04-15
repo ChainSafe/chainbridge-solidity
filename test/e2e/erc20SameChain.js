@@ -46,7 +46,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, false);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         await Promise.all([
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
@@ -57,7 +57,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
+            // Ethers.utils.hexZeroPad(ERC20MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
+            resourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)

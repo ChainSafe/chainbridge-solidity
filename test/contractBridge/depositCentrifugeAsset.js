@@ -15,6 +15,8 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
     const recipientAddress = accounts[2];
     const expectedDepositID = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
+
+    const randomAddress = Ethers.utils.hexZeroPad('0x1', 20)
     
     let RelayerInstance;
     let BridgeInstance;
@@ -26,14 +28,20 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([relayer], relayerThreshold);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
-        CentrifugeAssetHandlerInstance = await CentrifugeAssetHandlerContract.new(BridgeInstance.address);
+
+        resourceID = Ethers.utils.hexZeroPad((randomAddress + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        initialResourceIDs = [resourceID];
+        initialContractAddresses = [randomAddress];
+
+        CentrifugeAssetHandlerInstance = await CentrifugeAssetHandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad('0x0', 32).substr(2) +
-            Ethers.utils.hexZeroPad('0x0', 32).substr(2) +
+            resourceID.substr(2) +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
             Ethers.utils.keccak256(genericBytes).substr(2);
-        depositProposalData = Ethers.utils.keccak256(genericBytes);
+        depositProposalData = '0x' +
+            resourceID.substr(2) +
+            Ethers.utils.keccak256(genericBytes).substr(2);
         depositProposalDataHash = Ethers.utils.keccak256(CentrifugeAssetHandlerInstance.address + depositProposalData.substr(2));
     });
 

@@ -17,6 +17,8 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     const expectedDepositNonce = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
 
+    const randomAddress = Ethers.utils.hexZeroPad('0x1', 20)
+
     let RelayerInstance;
     let BridgeInstance;
     let GenericHandlerInstance;
@@ -25,11 +27,16 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], 0);
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
-        GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address);
+
+        resourceID = Ethers.utils.hexZeroPad((randomAddress + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        initialResourceIDs = [resourceID];
+        initialContractAddresses = [randomAddress];
+
+        GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         depositData = '0x' +
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(originChainID), 32).substr(2) +
+            resourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
             Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
     });

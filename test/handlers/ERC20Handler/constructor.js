@@ -42,11 +42,11 @@ contract('ERC20Handler - [constructor]', async () => {
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, false));
+        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses));
     });
 
     it('initialResourceIDs should be parsed correctly and corresponding resourceID mappings should have expected values', async () => {
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, false);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
         
         for (const resourceID of initialResourceIDs) {
             const tokenAddress = `0x` + resourceID.substr(24,40);

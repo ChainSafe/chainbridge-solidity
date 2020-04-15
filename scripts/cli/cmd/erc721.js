@@ -36,7 +36,6 @@ const whitelistCmd = new Command("whitelist")
 
         for (let i = 0; i < args.whitelist.length; i++) {
             resourceID = ethers.utils.hexZeroPad((args.whitelist[i] + ethers.utils.hexlify(chainID).substr(2)), 32);
-            console.log(resourceID);
             await erc721HandlerInstance.setResourceIDAndContractAddress(resourceID, args.whitelist[i]);
             console.log(`[ERC721 Mint] Successfully whitelisted ${args.whitelist[i]} on handler ${args.erc721HandlerAddress}`);
         }

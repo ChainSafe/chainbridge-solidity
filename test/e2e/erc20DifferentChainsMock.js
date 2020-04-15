@@ -66,8 +66,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         originInitialContractAddresses = [OriginERC20MintableInstance.address];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
-        
-        // AbiCoder.encode(['uint256', 'address'], [originChainID, DestinationERC20MintableInstance.address]);
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC20MintableInstance.address];
 
@@ -84,7 +82,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
 
         originDepositData = '0x' +
-            // Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +    // OriginHandlerAddress  (32 bytes)
             originResourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
@@ -99,7 +96,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = '0x' +
-            // Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
             destinationResourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +       // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +                  // len(recipientAddress) (32 bytes)

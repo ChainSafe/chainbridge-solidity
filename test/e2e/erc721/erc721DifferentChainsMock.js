@@ -59,14 +59,13 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
-        
         destinationInitialResourceIDs = [destinationResourceID];
-        destinationInitialContractAddresses = [OriginERC721MintableInstance.address];
+        destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
 
         await Promise.all([
-            ERC721HandlerContract.new(OriginBridgeInstance.address)
+            ERC721HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses)
                 .then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(DestinationBridgeInstance.address)
+            ERC721HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses)
                 .then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
@@ -76,10 +75,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await DestinationERC721MintableInstance.addMinter(DestinationERC721HandlerInstance.address);
 
         originDepositData = '0x' +
-            Ethers.utils.hexZeroPad(OriginERC721MintableInstance.address, 32).substr(2) +    // OriginHandlerAddress  (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
+            originResourceID.substr(2) +                                           // resourceID            (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) + // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +      // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);               // recipientAddress      (?? bytes)
 
         originDepositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes) 
@@ -92,10 +91,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = '0x' +
-            Ethers.utils.hexZeroPad(DestinationERC721MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +              // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +                   // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);                            // recipientAddress      (?? bytes)
+            destinationResourceID.substr(2) +                                      // resourceID            (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) + // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +      // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);               // recipientAddress      (?? bytes)
 
         destinationDepositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) + // Deposit Amount        (32 bytes) 
@@ -170,13 +169,13 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
         // Assert ERC721 balance was transferred from depositerAddress
         tokenOwner = await DestinationERC721MintableInstance.ownerOf(tokenID);
-        assert.strictEqual(depositerAddress, recipientAddress, "tokenID wasn't transferred from depositerAddress to recipientAddress");
+        assert.strictEqual(tokenOwner, recipientAddress, "tokenID wasn't transferred from depositerAddress to recipientAddress");
 
         // At this point a representation of OriginERC721Mintable has been transferred from
         // depositer to the recipient using Both Bridges and DestinationERC721Mintable.
         // Next we will transfer DestinationERC721Mintable back to the depositer
 
-        await DestinationERC721MintableInstance.approve(DestinationERC721HandlerInstance.address, depositAmount, { from: recipientAddress });
+        await DestinationERC721MintableInstance.approve(DestinationERC721HandlerInstance.address, tokenID, { from: recipientAddress });
 
         // recipientAddress makes a deposit of the received depositAmount
         TruffleAssert.passes(await DestinationBridgeInstance.deposit(

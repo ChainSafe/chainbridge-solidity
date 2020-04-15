@@ -22,6 +22,8 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     let BridgeInstance;
     let ERC721MintableInstance;
     let ERC721HandlerInstance;
+    let initialResourceIDs;
+    let initialContractAddresses;
 
     let resourceID;
     let depositData;
@@ -33,20 +35,23 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold).then(instance => RelayerInstance = instance),
             ERC721MintableContract.new().then(instance => ERC721MintableInstance = instance)
         ]);
+        
+        resourceID = Ethers.utils.hexZeroPad((ERC721MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
+        initialResourceIDs = [resourceID];
+        initialContractAddresses = [ERC721MintableInstance.address];
 
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
+        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
-        resourceID = Ethers.utils.hexZeroPad((ERC721MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
 
         await ERC721MintableInstance.mint(depositerAddress, tokenID);        
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(ERC721MintableInstance.address, 32).substr(2) +          // OriginHandlerAddress  (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
+            resourceID.substr(2) +                                                  // resourceID            (32 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(recipientAddress) (32 bytes)
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                // recipientAddress      (?? bytes)
 
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes) 

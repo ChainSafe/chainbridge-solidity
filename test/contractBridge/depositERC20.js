@@ -26,7 +26,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
     let depositData;
-    let initialTokenIDs;
+    let initialResourceIDs;
     let initialContractAddresses;
 
     beforeEach(async () => {
@@ -39,17 +39,17 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
 
-        tokenID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
-        initialTokenIDs = [tokenID];
+        resourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        initialResourceIDs = [resourceID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
 
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialTokenIDs, initialContractAddresses, false);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(OriginERC20MintableInstance.address, 32).substr(2) +  // OriginHandlerAddress  (32 bytes)
+            resourceID.substr(2) +  // resourceID  (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +  // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +             // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                             // recipientAddress      (?? bytes)

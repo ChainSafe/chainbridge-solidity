@@ -29,11 +29,17 @@ const transferHashCmd = new Command('transferHash')
         setupParentArgs(args, args.parent.parent)
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, BridgeContract.abi, args.wallet);
 
+        
+        chainID = await bridgeInstance._chainID()
         const hash = ethers.utils.hexZeroPad(args.hash, 32)
+        resourceID = ethers.utils.hexZeroPad((ethers.utils.hexZeroPad('0x1', 20) + ethers.utils.hexlify(chainID).substr(2)), 32)
+
+        const data = `0x` + resourceID.substr(2) + hash.substr(2);
+
         let tx = await bridgeInstance.voteDepositProposal(
             args.destId,
             args.centAddress,
-            hash
+            hash,
         )
         console.log(`Proposal created, hash: ${tx.hash}`);
     })

@@ -162,7 +162,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // }
 
         if (_burnList[originChainTokenAddress]) {
-            chickens(originChainTokenAddress, depositer, amount);
+            burnERC20(originChainTokenAddress, depositer, amount);
         } else {
             lockERC20(originChainTokenAddress, depositer, address(this), amount);
         }

@@ -23,6 +23,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let ERC20HandlerInstance;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], relayerThreshold);
@@ -31,8 +32,9 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         initialContractAddresses = [ERC20MintableInstance1.address];
+        burnableContractAddresses = [];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
     });
 
     it("[sanity] ERC20MintableInstance1's resourceID and contract address should be set correctly", async () => {

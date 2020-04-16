@@ -32,6 +32,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositProposalDataHash;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -45,8 +46,9 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
+        burnableContractAddresses = [];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await ERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
         

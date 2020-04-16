@@ -30,7 +30,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     mapping (address => bool) public _contractWhitelist;
 
     // token contract address => is burnable
-    mapping (address => bool) public _burnlist;
+    mapping (address => bool) public _burnList;
 
     // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
@@ -44,7 +44,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses,
-        address[] memory burnableContractAddreses
+        address[] memory burnableContractAddresses
         // bool             useContractWhitelist
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
@@ -58,8 +58,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
             _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
         }
 
-        for (uint256 i = 0; i < burnableContractAddreses.length; i++) {
-            setBurnable(burnableContractAddreses[i]);
+        for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
+            setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -78,7 +78,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
     function setBurnable(address contractAddress) public {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
-        _burnlist[contractAddress] = true;
+        _burnList[contractAddress] = true;
     }
 
     function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
@@ -140,7 +140,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
-
         // we are currently only allowing for interactions with whitelisted tokenContracts
         // there should not be a case where we recieve an empty resourceID
 
@@ -162,8 +161,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         // }
 
-        if (_burnlist[originChainTokenAddress]) {
-            burnERC20(originChainTokenAddress, depositer, amount);
+        if (_burnList[originChainTokenAddress]) {
+            chickens(originChainTokenAddress, depositer, amount);
         } else {
             lockERC20(originChainTokenAddress, depositer, address(this), amount);
         }

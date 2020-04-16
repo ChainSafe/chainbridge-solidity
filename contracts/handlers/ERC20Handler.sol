@@ -163,7 +163,8 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
     }
 
     function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
-        bytes memory encodedResourceID = abi.encode(abi.encodePacked(originChainTokenAddress, chainID));
+        bytes11 padding;
+        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(originChainTokenAddress, chainID));
         bytes32 resourceID;
 
         assembly {

@@ -43,7 +43,7 @@ contract ERC20Safe {
     }
 
     function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
-        ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
+        ERC20Mintable erc20 = ERC20Mintable(tokenAddress);
         erc20.burnFrom(owner, amount);
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);

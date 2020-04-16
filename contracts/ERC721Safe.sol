@@ -2,7 +2,7 @@ pragma solidity 0.6.4;
 
 import "./helpers/SafeMath.sol";
 import "./erc/ERC721/IERC721.sol";
-import "./erc/ERC721/ERC721Burnable.sol";
+import "./erc/ERC721/ERC721Mintable.sol";
 
 contract ERC721Safe {
     using SafeMath for uint256;
@@ -28,7 +28,7 @@ contract ERC721Safe {
     }
 
     function burnERC721(address tokenAddress, uint256 tokenID) internal {
-        ERC721Burnable erc721 = ERC721Burnable(tokenAddress);
+        ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
         erc721.burn(tokenID);
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(1);

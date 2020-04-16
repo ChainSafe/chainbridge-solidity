@@ -32,6 +32,9 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
+    // token contract address => is burnable
+    mapping (address => bool) public _burnlist;
+
     modifier _onlyBridge() {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
@@ -40,8 +43,8 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses
-        
+        address[] memory initialContractAddresses,
+        address[] memory burnableContractAddreses
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
@@ -51,6 +54,10 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
             _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
         }
+
+        for (uint256 i = 0; i < burnableContractAddreses.length; i++) {
+            setBurnable(burnableContractAddreses[i]);
+        }
     }
 
     function isWhitelisted(address contractAddress) internal view returns (bool) {
@@ -59,6 +66,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
+    }
+
+    function setBurnable(address contractAddress) public {
+        require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
+        _burnlist[contractAddress] = true;
     }
 
     function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
@@ -174,7 +186,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         // }
 
-        lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+        if (_burnlist[originChainTokenAddress]) {
+            burnERC721(originChainTokenAddress, tokenID);
+        } else {
+            lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+        }
 
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,

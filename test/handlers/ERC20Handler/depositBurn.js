@@ -84,8 +84,8 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
         // const handlerAllowance = await ERC20MintableInstance1.allowance(depositerAddress, ERC20HandlerInstance.address);
         // assert.strictEqual(handlerAllowance.toNumber(), 0);
 
-        const handlerBalance = await ERC20MintableInstance1.balanceOf(ERC20HandlerInstance.address);
-        assert.strictEqual(handlerBalance.toNumber(), 0);
+        // const handlerBalance = await ERC20MintableInstance1.balanceOf(ERC20HandlerInstance.address);
+        // assert.strictEqual(handlerBalance.toNumber(), 0);
 
         // const zeroAddressBalance = await ERC20MintableInstance1.balanceOf(Ethers.utils.hexZeroPad('0x0', 20));
         // assert.strictEqual(zeroAddressBalance.toNumber(), 0);

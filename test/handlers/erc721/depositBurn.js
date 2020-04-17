@@ -81,6 +81,15 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             { from: depositerAddress }
         );
 
+        const handlerBalance = await ERC721MintableInstance1.balanceOf(ERC721HandlerInstance.address);
+        assert.strictEqual(handlerBalance.toNumber(), 0);
+
+        const depositerBalance = await ERC721MintableInstance1.balanceOf(depositerAddress);
+        assert.strictEqual(depositerBalance.toNumber(), 0);
+
+        // This would be the ideal test for verifying the token
+        // has been transferred to address(0), however
+        // this test fails when executed using Geth
         // await TruffleAssert.reverts(
         //     ERC721MintableInstance1.ownerOf(tokenID),
         //     'ERC721: owner query for nonexistent token');

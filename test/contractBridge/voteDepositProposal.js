@@ -71,6 +71,14 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
         executeProposal = (relayer) => BridgeInstance.executeDepositProposal(originChainID, expectedDepositNonce, DestinationERC20HandlerInstance.address, depositData, {from: relayer})
     });
 
+    it ('[sanity] bridge configured with threshold and relayers', async () => {
+        assert.equal(await BridgeInstance._chainID(), destinationChainID)
+
+        assert.equal(await BridgeInstance._relayerThreshold(), relayerThreshold)
+
+        assert.equal(await RelayerInstance._totalRelayers(), 4)
+    })
+
     it('[sanity] depositProposal should be created with expected values', async () => {
         await TruffleAssert.passes(vote(relayer1Address));
 

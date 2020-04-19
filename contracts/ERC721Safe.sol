@@ -9,6 +9,13 @@ contract ERC721Safe {
     // ERC721 contract => amount of tokens owned by Safe
     mapping(address => uint) public _balances;
 
+    function fundERC721(address tokenAddress, address owner, uint tokenID) public {
+        IERC721 erc721 = IERC721(tokenAddress);
+        erc721.transferFrom(owner, address(this), tokenID);
+
+        _balances[tokenAddress] = _balances[tokenAddress].add(1);
+    }
+
     function lockERC721(address tokenAddress, address owner, address recipient, uint tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, recipient, tokenID);

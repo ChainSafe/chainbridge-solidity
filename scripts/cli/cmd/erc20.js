@@ -23,8 +23,8 @@ const mintCmd = new Command("mint")
 const whitelistCmd = new Command("whitelist")
     .description("whitelists token addresses for a particular handler")
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option(`--tokenContract <address>`, `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
-    .option(`--resourceID <address>`, `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
+    .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
+    .option('--resourceID <address>', `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
     .option('--erc20HandlerAddress <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
@@ -37,18 +37,15 @@ const whitelistCmd = new Command("whitelist")
         chainID = await bridgeInstance._chainID()
 
         await erc20HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
-        console.log(`[ERC20 Mint] Successfully whitelisted ${args.tokenContract} on handler ${args.erc20HandlerAddress}`);
+        console.log(`[ERC20 Mint] Successfully registered contract ${args.tokenContract} with id ${args.resourceID} on handler ${args.erc20HandlerAddress}`);
     
     })
-
-
-
 
 const transferCmd = new Command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
     .option('--dest <value>', "destination chain", 1)
-    .option(`--recipient <address>`, 'Destination recipient address', constants.relayerAddresses[4])
+    .option('--recipient <address>', 'Destination recipient address', constants.relayerAddresses[4])
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
@@ -77,7 +74,7 @@ const transferCmd = new Command("transfer")
 
         const data = '0x' +
             resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(args.value), 32).substr(2) +    // Deposit Amount        (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number(args.value)), 32).substr(2) +    // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
 
@@ -99,7 +96,7 @@ const transferCmd = new Command("transfer")
 
 const balanceCmd = new Command("balance")
     .description("Get the balance for an account")
-    .option(`--address <address>`, 'Address to query', constants.deployerAddress)
+    .option('--address <address>', 'Address to query', constants.deployerAddress)
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .action(async function(args) {
         setupParentArgs(args, args.parent.parent)

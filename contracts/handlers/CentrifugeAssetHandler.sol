@@ -30,6 +30,9 @@ contract CentrifugeAssetHandler is IDepositHandler {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
+    // Event emitted when asset is stored
+    event AssetStored(bytes32 indexed asset);
+
     modifier _onlyBridge() {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
@@ -178,5 +181,7 @@ contract CentrifugeAssetHandler is IDepositHandler {
 
         require(_assetDepositStatuses[metaDataHash] == false, "asset has been deposited!");
         _assetDepositStatuses[metaDataHash] = true;
+
+        emit AssetStored(metaDataHash);
     }
 }

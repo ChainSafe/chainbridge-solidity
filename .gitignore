@@ -3,3 +3,5 @@
 .history/
 node_modules/
 gethdata/
+coverage/
+coverage.json

@@ -112,21 +112,26 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         assembly {
 
-            resourceID                    := mload(add(data, 0x20))
-            tokenID                       := mload(add(data, 0x40))
+            // Load resourceID from data + 32
+            resourceID := mload(add(data, 0x20))
+            // Load tokenID from data + 64
+            tokenID := mload(add(data, 0x40))
 
-            // set up destinationRecipientAddress
-            lenDestinationRecipientAddress  := mload(add(data, 0x60))
-            destinationRecipientAddress     := mload(0x40)              // load free memory pointer
+            // Load length of recipient address from data + 96
+            lenDestinationRecipientAddress := mload(add(data, 0x60))
+            // Load free mem pointer for recipient
+            destinationRecipientAddress := mload(0x40)
+            // Store recipient address
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            // Load length of metadata
+            let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
 
             calldatacopy(
                 destinationRecipientAddress,    // copy to destinationRecipientAddress
                 0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
-                sub(calldatasize(), 0xE4)       // copy size (calldatasize - 0xE4)
+                sub(calldatasize(), add(0xE4, add(0x20, lenMeta)))       // copy size (calldatasize - (0xE4 + lenMeta + 0x20))
             )
 
-            let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)

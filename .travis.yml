@@ -48,7 +48,3 @@ jobs:
       script:
         - ./node_modules/.bin/truffle run coverage
         - cat ./coverage/lcov.info | node_modules/.bin/coveralls
-    
-    - name: "Run gas check"
-      script:
-        - npx codechecks

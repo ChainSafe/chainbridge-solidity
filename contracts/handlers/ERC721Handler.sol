@@ -41,7 +41,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses
-        
+
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
@@ -121,9 +121,9 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
             calldatacopy(
-                destinationRecipientAddress,                             // copy to destinationRecipientAddress
-                0xE4,                                                    // copy from calldata after destinationRecipientAddress length declaration @0xC4
-                sub(calldatasize(), 0xE4)       // copy size (calldatasize - (0xC4 + the space metaData takes up))
+                destinationRecipientAddress,    // copy to destinationRecipientAddress
+                0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
+                sub(calldatasize(), 0xE4)       // copy size (calldatasize - 0xE4)
             )
 
             let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
@@ -134,7 +134,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             // incrementing free memory pointer
             mstore(0x40, add(0x40, add(metaData, lenMeta)))
 
-            // metadata is located at (0xC4 + 0x20 + lenDestinationRecipientAddress) in calldata
+            // metadata is located at (0xE4 + 0x20 + lenDestinationRecipientAddress) in calldata
             let metaDataLoc := add(0x104, lenDestinationRecipientAddress)
 
             // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
@@ -248,7 +248,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
             tokenAddress := mload(add(data, 0x4B))
         }
-        
+
         require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
 
@@ -272,7 +272,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         // } else {
         //     // Token doesn't exist
         //     ERC721Mintable erc721 = new ERC721Mintable();
-            
+
         //     // Create a relationship between the originAddress and the synthetic
         //     _resourceIDToTokenContractAddress[resourceID] = address(erc721);
         //     _tokenContractAddressToResourceID[address(erc721)] = resourceID;

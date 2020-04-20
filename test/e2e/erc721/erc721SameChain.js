@@ -16,6 +16,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     const relayer2Address = accounts[4];
 
     const tokenID = 1;
+    const depositMetadata = "0xdeadbeef"
     const expectedDepositNonce = 1;
 
     let RelayerInstance;
@@ -61,7 +62,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2) +                      // recipientAddress      (?? bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0xDEADBEEF), 32).substr(2);         // metaData              (?? bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData              (?? bytes)
 
             
         depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + depositProposalData.substr(2));
@@ -94,7 +95,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         assert.strictEqual(record[4], recipientAddress.toLowerCase())
         assert.strictEqual(record[5], depositerAddress)
         assert.strictEqual(Number(record[6]), tokenID)
-        assert.strictEqual(record[7], Ethers.utils.hexZeroPad("0xdeadbeef", 32))
+        assert.strictEqual(record[7], Ethers.utils.hexZeroPad(depositMetadata, 32))
 
         // Handler should have a balance of depositAmount
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);

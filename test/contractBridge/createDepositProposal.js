@@ -30,6 +30,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let dataHash = '';
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -47,8 +48,9 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
             Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
+        burnableContractAddresses = [];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +
@@ -167,6 +169,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     let dataHash = '';
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -183,8 +186,9 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
             Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         ];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
+        burnableContractAddresses = [];
 
-        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         data = '0x' +
             Ethers.utils.hexZeroPad(DestinationERC20MintableInstance.address, 32).substr(2) +

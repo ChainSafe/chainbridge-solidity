@@ -28,6 +28,16 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     let DestinationERC721HandlerInstance;
     let depositData;
 
+    let originResourceID;
+    let originInitialResourceIDs;
+    let originInitialContractAddresses;
+    let originBurnableContractAddresses;
+
+    let destinationResourceID;
+    let destinationInitialResourceIDs;
+    let destinationInitialContractAddresses;
+    let destinationBurnableContractAddresses;
+
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([], 0).then(instance => RelayerInstance = instance),
@@ -40,14 +50,16 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
+        originBurnableContractAddresses =[];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC721MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
+        destinationBurnableContractAddresses = [];
 
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
+            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
         await OriginERC721MintableInstance.safeMint(depositerAddress, originChainTokenID, genericBytes);

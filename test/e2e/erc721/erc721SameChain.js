@@ -25,6 +25,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     let ERC721HandlerInstance;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     let resourceID;
     let depositData;
@@ -40,10 +41,10 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         resourceID = Ethers.utils.hexZeroPad((ERC721MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC721MintableInstance.address];
+        burnableContractAddresses = [];
 
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
-
+        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await ERC721MintableInstance.mint(depositerAddress, tokenID);        
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });

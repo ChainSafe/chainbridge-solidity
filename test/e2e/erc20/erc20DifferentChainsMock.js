@@ -35,6 +35,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     let originResourceID;
     let originInitialResourceIDs;
     let originInitialContractAddresses;
+    let originBurnableContractAddresses;
     
     let DestinationRelayerInstance;
     let DestinationBridgeInstance;
@@ -46,7 +47,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     let destinationResourceID;
     let destinationInitialResourceIDs;
     let destinationInitialContractAddresses;
-    
+    let destinationBurnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -64,15 +65,17 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         originResourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC20MintableInstance.address];
+        originBurnableContractAddresses = [];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC20MintableInstance.address];
+        destinationBurnableContractAddresses = [];
 
         await Promise.all([
-            ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses)
+            ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses)
                 .then(instance => OriginERC20HandlerInstance = instance),
-            ERC20HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses)
+            ERC20HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses)
                 .then(instance => DestinationERC20HandlerInstance = instance),
         ]);
 

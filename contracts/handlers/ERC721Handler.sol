@@ -126,6 +126,9 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             // Load length of metadata
             let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
 
+            // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
+            // bytes lenght (32) + resourceId (32) + tokenId (32) + length (32) = 0xE4
+
             calldatacopy(
                 destinationRecipientAddress,    // copy to destinationRecipientAddress
                 0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4

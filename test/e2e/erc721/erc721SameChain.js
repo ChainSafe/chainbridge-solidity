@@ -54,7 +54,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2) +                // recipientAddress      (?? bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0xDEADBEEF), 32).substr(2);         // metaData
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData
 
         depositProposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes) 

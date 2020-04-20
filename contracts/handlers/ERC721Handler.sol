@@ -36,7 +36,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
-
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,

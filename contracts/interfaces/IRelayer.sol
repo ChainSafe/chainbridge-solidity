@@ -10,4 +10,6 @@ interface IRelayer {
     function voteRelayerProposal(address proposedAddress, RelayerActionType action) external;
     function createRelayerThresholdProposal(uint proposedValue) external;
     function voteRelayerThresholdProposal(Vote vote) external;
+    function adminAddRelayer(address) external;
+    function adminRemoveRelayer(address) external;
 }

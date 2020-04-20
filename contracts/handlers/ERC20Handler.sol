@@ -78,7 +78,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // }
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];

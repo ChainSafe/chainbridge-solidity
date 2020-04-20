@@ -8,6 +8,8 @@ contract Relayer is IRelayer {
 
     uint public _relayerThreshold;
     uint public _totalRelayers;
+    address public _bridgeAddress;
+
     RelayerThresholdProposal private _currentRelayerThresholdProposal;
 
     struct RelayerProposal {
@@ -44,6 +46,11 @@ contract Relayer is IRelayer {
         _;
     }
 
+    modifier _onlyBridge() {
+        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+        _;
+    }
+
     constructor (address[] memory initialRelayers, uint initialRelayerThreshold) public {
         for (uint i; i < initialRelayers.length; i++) {
             _addRelayer(initialRelayers[i]);
@@ -54,6 +61,15 @@ contract Relayer is IRelayer {
 
     function isRelayer(address relayerAddress) public override returns (bool) {
         return _relayers[relayerAddress];
+    }
+
+    function adminAddRelayer(address relayerAddress) public override _onlyBridge {
+        _addRelayer(relayerAddress);
+
+    }
+
+    function adminRemoveRelayer(address relayerAddress) public override _onlyBridge {
+        _removeRelayer(relayerAddress);
     }
 
     function getTotalRelayers() public override returns (uint) {

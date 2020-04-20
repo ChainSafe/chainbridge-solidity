@@ -5,8 +5,9 @@ import "./helpers/SafeMath.sol";
 import "./interfaces/IRelayer.sol";
 import "./interfaces/IDepositHandler.sol";
 import "./interfaces/IBridge.sol";
+import "./access/Ownable.sol";
 
-contract Bridge {
+contract Bridge is Ownable {
     using SafeMath for uint;
 
     uint8                    public _chainID;
@@ -80,6 +81,8 @@ contract Bridge {
         _;
     }
 
+    // Instanciate a bridge
+    // msg.sender becomes the Owner of this contract
     constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
@@ -96,6 +99,31 @@ contract Bridge {
         );
     }
 
+    // change relayer threshold
+    function adminChangeRelayerThreshold(uint newThreshold) public _onlyOwner {
+        _relayerThreshold = newThreshold;
+        emit RelayerThresholdChanged(newThreshold);
+
+    }
+
+    // add relayer
+    function adminAddRelayer(address relayerAddress) public _onlyOwner {
+        IRelayer relayerContract = IRelayer(_relayerContract);
+        relayerContract.adminAddRelayer(relayerAddress);
+    }
+
+    // remove relayer
+    function adminRemoveRelayer(address relayerAddress) public _onlyOwner {
+        IRelayer relayerContract = IRelayer(_relayerContract);
+        relayerContract.adminRemoveRelayer(relayerAddress);
+    }
+
+        // remove relayer
+    function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public _onlyOwner {
+        IDepositHandler handler = IDepositHandler(handlerAddress);
+        handler.setResourceIDAndContractAddress(resourceID, tokenAddress);
+    }
+
     function getDepositProposal(
         uint8 destinationChainID,
         uint256 depositNonce
@@ -103,11 +131,11 @@ contract Bridge {
         return _depositProposals[destinationChainID][depositNonce];
     }
 
-    function deposit(
+    function deposit (
         uint8        destinationChainID,
         address      originChainHandlerAddress,
         bytes memory data
-    ) public {
+    ) public _whenNotEmergencyHalt {
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
@@ -121,7 +149,7 @@ contract Bridge {
         uint8   originChainID,
         uint256 depositNonce,
         bytes32 dataHash
-    ) public _onlyRelayers {
+    ) public _onlyRelayers _whenNotEmergencyHalt {
         DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(uint(depositProposal._status) <= 1, "proposal has already been passed or transferred");
@@ -158,7 +186,7 @@ contract Bridge {
         uint256      depositNonce,
         address      destinationChainHandlerAddress,
         bytes memory data
-    ) public {
+    ) public _whenNotEmergencyHalt {
         DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(depositProposal._status != DepositProposalStatus.Inactive, "proposal is not active");
@@ -173,7 +201,7 @@ contract Bridge {
         emit DepositProposalExecuted(originChainID, _chainID, depositNonce);
     }
 
-    function createRelayerThresholdProposal(uint proposedValue) public _onlyRelayers {
+    function createRelayerThresholdProposal(uint proposedValue) public _onlyRelayers _whenNotEmergencyHalt {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Inactive, "a proposal is currently active");
         require(proposedValue <= _relayerContract.getTotalRelayers(), "proposed value cannot be greater than the total number of relayers");
 
@@ -195,7 +223,7 @@ contract Bridge {
         emit RelayerThresholdProposalCreated(proposedValue);
     }
 
-    function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers {
+    function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers _whenNotEmergencyHalt {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Active, "no proposal is currently active");
         require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
         require(uint8(vote) <= 1, "vote out of the vote enum range");

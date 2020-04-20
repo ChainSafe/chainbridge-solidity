@@ -28,6 +28,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     let depositData;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         const AbiCoder = new Ethers.utils.AbiCoder();
@@ -42,8 +43,9 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         resourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
+        burnableContractAddresses = [];
 
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });

@@ -30,6 +30,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let originDepositProposalData;
     let originDepositProposalDataHash;
     let originResourceID;
+    let originBurnableContractAddresses;
     
     let DestinationRelayerInstance;
     let DestinationBridgeInstance;
@@ -39,7 +40,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let destinationDepositProposalData;
     let destinationDepositProposalDataHash;
     let destinationResourceID;
-    
+    let destinationBurnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -57,15 +58,17 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
+        originBurnableContractAddresses = [];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
+        destinationBurnableContractAddresses = [];
 
         await Promise.all([
-            ERC721HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses)
+            ERC721HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses)
                 .then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses)
+            ERC721HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses)
                 .then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 

@@ -32,16 +32,18 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
+    // token contract address => is burnable
+    mapping (address => bool) public _burnList;
+
     modifier _onlyBridge() {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
-
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses
-        
+        address[] memory initialContractAddresses,
+        address[] memory burnableContractAddresses
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
@@ -51,6 +53,10 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
             _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
         }
+
+        for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
+            setBurnable(burnableContractAddresses[i]);
+        }
     }
 
     function isWhitelisted(address contractAddress) internal view returns (bool) {
@@ -59,6 +65,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
+    }
+
+    function setBurnable(address contractAddress) public {
+        require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
+        _burnList[contractAddress] = true;
     }
 
     function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
@@ -112,24 +123,27 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         assembly {
 
-            // originChainTokenAddress     := mload(add(data, 0x20))
-            resourceID                    := mload(add(data, 0x20))
-            tokenID                       := mload(add(data, 0x40))
+            // Load resourceID from data + 32
+            resourceID := mload(add(data, 0x20))
+            // Load tokenID from data + 64
+            tokenID := mload(add(data, 0x40))
 
-            // set up destinationRecipientAddress
-            destinationRecipientAddress     := mload(0x40)              // load free memory pointer
-            lenDestinationRecipientAddress  := mload(add(data, 0x60))
+            // Load length of recipient address from data + 96
+            lenDestinationRecipientAddress := mload(add(data, 0x60))
+            // Load free mem pointer for recipient
+            destinationRecipientAddress := mload(0x40)
+            // Store recipient address
+            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            // Load length of metadata
+            let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
 
-            // set up metaData
-            let lenMeta    := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
-
-
-            mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress))) // shift free memory pointer
+            // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
+            // bytes lenght (32) + resourceId (32) + tokenId (32) + length (32) = 0xE4
 
             calldatacopy(
-                destinationRecipientAddress,                             // copy to destinationRecipientAddress
-                0xE4,                                                    // copy from calldata after destinationRecipientAddress length declaration @0xC4
-                sub(calldatasize(), add(0xE4, add(0x20, lenMeta)))       // copy size (calldatasize - (0xC4 + the space metaData takes up))
+                destinationRecipientAddress,    // copy to destinationRecipientAddress
+                0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
+                sub(calldatasize(), add(0xE4, add(0x20, lenMeta)))       // copy size (calldatasize - (0xE4 + lenMeta + 0x20))
             )
 
             // metadata has variable length
@@ -139,7 +153,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             // incrementing free memory pointer
             mstore(0x40, add(0x40, add(metaData, lenMeta)))
 
-            // metadata is located at (0xC4 + 0x20 + lenDestinationRecipientAddress) in calldata
+            // metadata is located at (0xE4 + 0x20 + lenDestinationRecipientAddress) in calldata
             let metaDataLoc := add(0x104, lenDestinationRecipientAddress)
 
             // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
@@ -175,7 +189,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         // }
 
-        lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+        if (_burnList[originChainTokenAddress]) {
+            burnERC721(originChainTokenAddress, tokenID);
+        } else {
+            lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+        }
 
         _depositRecords[depositNonce] = DepositRecord(
             originChainTokenAddress,
@@ -253,7 +271,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
             tokenAddress := mload(add(data, 0x4B))
         }
-        
+
         require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
 
@@ -277,7 +295,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         // } else {
         //     // Token doesn't exist
         //     ERC721Mintable erc721 = new ERC721Mintable();
-            
+
         //     // Create a relationship between the originAddress and the synthetic
         //     _resourceIDToTokenContractAddress[resourceID] = address(erc721);
         //     _tokenContractAddressToResourceID[address(erc721)] = resourceID;

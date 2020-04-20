@@ -16,7 +16,7 @@ const mintCmd = new Command("mint")
         setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, ERC721Contract.abi, args.wallet);
         await erc721Instance.mint(args.wallet.address, args.id);
-        console.log("[ERC721 Transfer] Minted tokens!");
+        console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
     })
 
 const whitelistCmd = new Command("whitelist")
@@ -36,8 +36,8 @@ const whitelistCmd = new Command("whitelist")
         chainID = await bridgeInstance._chainID()
 
         await erc721HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
-        console.log(`[ERC721 Mint] Successfully whitelisted ${args.tokenContract} on handler ${args.erc721HandlerAddress}`);
-    
+        console.log(`[ERC721 Whitelist] Successfully whitelisted ${args.tokenContract} on handler ${args.erc721HandlerAddress}`);
+
     })
 
 const transferCmd = new Command("transfer")
@@ -74,6 +74,7 @@ const transferCmd = new Command("transfer")
 
         const data = '0x' +
             resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)          
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(args.id), 32).substr(2) +      // Token ID
             ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
 

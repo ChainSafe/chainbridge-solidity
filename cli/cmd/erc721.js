@@ -45,7 +45,7 @@ const setBurnCmd = new Command("set-burn")
 
             // Instances
             const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-            const erc721HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
+            const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
 
             // Whitelisting Addresses
             chainID = await bridgeInstance._chainID()

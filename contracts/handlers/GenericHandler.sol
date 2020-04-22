@@ -1,10 +1,7 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "../ERC20Safe.sol";
-import "../interfaces/IDepositHandler.sol";
-
-contract GenericHandler is IDepositHandler, ERC20Safe {
+contract GenericHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -18,14 +15,14 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
     // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
 
-    // resourceID => token contract address
-    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
+    // resourceID => contract address
+    mapping (bytes32 => address) public _resourceIDToContractAddress;
 
-    // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
+    // contract address => resourceID
+    mapping (address => bytes32) public _contractAddressToResourceID;
 
-    // metaDataHash => AssetDepositStatus
-    mapping(bytes32 => bool) _assetDepositStatuses;
+    // contract address => function signature
+    mapping (address => bytes4) public _contractAddressToFunctionSignature;
 
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
@@ -35,58 +32,60 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         _;
     }
 
+    event EMarker(uint mark);
+    event EBytes(bytes metaData);
+    event EBytes4(bytes4 foo);
+    event EBytes32(bytes32 metaData);
+    event EAddress(address foo);
+
     constructor(
-        address bridgeAddress,
+        address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses
-        
+        address[] memory initialContractAddresses,
+        bytes4[]  memory initialFunctionSignatures
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
 
+        require(initialContractAddresses.length == initialFunctionSignatures.length,
+            "mismatch length between provided contract addresses and function signatures");
+
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
+            _setResourceID(initialResourceIDs[i], initialContractAddresses[i], initialFunctionSignatures[i]);
         }
     }
-
-    function isWhitelisted(address contractAddress) internal view returns (bool) {
-        return _contractWhitelist[contractAddress];
-    }
-
-    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
-        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
-        _tokenContractAddressToResourceID[contractAddress] = resourceID;
-
-        _contractWhitelist[contractAddress] = true;
-    }
-
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
-        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
-
-        bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes32 emptyBytes;
-        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding resourceID");
-
-        _setResourceIDAndContractAddress(resourceID, contractAddress);
-    }
-
 
     function getDepositRecord(uint256 depositNonce) public view returns (DepositRecord memory) {
         return _depositRecords[depositNonce];
     }
 
-    // make a deposit
-    // bytes memory data passed into the function should be constructed as follows:
-    //
-    // destinationRecipientAddress                address   bytes     0 - 32
-    // resourceID                                 bytes32   bytes    32 - 64
-    // ----------------------------------------------------------------------------
-    // metadata                     length        uint256   bytes    64 - 96
-    // metadata                                   bytes     bytes    96 - END
-    function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
+    function _setResourceID(bytes32 resourceID, address contractAddress, bytes4 functionSig) internal {
+        _resourceIDToContractAddress[resourceID] = contractAddress;
+        _contractAddressToResourceID[contractAddress] = resourceID;
+        _contractAddressToFunctionSignature[contractAddress] = functionSig;
+
+        _contractWhitelist[contractAddress] = true;
+    }
+
+    function setResourceID(bytes32 resourceID, address contractAddress, bytes4 functionSig) public {
+        require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
+
+        bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
+        bytes32 emptyBytes;
+        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
+            "contract address already has corresponding resourceID");
+
+        _setResourceID(resourceID, contractAddress, functionSig);
+    }
+
+    function deposit(
+        uint8        destinationChainID,
+        uint256      depositNonce,
+        address      depositer,
+        bytes memory data
+    ) public _onlyBridge {
         address       destinationRecipientAddress;
         bytes32       resourceID;
         bytes memory  metaData;
@@ -112,6 +111,18 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
             )
         }
 
+        address contractAddress = _resourceIDToContractAddress[resourceID];
+        require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
+
+        bytes32 bytes32MetaData = bytesToBytes32(metaData, 0);
+
+        emit EBytes32(bytes32MetaData);
+        emit EBytes4(_contractAddressToFunctionSignature[contractAddress]);
+
+        bytes memory callData = abi.encodeWithSelector(_contractAddressToFunctionSignature[contractAddress], bytes32MetaData);
+        (bool success, bytes memory returnedData) = contractAddress.call(callData);
+        require(success, "delegatecall to contractAddress failed");
+
         _depositRecords[depositNonce] = DepositRecord(
             destinationChainID,
             resourceID,
@@ -121,6 +132,12 @@ contract GenericHandler is IDepositHandler, ERC20Safe {
         );
     }
 
-    // Todo: Implement example of generic deposit
-    function executeDeposit(bytes memory data) public override _onlyBridge {}
+    function bytesToBytes32(bytes memory b, uint offset) private pure returns (bytes32) {
+        bytes32 out;
+
+        for (uint i = 0; i < 32; i++) {
+            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+        }
+        return out;
+    }
 }

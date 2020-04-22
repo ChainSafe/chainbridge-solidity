@@ -47,7 +47,7 @@ contract GenericHandler {
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResourceID(initialResourceIDs[i], initialContractAddresses[i], initialFunctionSignatures[i]);
+            _setResource(initialResourceIDs[i], initialContractAddresses[i], initialFunctionSignatures[i]);
         }
     }
 
@@ -55,15 +55,7 @@ contract GenericHandler {
         return _depositRecords[depositNonce];
     }
 
-    function _setResourceID(bytes32 resourceID, address contractAddress, bytes4 functionSig) internal {
-        _resourceIDToContractAddress[resourceID] = contractAddress;
-        _contractAddressToResourceID[contractAddress] = resourceID;
-        _contractAddressToFunctionSignature[contractAddress] = functionSig;
-
-        _contractWhitelist[contractAddress] = true;
-    }
-
-    function setResourceID(bytes32 resourceID, address contractAddress, bytes4 functionSig) public {
+    function setResource(bytes32 resourceID, address contractAddress, bytes4 functionSig) public {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
@@ -71,7 +63,7 @@ contract GenericHandler {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _setResourceID(resourceID, contractAddress, functionSig);
+        _setResource(resourceID, contractAddress, functionSig);
     }
 
     function deposit(
@@ -108,7 +100,7 @@ contract GenericHandler {
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        bytes32 bytes32MetaData = bytesToBytes32(metaData, 0);
+        bytes32 bytes32MetaData = _bytesToBytes32(metaData);
         bytes memory callData = abi.encodeWithSelector(_contractAddressToFunctionSignature[contractAddress], bytes32MetaData);
         (bool success, bytes memory returnedData) = contractAddress.call(callData);
         require(success, "delegatecall to contractAddress failed");
@@ -122,12 +114,17 @@ contract GenericHandler {
         );
     }
 
-    function bytesToBytes32(bytes memory b, uint offset) private pure returns (bytes32) {
-        bytes32 out;
+    function _setResource(bytes32 resourceID, address contractAddress, bytes4 functionSig) internal {
+        _resourceIDToContractAddress[resourceID] = contractAddress;
+        _contractAddressToResourceID[contractAddress] = resourceID;
+        _contractAddressToFunctionSignature[contractAddress] = functionSig;
 
-        for (uint i = 0; i < 32; i++) {
-            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+        _contractWhitelist[contractAddress] = true;
+    }
+
+    function _bytesToBytes32(bytes memory source) internal pure returns (bytes32 result) {
+        assembly {
+            result := mload(add(source, 32))
         }
-        return out;
     }
 }

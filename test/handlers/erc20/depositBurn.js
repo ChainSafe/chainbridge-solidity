@@ -45,7 +45,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
         resourceID2 = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address];
-        burnableContractAddresses = [ERC20MintableInstance1.address]
+        burnableContractAddresses = [ERC20MintableInstance1.address];
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC20HandlerInstance = instance),

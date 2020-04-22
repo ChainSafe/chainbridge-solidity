@@ -42,3 +42,8 @@ jobs:
         - cb-sol-cli erc721 transfer
         - cb-sol-cli cent transferHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
         - cb-sol-cli cent getHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
+    
+    - name: "Run coverage"
+      script:
+        - ./node_modules/.bin/truffle run coverage
+        - cat ./coverage/lcov.info | node_modules/.bin/coveralls

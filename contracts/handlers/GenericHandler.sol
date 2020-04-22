@@ -32,12 +32,6 @@ contract GenericHandler {
         _;
     }
 
-    event EMarker(uint mark);
-    event EBytes(bytes metaData);
-    event EBytes4(bytes4 foo);
-    event EBytes32(bytes32 metaData);
-    event EAddress(address foo);
-
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -115,10 +109,6 @@ contract GenericHandler {
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
         bytes32 bytes32MetaData = bytesToBytes32(metaData, 0);
-
-        emit EBytes32(bytes32MetaData);
-        emit EBytes4(_contractAddressToFunctionSignature[contractAddress]);
-
         bytes memory callData = abi.encodeWithSelector(_contractAddressToFunctionSignature[contractAddress], bytes32MetaData);
         (bool success, bytes memory returnedData) = contractAddress.call(callData);
         require(success, "delegatecall to contractAddress failed");

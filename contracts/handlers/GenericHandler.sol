@@ -21,8 +21,11 @@ contract GenericHandler {
     // contract address => resourceID
     mapping (address => bytes32) public _contractAddressToResourceID;
 
-    // contract address => function signature
-    mapping (address => bytes4) public _contractAddressToFunctionSignature;
+    // contract address => deposit function signature
+    mapping (address => bytes4) public _contractAddressToDepositFunctionSignature;
+
+    // contract address => execute deposit function signature
+    mapping (address => bytes4) public _contractAddressToExecuteFunctionSignature;
 
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
@@ -32,22 +35,32 @@ contract GenericHandler {
         _;
     }
 
+    event EBytes(bytes test);
+
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses,
-        bytes4[]  memory initialFunctionSignatures
+        bytes4[]  memory initialDepositFunctionSignatures,
+        bytes4[]  memory initialExecuteFunctionSignatures
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
 
-        require(initialContractAddresses.length == initialFunctionSignatures.length,
+        require(initialContractAddresses.length == initialDepositFunctionSignatures.length,
             "mismatch length between provided contract addresses and function signatures");
+
+        require(initialDepositFunctionSignatures.length == initialExecuteFunctionSignatures.length,
+            "mismatch length between provided deposit and execute function signatures");
 
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResource(initialResourceIDs[i], initialContractAddresses[i], initialFunctionSignatures[i]);
+            _setResource(
+                initialResourceIDs[i],
+                initialContractAddresses[i],
+                initialDepositFunctionSignatures[i],
+                initialExecuteFunctionSignatures[i]);
         }
     }
 
@@ -55,7 +68,12 @@ contract GenericHandler {
         return _depositRecords[depositNonce];
     }
 
-    function setResource(bytes32 resourceID, address contractAddress, bytes4 functionSig) public {
+    function setResource(
+        bytes32 resourceID,
+        address contractAddress,
+        bytes4 depositFunctionSig,
+        bytes4 executeFunctionSig
+    ) public {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
@@ -63,7 +81,7 @@ contract GenericHandler {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _setResource(resourceID, contractAddress, functionSig);
+        _setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
     function deposit(
@@ -100,10 +118,10 @@ contract GenericHandler {
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        bytes32 bytes32MetaData = _bytesToBytes32(metaData);
-        bytes memory callData = abi.encodeWithSelector(_contractAddressToFunctionSignature[contractAddress], bytes32MetaData);
-        (bool success, bytes memory returnedData) = contractAddress.call(callData);
-        require(success, "delegatecall to contractAddress failed");
+        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0)) {
+            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            require(success, "delegatecall to contractAddress failed");
+        }
 
         _depositRecords[depositNonce] = DepositRecord(
             destinationChainID,
@@ -114,10 +132,50 @@ contract GenericHandler {
         );
     }
 
-    function _setResource(bytes32 resourceID, address contractAddress, bytes4 functionSig) internal {
+    function executeDeposit(bytes memory data) public _onlyBridge {
+        bytes32       resourceID;
+        bytes memory  metaData;
+
+        assembly {
+            // These are all fixed 32 bytes
+            // first 32 bytes of bytes is the length
+            resourceID                     := mload(add(data, 0x20))
+
+            // metadata has variable length
+            // load free memory pointer to store metadata
+            metaData := mload(0x40)
+            // first 32 bytes of variable length in storage refer to length
+            let lenMeta := mload(add(0x40, data))
+            mstore(0x40, add(0x60, add(metaData, lenMeta)))
+
+            // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 3 previous params
+            calldatacopy(
+                metaData,                     // copy to metaData
+                0xC4,                        // copy from calldata after data length declaration at 0xC4
+                sub(calldatasize(), 0xC4)   // copy size (calldatasize - 0xC4)
+            )
+        }
+
+        address contractAddress = _resourceIDToContractAddress[resourceID];
+        require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
+
+        if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0)) {
+            emit EBytes(metaData);
+            // (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            // require(success, "delegatecall to contractAddress failed");
+        }
+    }
+
+    function _setResource(
+        bytes32 resourceID,
+        address contractAddress,
+        bytes4 depositFunctionSig,
+        bytes4 executeFunctionSig
+    ) internal {
         _resourceIDToContractAddress[resourceID] = contractAddress;
         _contractAddressToResourceID[contractAddress] = resourceID;
-        _contractAddressToFunctionSignature[contractAddress] = functionSig;
+        _contractAddressToDepositFunctionSignature[contractAddress] = depositFunctionSig;
+        _contractAddressToExecuteFunctionSignature[contractAddress] = executeFunctionSig;
 
         _contractWhitelist[contractAddress] = true;
     }

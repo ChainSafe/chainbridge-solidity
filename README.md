@@ -1,5 +1,7 @@
 # chainbridge-solidity
 
+[![Coverage Status](https://coveralls.io/repos/github/ChainSafe/chainbridge-solidity/badge.svg?branch=master)](https://coveralls.io/github/ChainSafe/chainbridge-solidity?branch=master)
+
 ## Dependencies
 
 Requires `nodejs` and `npm`.

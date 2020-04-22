@@ -14,6 +14,7 @@ contract Bridge {
     uint256                  public _relayerThreshold;
     RelayerThresholdProposal public _currentRelayerThresholdProposal;
     uint256                  public _totalDepositProposals;
+    uint256                  public _fee;
 
     enum Vote {No, Yes}
     enum RelayerThresholdProposalStatus {Inactive, Active}
@@ -80,10 +81,11 @@ contract Bridge {
         _;
     }
 
-    constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold) public {
+    constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold, uint256 fee) public {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
+        _fee = fee ether;
     }
 
     function getCurrentRelayerThresholdProposal() public view returns (
@@ -107,7 +109,8 @@ contract Bridge {
         uint8        destinationChainID,
         address      originChainHandlerAddress,
         bytes memory data
-    ) public {
+    ) payable external {
+        require(msg.value == _fee);
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 

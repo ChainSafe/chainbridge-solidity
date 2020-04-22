@@ -76,10 +76,6 @@ const transferCmd = new Command("transfer")
         await erc721Instance.approve(args.erc721HandlerAddress, args.id);
         console.log(`[ERC721 Transfer] Approved ${args.erc721HandlerAddress} to move ${args.id} on behalf of ${args.wallet.address}!`);
 
-        // Check pre balance
-        const preOwner = await erc721Instance.ownerOf(args.id);
-        console.log(`[ERC721 Transfer] Owner of token ${args.id} is ${preOwner}`);
-
         // Compute resourceID
         const resourceID = await erc721HandlerInstance._tokenContractAddressToResourceID(args.erc721Address)
 
@@ -88,7 +84,7 @@ const transferCmd = new Command("transfer")
             ethers.utils.hexZeroPad(ethers.utils.hexlify(args.id), 32).substr(2) +  // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             ethers.utils.hexlify(args.recipient).substr(2) +                // recipientAddress      (?? bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2)       // len(metaData)         (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32).substr(2)       // len(metaData)         (32 bytes)
 
         // Perform deposit
@@ -97,9 +93,6 @@ const transferCmd = new Command("transfer")
             args.erc721HandlerAddress,
             depositData);
         console.log("[ERC721 Transfer] Created deposit to initiate transfer!")
-
-        const postOwner = await erc721Instance.ownerOf(args.id);
-        console.log(`[ERC721 Transfer] Owner of token ${args.id} is now ${postOwner}`);
     })
 
 const erc721Cmd = new Command("erc721")
@@ -110,5 +103,3 @@ erc721Cmd.addCommand(setBurnCmd)
 erc721Cmd.addCommand(transferCmd)
 
 module.exports = erc721Cmd
-
-

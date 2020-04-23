@@ -85,7 +85,7 @@ contract Bridge {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
-        _fee = fee ether;
+        _fee = fee;
     }
 
     function getCurrentRelayerThresholdProposal() public view returns (
@@ -108,9 +108,9 @@ contract Bridge {
     function deposit(
         uint8        destinationChainID,
         address      originChainHandlerAddress,
-        bytes memory data
-    ) payable external {
-        require(msg.value == _fee);
+        bytes calldata data
+    ) external payable {
+        require(msg.value == _fee, "Incorrect amount for fee supplied");
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 

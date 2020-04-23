@@ -105,6 +105,46 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             depositProposalData
         ));
         
+        // Verifying asset was marked as stored in CentrifugeAssetInstance
         assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
+    });
+
+    it('AssetStored event should be emitted', async () => {
+        TruffleAssert.passes(await BridgeInstance.deposit(
+            chainID,
+            GenericHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        ));
+
+        // relayer1 creates the deposit proposal
+        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+            chainID,
+            expectedDepositNonce,
+            depositProposalDataHash,
+            { from: relayer1Address }
+        ));
+
+        // relayer2 votes in favor of the deposit proposal
+        // because the relayerThreshold is 2, the deposit proposal will go
+        // into a finalized state
+        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+            chainID,
+            expectedDepositNonce,
+            depositProposalDataHash,
+            { from: relayer2Address }
+        ));
+
+        // relayer1 will execute the deposit proposal
+        const executeDepositTx = await BridgeInstance.executeDepositProposal(
+            chainID,
+            expectedDepositNonce,
+            GenericHandlerInstance.address,
+            depositProposalData
+        );
+        
+        TruffleAssert.eventNotEmitted(executeDepositTx, 'AssetStored', event => {
+            return event.asset === hashOfCentrifugeAsset;
+        });
     });
 });

@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (accounts) => {
@@ -46,7 +46,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
                 relayer2Address,
                 relayer3Address,
                 relayer4Address], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
         BridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
@@ -66,7 +66,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
-        DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address)
+        DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address)
 
         vote = (relayer) => BridgeInstance.voteDepositProposal(originChainID, expectedDepositNonce, depositDataHash, {from: relayer})
 

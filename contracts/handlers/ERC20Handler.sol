@@ -2,7 +2,7 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../ERC20Safe.sol";
-import "../erc/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../interfaces/IBridge.sol";
 

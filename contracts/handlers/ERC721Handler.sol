@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../erc/ERC721/ERC721Mintable.sol";
+import "../ERC721MinterBurnerPauser.sol";
 import "../interfaces/IBridge.sol";
 
 contract ERC721Handler is IDepositHandler, ERC721Safe {
@@ -279,8 +279,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         uint8 chainID = bridge._chainID();
 
         if (_burnList[tokenAddress]) {
-            ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
-            erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }

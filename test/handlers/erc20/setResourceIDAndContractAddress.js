@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
@@ -23,16 +23,18 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let ERC20HandlerInstance;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], relayerThreshold);
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC20MintableInstance1 = await ERC20MintableContract.new();
+        ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         initialContractAddresses = [ERC20MintableInstance1.address];
+        burnableContractAddresses = [];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
     });
 
     it("[sanity] ERC20MintableInstance1's resourceID and contract address should be set correctly", async () => {
@@ -44,7 +46,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     });
 
     it('new resourceID and corresponding contract address should be set correctly', async () => {
-        const ERC20MintableInstance2 = await ERC20MintableContract.new();
+        const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
         await ERC20HandlerInstance.setResourceIDAndContractAddress(secondERC20ResourceID, ERC20MintableInstance2.address);
@@ -63,7 +65,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     });
 
     it('should revert because contract address should already be set', async () => {
-        const ERC20MintableInstance2 = await ERC20MintableContract.new();
+        const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
         await TruffleAssert.reverts(ERC20HandlerInstance.setResourceIDAndContractAddress(

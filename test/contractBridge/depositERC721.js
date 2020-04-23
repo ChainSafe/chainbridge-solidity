@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('Bridge - [deposit - ERC721]', async (accounts) => {
@@ -28,11 +28,21 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     let DestinationERC721HandlerInstance;
     let depositData;
 
+    let originResourceID;
+    let originInitialResourceIDs;
+    let originInitialContractAddresses;
+    let originBurnableContractAddresses;
+
+    let destinationResourceID;
+    let destinationInitialResourceIDs;
+    let destinationInitialContractAddresses;
+    let destinationBurnableContractAddresses;
+
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([], 0).then(instance => RelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => OriginERC721MintableInstance = instance),
-            ERC721MintableContract.new().then(instance => DestinationERC721MintableInstance = instance)
+            ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
         ]);
 
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
@@ -40,17 +50,19 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
+        originBurnableContractAddresses =[];
 
         destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC721MintableInstance.address + Ethers.utils.hexlify(destinationChainID).substr(2)), 32)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
+        destinationBurnableContractAddresses = [];
 
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
+            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
-        await OriginERC721MintableInstance.safeMint(depositerAddress, originChainTokenID, genericBytes);
+        await OriginERC721MintableInstance.mint(depositerAddress, originChainTokenID, genericBytes);
         await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositerAddress });
 
         depositData = '0x' +

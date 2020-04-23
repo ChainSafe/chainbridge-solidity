@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [deposit - ERC20]', async (accounts) => {
@@ -28,13 +28,14 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     let depositData;
     let initialResourceIDs;
     let initialContractAddresses;
+    let burnableContractAddresses;
 
     beforeEach(async () => {
         const AbiCoder = new Ethers.utils.AbiCoder();
 
         await Promise.all([
             RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance)
         ]);
         
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
@@ -42,8 +43,9 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         resourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
+        burnableContractAddresses = [];
 
-        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });

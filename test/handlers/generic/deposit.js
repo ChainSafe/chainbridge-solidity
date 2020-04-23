@@ -17,8 +17,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-
-    const centrifugeAssetMinCount = 10;
+    
     const blankFunctionSig = '0x00000000';
     const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
     const expectedDepositNonce = 1;
@@ -36,7 +35,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
+            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
         ]);
         
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);

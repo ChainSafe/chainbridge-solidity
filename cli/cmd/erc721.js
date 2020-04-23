@@ -7,10 +7,11 @@ const {setupParentArgs, splitCommaList} = require("./utils")
 const mintCmd = new Command("mint")
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .option('--id <id>', "ERC721 token id", 1)
+    .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
-        await erc721Instance.mint(args.wallet.address, args.id);
+        await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
     })
 

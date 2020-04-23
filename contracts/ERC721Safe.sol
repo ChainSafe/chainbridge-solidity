@@ -1,8 +1,8 @@
 pragma solidity 0.6.4;
 
-import "./helpers/SafeMath.sol";
-import "./erc/ERC721/IERC721.sol";
-import "./erc/ERC721/ERC721Mintable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./ERC721MinterBurnerPauser.sol";
 
 contract ERC721Safe {
     using SafeMath for uint256;
@@ -34,8 +34,13 @@ contract ERC721Safe {
         _balances[tokenAddress] = _balances[tokenAddress].sub(1);
     }
 
+    function mintERC721(address tokenAddress, address recipient, uint256 tokenID, bytes memory data) internal {
+        ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
+        erc721.mint(recipient, tokenID, string(data));
+    }
+
     function burnERC721(address tokenAddress, uint256 tokenID) internal {
-        ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
+        ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.burn(tokenID);
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(1);

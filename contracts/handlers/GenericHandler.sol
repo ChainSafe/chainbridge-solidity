@@ -1,7 +1,9 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-contract GenericHandler {
+import "../interfaces/IDepositHandler.sol";
+
+contract GenericHandler is IDepositHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -87,7 +89,7 @@ contract GenericHandler {
         uint256      depositNonce,
         address      depositer,
         bytes memory data
-    ) public _onlyBridge {
+    ) public override _onlyBridge {
         address       destinationRecipientAddress;
         bytes32       resourceID;
         bytes memory  metaData;
@@ -130,7 +132,7 @@ contract GenericHandler {
         );
     }
 
-    function executeDeposit(bytes memory data) public _onlyBridge {
+    function executeDeposit(bytes memory data) public override  _onlyBridge {
         bytes32       resourceID;
         bytes memory  metaData;
 

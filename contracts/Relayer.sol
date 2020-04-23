@@ -1,7 +1,7 @@
 pragma solidity 0.6.4;
 
 import "./interfaces/IRelayer.sol";
-import "./helpers/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Relayer is IRelayer {
     using SafeMath for uint;

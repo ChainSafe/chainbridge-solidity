@@ -3,7 +3,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Same Chain', async accounts => {
@@ -35,7 +35,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance = instance)
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
         
         resourceID = Ethers.utils.hexZeroPad((ERC721MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
@@ -46,7 +46,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        await ERC721MintableInstance.mint(depositerAddress, tokenID);        
+        await ERC721MintableInstance.mint(depositerAddress, tokenID, "");
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
 
         depositData = '0x' +

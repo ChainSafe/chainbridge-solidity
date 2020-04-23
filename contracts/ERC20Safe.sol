@@ -1,9 +1,9 @@
 pragma solidity 0.6.4;
 
-import "./helpers/SafeMath.sol";
-import "./erc/ERC20/IERC20.sol";
-import "./erc/ERC20/ERC20Mintable.sol";
-import "./erc/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 
 contract ERC20Safe {
     using SafeMath for uint256;
@@ -36,14 +36,14 @@ contract ERC20Safe {
     }
 
     function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
-        ERC20Mintable erc20 = ERC20Mintable(tokenAddress);
+        ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
         erc20.mint(recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
 
     function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
-        ERC20Mintable erc20 = ERC20Mintable(tokenAddress);
+        ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
         erc20.burnFrom(owner, amount);
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);

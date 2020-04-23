@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../erc/ERC721/ERC721Mintable.sol";
+import "../ERC721MinterBurnerPauser.sol";
 import "../interfaces/IBridge.sol";
 
 contract ERC721Handler is IDepositHandler, ERC721Safe {
@@ -285,8 +285,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         } else {
             // token is not from chain
 
-            ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
-            erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         }
 
         // As we are only allowing for interaction with whitelisted contracts, this case no longer exists

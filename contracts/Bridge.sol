@@ -1,7 +1,7 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "./helpers/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./interfaces/IRelayer.sol";
 import "./interfaces/IDepositHandler.sol";
 import "./interfaces/IBridge.sol";

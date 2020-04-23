@@ -35,8 +35,6 @@ contract GenericHandler {
         _;
     }
 
-    event EBytes(bytes test);
-
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -148,11 +146,11 @@ contract GenericHandler {
             let lenMeta := mload(add(0x40, data))
             mstore(0x40, add(0x60, add(metaData, lenMeta)))
 
-            // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 3 previous params
+            // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 2 previous params
             calldatacopy(
                 metaData,                     // copy to metaData
-                0xC4,                        // copy from calldata after data length declaration at 0xC4
-                sub(calldatasize(), 0xC4)   // copy size (calldatasize - 0xC4)
+                0x64,                        // copy from calldata after data length declaration at 0xC4
+                sub(calldatasize(), 0x64)   // copy size (calldatasize - 0xC4)
             )
         }
 
@@ -160,9 +158,8 @@ contract GenericHandler {
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
         if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0)) {
-            emit EBytes(metaData);
-            // (bool success, bytes memory returnedData) = contractAddress.call(metaData);
-            // require(success, "delegatecall to contractAddress failed");
+            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            require(success, "delegatecall to contractAddress failed");
         }
     }
 

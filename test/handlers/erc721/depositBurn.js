@@ -87,6 +87,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
         const depositerBalance = await ERC721MintableInstance1.balanceOf(depositerAddress);
         assert.strictEqual(depositerBalance.toNumber(), 0);
 
-        assert.strictEqual(await ERC721MintableInstance1.ownerOf(tokenID), '0x0000000000000000000000000000000000000000')
-    });
+        await TruffleAssert.reverts(
+            ERC721MintableInstance1.ownerOf(tokenID),
+            'ERC721: owner query for nonexistent token');    });
 });

@@ -3,7 +3,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Two EVM Chains', async accounts => {
@@ -46,8 +46,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await Promise.all([
             RelayerContract.new([originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginRelayerInstance = instance),
             RelayerContract.new([destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationRelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => OriginERC721MintableInstance = instance),
-            ERC721MintableContract.new().then(instance => DestinationERC721MintableInstance = instance)
+            ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
         ]);
 
         await Promise.all([
@@ -72,10 +72,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
                 .then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
-        await OriginERC721MintableInstance.mint(depositerAddress, tokenID);
+        await OriginERC721MintableInstance.mint(depositerAddress, tokenID, "");
         await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositerAddress });
         
-        await DestinationERC721MintableInstance.addMinter(DestinationERC721HandlerInstance.address);
+        await DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address);
 
         originDepositData = '0x' +
             originResourceID.substr(2) +                                           // resourceID            (64 bytes) for now
@@ -121,7 +121,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     });
 
     it("[sanity] DestinationERC721HandlerInstance.address should have minterRole for DestinationERC721MintableInstance", async () => {
-        const isMinter = await DestinationERC721MintableInstance.isMinter(DestinationERC721HandlerInstance.address);
+        const isMinter = await DestinationERC721MintableInstance.hasRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address);
         assert.isTrue(isMinter);
     });
 

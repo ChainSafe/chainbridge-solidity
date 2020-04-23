@@ -8,7 +8,7 @@ const {
     deploy,
     erc20,
     erc721,
-    centrifuge,
+    // centrifuge,
 } = require('./cmd/index');
 const constants = require('./constants');
 
@@ -19,7 +19,7 @@ program.option('--private-key <value>', 'Private key to use', constants.deployer
 program.addCommand(deploy)
 program.addCommand(erc20)
 program.addCommand(erc721)
-program.addCommand(centrifuge)
+// program.addCommand(centrifuge)
 
 program.allowUnknownOption(false);
 

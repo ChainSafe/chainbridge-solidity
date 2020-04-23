@@ -37,6 +37,8 @@ contract GenericHandler is IDepositHandler {
         _;
     }
 
+    event EBytes4(bytes4 functionSig);
+
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -90,9 +92,10 @@ contract GenericHandler is IDepositHandler {
         address      depositer,
         bytes memory data
     ) public override _onlyBridge {
-        address       destinationRecipientAddress;
-        bytes32       resourceID;
-        bytes memory  metaData;
+        address      destinationRecipientAddress;
+        bytes32      resourceID;
+        bytes memory metaData;
+        bytes4       functionSignature;
 
         assembly {
             // These are all fixed 32 bytes
@@ -113,12 +116,15 @@ contract GenericHandler is IDepositHandler {
                 0xE4,                        // copy from calldata after data length declaration at 0xC4
                 sub(calldatasize(), 0xE4)   // copy size (calldatasize - 0xC4)
             )
+
+            functionSignature := mload(add(data, 0x40))
         }
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0)) {
+        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0) &&
+            _contractAddressToDepositFunctionSignature[contractAddress] == functionSignature) {
             (bool success, bytes memory returnedData) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }
@@ -133,9 +139,9 @@ contract GenericHandler is IDepositHandler {
     }
 
     function executeDeposit(bytes memory data) public override  _onlyBridge {
-        bytes32       resourceID;
-        bytes memory  metaData;
-
+        bytes32      resourceID;
+        bytes memory metaData;
+        bytes4       functionSignature;
         assembly {
             // These are all fixed 32 bytes
             // first 32 bytes of bytes is the length
@@ -148,18 +154,25 @@ contract GenericHandler is IDepositHandler {
             let lenMeta := mload(add(0x40, data))
             mstore(0x40, add(0x60, add(metaData, lenMeta)))
 
-            // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 2 previous params
+            // in the calldata, metadata is stored @0x64 after accounting for function signature, and 2 previous params
             calldatacopy(
                 metaData,                     // copy to metaData
-                0x64,                        // copy from calldata after data length declaration at 0xC4
-                sub(calldatasize(), 0x64)   // copy size (calldatasize - 0xC4)
+                0x64,                        // copy from calldata after data length declaration at 0x64
+                sub(calldatasize(), 0x64)   // copy size (calldatasize - 0x64)
             )
+
+            functionSignature := mload(add(data, 0x60))
         }
+
+        emit EBytes4(functionSignature);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0)) {
+        emit EBytes4(_contractAddressToExecuteFunctionSignature[contractAddress]);
+
+        if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0) &&
+            _contractAddressToExecuteFunctionSignature[contractAddress] == functionSignature) {
             (bool success, bytes memory returnedData) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }

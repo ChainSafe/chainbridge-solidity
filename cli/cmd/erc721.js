@@ -8,7 +8,7 @@ const mintCmd = new Command("mint")
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .option('--id <id>', "ERC721 token id", 1)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
         await erc721Instance.mint(args.wallet.address, args.id);
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
@@ -21,7 +21,7 @@ const setResourceCmd = new Command("register-resource")
     .option(`--resourceID <address>`, `Custom resourceID to be whitelisted`, constants.ERC721_RESOURCEID)
     .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
@@ -41,7 +41,7 @@ const setBurnCmd = new Command("set-burn")
     .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC721_ADDRESS)
     .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
     .action(async function (args) {
-            setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
             // Instances
             const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
@@ -65,7 +65,7 @@ const transferCmd = new Command("transfer")
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
 
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);

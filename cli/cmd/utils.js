@@ -1,7 +1,7 @@
 const ethers = require('ethers');
 const fs = require('fs');
 
-const setupParentArgs = (args, parent) => {
+const setupParentArgs = async (args, parent) => {
     args.url= parent.url
     args.provider = new ethers.providers.JsonRpcProvider(args.url);
     if (!parent.jsonWallet) {

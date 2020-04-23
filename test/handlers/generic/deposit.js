@@ -21,6 +21,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const centrifugeAssetMinCount = 10;
     const blankFunctionSig = '0x00000000';
     const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
+    const expectedDepositNonce = 1;
 
     let RelayerInstance;
     let BridgeInstance;
@@ -65,5 +66,37 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             depositData,
             { from: depositerAddress }
         ));
+    });
+
+    it('depositRecord is created with expected values', async () => {
+        const expectedDepositRecord = {
+            _destinationChainID: chainID,
+            _resourceID: initialResourceIDs[0],
+            _destinationRecipientAddress: recipientAddress,
+            _depositer: depositerAddress,
+            _metaData: null
+        };
+
+        TruffleAssert.passes(await BridgeInstance.deposit(
+            chainID,
+            GenericHandlerInstance.address,
+            depositData,
+            { from: depositerAddress }
+        ));
+
+        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce);
+        assert.containsAllKeys(retrievedDepositRecord, Object.keys(expectedDepositRecord));
+
+        for(const depositRecordProperty of Object.keys(expectedDepositRecord)) {
+            let retrievedValue = retrievedDepositRecord[depositRecordProperty];
+            let expectedValue = expectedDepositRecord[depositRecordProperty];
+            
+            retrievedValue = retrievedValue != null && retrievedValue.toNumber ? retrievedValue.toNumber() : retrievedValue;
+            retrievedValue = retrievedValue != null && retrievedValue.toLowerCase ? retrievedValue.toLowerCase() : retrievedValue;
+            expectedValue = expectedValue != null && expectedValue.toLowerCase ? expectedValue.toLowerCase() : expectedValue;
+
+            assert.equal(retrievedValue, expectedValue,
+                `expected ${depositRecordProperty} does not match retrieved value`);
+        }
     });
 });

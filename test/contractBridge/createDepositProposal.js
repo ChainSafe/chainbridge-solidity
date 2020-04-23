@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayerThreshold = 1]', async (accounts) => {
@@ -35,7 +35,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
 
@@ -174,7 +174,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
         await Promise.all([

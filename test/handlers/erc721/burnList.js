@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Burn ERC721]', async () => {
@@ -28,8 +28,8 @@ contract('ERC721Handler - [Burn ERC721]', async () => {
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance1 = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance2 = instance)
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
         
         BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);

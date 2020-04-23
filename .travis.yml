@@ -17,33 +17,23 @@ jobs:
       script:
         - make install-deps
         - make test
-    - name: "Run Truffle tests (Geth)"
-      install:
-        - sudo add-apt-repository -y ppa:ethereum/ethereum
-        - sudo apt-get update
-        - sudo apt-get install ethereum
-      script:
-        - make install-deps
-        - QUIET=true make start-geth &
-        - truffle test --network geth
+#    - name: "Run Truffle tests (Geth)"
+#      install:
+#        - sudo add-apt-repository -y ppa:ethereum/ethereum
+#        - sudo apt-get update
+#        - sudo apt-get install ethereum
+#      script:
+#        - make install-deps
+#        - QUIET=true make start-geth &
+#        - truffle test --network geth
     - name: "Verify contract deployment and binding creation"
       env: CI=true
       script:
         - make install-deps && make install-cli
         - make bindings
         - SILENT=true make start-ganache
-        - cb-sol-cli deploy
-        - cb-sol-cli erc20 mint
-        - cb-sol-cli erc20 register-resource
-        - cb-sol-cli erc20 set-burn
-        - cb-sol-cli erc20 transfer
-        - cb-sol-cli erc20 balance
-        - cb-sol-cli erc721 mint
-        - cb-sol-cli erc721 register-resource
-        - cb-sol-cli erc721 set-burn
-        - cb-sol-cli erc721 transfer
-        - cb-sol-cli cent transferHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
-        - cb-sol-cli cent getHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
+        - ./scripts/ci_cli.sh
+
     
     - name: "Run coverage"
       script:

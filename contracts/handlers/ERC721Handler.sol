@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../erc/ERC721/ERC721Mintable.sol";
+import "../ERC721MinterBurnerPauser.sol";
 import "../interfaces/IBridge.sol";
 
 contract ERC721Handler is IDepositHandler, ERC721Safe {
@@ -114,7 +114,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
     // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
-        // address      originChainTokenAddress;
         bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
@@ -279,14 +278,10 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         IBridge bridge = IBridge(_bridgeAddress);
         uint8 chainID = bridge._chainID();
 
-        if (uint8(resourceID[31]) == chainID) {
-            // token is from same chain
-            releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
+        if (_burnList[tokenAddress]) {
+            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
-            // token is not from chain
-
-            ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
-            erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
 
         // As we are only allowing for interaction with whitelisted contracts, this case no longer exists

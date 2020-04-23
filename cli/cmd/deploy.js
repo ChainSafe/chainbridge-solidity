@@ -84,7 +84,7 @@ async function deployBridgeContract(args) {
 
 async function deployERC20(args) {
     const factory = new ethers.ContractFactory(constants.ContractABIs.Erc20Mintable.abi, constants.ContractABIs.Erc20Mintable.bytecode, args.wallet);
-    const contract = await factory.deploy();
+    const contract = await factory.deploy("", "");
     await contract.deployed();
     args.erc20Contract = contract.address
     console.log("✓ ERC20 contract deployed")
@@ -102,7 +102,7 @@ async function deployERC20Handler(args) {
 
 async function deployERC721(args) {
     const factory = new ethers.ContractFactory(constants.ContractABIs.Erc721Mintable.abi, constants.ContractABIs.Erc721Mintable.bytecode, args.wallet);
-    const contract = await factory.deploy();
+    const contract = await factory.deploy("", "", "");
     await contract.deployed();
     args.erc721Contract = contract.address
     console.log("✓ ERC721 contract deployed")

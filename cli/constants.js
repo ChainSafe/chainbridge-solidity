@@ -4,7 +4,18 @@
  */
 const ethers = require('ethers');
 
+const CONTRACT_PATH = "../"
+const ContractABIs = {
+    Bridge: require(CONTRACT_PATH + "/build/contracts/Bridge.json"),
+    Relayer: require(CONTRACT_PATH + "/build/contracts/Relayer.json"),
+    Erc20Handler: require(CONTRACT_PATH + "/build/contracts/ERC20Handler.json"),
+    Erc20Mintable: require(CONTRACT_PATH + "/build/contracts/ERC20Mintable.json"),
+    Erc721Handler: require(CONTRACT_PATH + "/build/contracts/ERC721Handler.json"),
+    Erc721Mintable: require(CONTRACT_PATH + "/build/contracts/ERC721Mintable.json"),
+    CentrifugeHandler: require(CONTRACT_PATH + "/build/contracts/CentrifugeAssetHandler.json")
+}
 
+module.exports.ContractABIs = ContractABIs
 // This is just Alice's key.
 module.exports.deployerAddress = "0xff93B45308FD417dF303D6515aB04D9e89a750Ca";
 module.exports.deployerPrivKey = "0x000000000000000000000000000000000000000000000000000000616c696365";

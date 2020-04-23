@@ -265,13 +265,12 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         }
 
         bytes20 recipientAddress;
-        bytes20 tokenAddress;
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            tokenAddress := mload(add(data, 0x4B))
         }
 
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
 
@@ -282,11 +281,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         if (uint8(resourceID[31]) == chainID) {
             // token is from same chain
-            releaseERC721(address(tokenAddress), address(this), address(recipientAddress), tokenID);
+            releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         } else {
             // token is not from chain
 
-            ERC721Mintable erc721 = ERC721Mintable(address(tokenAddress));
+            ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
             erc721.safeMint(address(recipientAddress), tokenID, metaData);
         }
 

@@ -142,9 +142,13 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             GenericHandlerInstance.address,
             depositProposalData
         );
-        
-        TruffleAssert.eventNotEmitted(executeDepositTx, 'AssetStored', event => {
+
+        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeDepositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
             return event.asset === hashOfCentrifugeAsset;
         });
+
+        assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset),
+            'Centrifuge Asset was not successfully stored');
     });
 });

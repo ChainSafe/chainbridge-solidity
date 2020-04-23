@@ -176,10 +176,4 @@ contract GenericHandler {
 
         _contractWhitelist[contractAddress] = true;
     }
-
-    function _bytesToBytes32(bytes memory source) internal pure returns (bytes32 result) {
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
 }

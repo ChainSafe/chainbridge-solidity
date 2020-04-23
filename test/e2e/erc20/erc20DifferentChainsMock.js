@@ -3,7 +3,7 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Two EVM Chains', async accounts => {
@@ -53,8 +53,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await Promise.all([
             RelayerContract.new([originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginRelayerInstance = instance),
             RelayerContract.new([destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationRelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance),
-            ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
         await Promise.all([
@@ -82,7 +82,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await OriginERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
         
-        await DestinationERC20MintableInstance.addMinter(DestinationERC20HandlerInstance.address);
+        await DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address);
 
         originDepositData = '0x' +
             originResourceID.substr(2) +
@@ -124,7 +124,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     });
 
     it("[sanity] DestinationERC20HandlerInstance.address should have minterRole for DestinationERC20MintableInstance", async () => {
-        const isMinter = await DestinationERC20MintableInstance.isMinter(DestinationERC20HandlerInstance.address);
+        const isMinter = await DestinationERC20MintableInstance.hasRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address);
         assert.isTrue(isMinter);
     });
 

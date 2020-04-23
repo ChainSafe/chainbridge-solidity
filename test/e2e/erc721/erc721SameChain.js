@@ -43,7 +43,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
 
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold, 0);
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await ERC721MintableInstance.mint(depositerAddress, tokenID);        

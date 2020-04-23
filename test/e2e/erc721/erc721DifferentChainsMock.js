@@ -51,8 +51,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         ]);
 
         await Promise.all([
-            BridgeContract.new(originChainID, OriginRelayerInstance.address, originRelayerThreshold).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationChainID, DestinationRelayerInstance.address, destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance)
+            BridgeContract.new(originChainID, OriginRelayerInstance.address, originRelayerThreshold, 0).then(instance => OriginBridgeInstance = instance),
+            BridgeContract.new(destinationChainID, DestinationRelayerInstance.address, destinationRelayerThreshold, 0).then(instance => DestinationBridgeInstance = instance)
         ]);
 
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)

@@ -28,7 +28,7 @@ contract('ERC20Handler - [constructor]', async () => {
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold, 0);
         ERC20MintableInstance1 = await ERC20MintableContract.new();
         ERC20MintableInstance2 = await ERC20MintableContract.new();
         ERC20MintableInstance3 = await ERC20MintableContract.new();

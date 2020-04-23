@@ -45,7 +45,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             ERC721MintableContract.new().then(instance => DestinationERC721MintableInstance = instance)
         ]);
 
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0, 0);
 
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         originInitialResourceIDs = [originResourceID];

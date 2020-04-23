@@ -40,7 +40,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             ERC20MintableContract.new().then(instance => ERC20MintableInstance = instance)
         ]);
 
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold, 0);
 
         resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
     

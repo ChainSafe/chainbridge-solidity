@@ -27,7 +27,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold, 0);
         ERC20MintableInstance1 = await ERC20MintableContract.new();
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];

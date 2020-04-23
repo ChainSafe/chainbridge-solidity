@@ -49,7 +49,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
             ERC20MintableContract.new().then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
-        BridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold, 0);
 
         resourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
 

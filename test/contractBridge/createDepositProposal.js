@@ -40,8 +40,8 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
 
 
         await Promise.all([
-            BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold, 0).then(instance => DestBridgeInstance = instance)
         ]);
 
         initialResourceIDs = [
@@ -178,8 +178,8 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
         ]);
 
         await Promise.all([
-            BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold, 0).then(instance => DestBridgeInstance = instance)
         ]);
         
         initialResourceIDs = [

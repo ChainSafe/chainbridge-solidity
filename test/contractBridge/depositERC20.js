@@ -38,7 +38,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance)
         ]);
         
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold, 0);
 
         resourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         initialResourceIDs = [resourceID];

@@ -27,7 +27,7 @@ contract('Bridge - [deposit - centrifugeAsset]', async (accounts) => {
 
     beforeEach(async () => {
         RelayerInstance = await RelayerContract.new([relayer], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold, 0);
 
         resourceID = Ethers.utils.hexZeroPad((randomAddress + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         initialResourceIDs = [resourceID];

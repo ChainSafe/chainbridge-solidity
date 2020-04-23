@@ -59,16 +59,27 @@ Options:
   --erc20Address <address>  Custom erc20 address (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
 ```
 
-#### - `whitelist`
+#### - `register-resource`
 Whitelist a resourceID and tokenAddress pair
 ```
-$ cb-sol-cli erc20 whitelist
+$ cb-sol-cli erc20 register-resource
 
 Options:
   --bridgeAddress <address>           Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
   --tokenContract <address>           Custom erc20 token address to whitelist (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
   --resourceID <id>                   Custom resourceID to whitelist (default: "0x00000000000000000000003f709398808af36ADBA86ACC617FeB7F5B7B193E00")
   --erc20HandlerAddress <address>`    Custom erc20Handler contract (default: "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07")
+```
+
+#### - `set-burn`
+Enable mint/burn for an Erc20 token contract
+```
+$ cb-sol-cli erc20 set-burn
+
+Options:
+  --bridgeAddress <address>        Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
+  --tokenContract <address>        Custom addresses to be whitelisted (default: "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E")
+  --erc20HandlerAddress <address>  Custom erc20 handler (default: "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07")
 ```
 
 #### - `transfer`
@@ -107,16 +118,27 @@ Options:
   --erc721Address <address>  Custom erc721 contract (default: "0x21605f71845f372A9ed84253d2D024B7B10999f4")
   --id <id>                  ERC721 token id (default: 1)
 ```
-#### - `whitelist`
+#### - `register-resource`
 Whitelist a resourceID and tokenAddress pair
 ```
-$ cb-sol-cli erc721 whitelist
+$ cb-sol-cli erc721 register-resource
 
 Options:
   --bridgeAddress <address>           Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
   --tokenContract <address>           Custom erc721 token address to whitelist (default: "0x21605f71845f372A9ed84253d2D024B7B10999f4")
   --resourceID <id>                   Custom resourceID to whitelist (default: "0x000000000000000000000021605f71845f372A9ed84253d2D024B7B10999f400")
   --erc721HandlerAddress <address>`   Custom erc721Handler contract (default: "0xd7E33e1bbf65dC001A0Eb1552613106CD7e40C31")
+```
+
+#### - `set-burn`
+Enable mint/burn for an Erc721 token contract
+```
+$ cb-sol-cli erc721 set-burn
+
+Options:
+  --bridgeAddress <address>         Custom bridge address (default: "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF")
+  --tokenContract <address>         Custom addresses to be whitelisted (default: "0x21605f71845f372A9ed84253d2D024B7B10999f4")
+  --erc721HandlerAddress <address>  Custom erc721 handler (default: "0xd7E33e1bbf65dC001A0Eb1552613106CD7e40C31")
 ```
 
 #### - `transfer`

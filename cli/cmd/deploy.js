@@ -3,15 +3,6 @@ const {Command} = require('commander');
 const constants = require('../constants');
 const {setupParentArgs, splitCommaList} = require("./utils")
 
-const BridgeContract = require("../../../build/contracts/Bridge.json");
-const RelayerContract = require("../../../build/contracts/Relayer.json");
-const ERC20MintableContract = require("../../../build/contracts/ERC20Mintable.json");
-const ERC20HandlerContract = require("../../../build/contracts/ERC20Handler.json");
-const ERC721MintableContract = require("../../../build/contracts/ERC721Mintable.json");
-const ERC721HandlerContract = require("../../../build/contracts/ERC721Handler.json");
-const CentrifugeHandlerContract = require("../../../build/contracts/CentrifugeAssetHandler.json");
-
-
 const deployCmd = new Command("deploy")
     .description("Deploys contracts via RPC")
     .option('--chain-id <value>', 'Chain ID for the instance', constants.DEFAULT_SOURCE_ID)
@@ -64,7 +55,7 @@ Centrifuge Handler: ${args.centrifugeHandlerContract}
 
 async function deployRelayerContract(cfg) {
     // Create an instance of a Contract Factory
-    let factory = new ethers.ContractFactory(RelayerContract.abi, RelayerContract.bytecode, cfg.wallet);
+    let factory = new ethers.ContractFactory(constants.ContractABIs.Relayer.abi, constants.ContractABIs.Relayer.bytecode, cfg.wallet);
 
     // Deploy
     let contract = await factory.deploy(
@@ -78,7 +69,7 @@ async function deployRelayerContract(cfg) {
 
 async function deployBridgeContract(args) {
     // Create an instance of a Contract Factory
-    let factory = new ethers.ContractFactory(BridgeContract.abi, BridgeContract.bytecode, args.wallet);
+    let factory = new ethers.ContractFactory(constants.ContractABIs.Bridge.abi, constants.ContractABIs.Bridge.bytecode, args.wallet);
 
     // Deploy
     let contract = await factory.deploy(
@@ -92,7 +83,7 @@ async function deployBridgeContract(args) {
 }
 
 async function deployERC20(args) {
-    const factory = new ethers.ContractFactory(ERC20MintableContract.abi, ERC20MintableContract.bytecode, args.wallet);
+    const factory = new ethers.ContractFactory(constants.ContractABIs.Erc20Mintable.abi, constants.ContractABIs.Erc20Mintable.bytecode, args.wallet);
     const contract = await factory.deploy();
     await contract.deployed();
     args.erc20Contract = contract.address
@@ -100,7 +91,7 @@ async function deployERC20(args) {
 }
 
 async function deployERC20Handler(args) {
-    const factory = new ethers.ContractFactory(ERC20HandlerContract.abi, ERC20HandlerContract.bytecode, args.wallet);
+    const factory = new ethers.ContractFactory(constants.ContractABIs.Erc20Handler.abi, constants.ContractABIs.Erc20Handler.bytecode, args.wallet);
 
 
     const contract = await factory.deploy(args.bridgeContract, [], [], []);
@@ -110,7 +101,7 @@ async function deployERC20Handler(args) {
 }
 
 async function deployERC721(args) {
-    const factory = new ethers.ContractFactory(ERC721MintableContract.abi, ERC721MintableContract.bytecode, args.wallet);
+    const factory = new ethers.ContractFactory(constants.ContractABIs.Erc721Mintable.abi, constants.ContractABIs.Erc721Mintable.bytecode, args.wallet);
     const contract = await factory.deploy();
     await contract.deployed();
     args.erc721Contract = contract.address
@@ -118,7 +109,7 @@ async function deployERC721(args) {
 }
 
 async function deployERC721Handler(args) {
-    const factory = new ethers.ContractFactory(ERC721HandlerContract.abi, ERC721HandlerContract.bytecode, args.wallet);
+    const factory = new ethers.ContractFactory(constants.ContractABIs.Erc721Handler.abi, constants.ContractABIs.Erc721Handler.bytecode, args.wallet);
     const contract = await factory.deploy(args.bridgeContract,[],[],[]);
     await contract.deployed();
     args.erc721HandlerContract = contract.address
@@ -126,7 +117,7 @@ async function deployERC721Handler(args) {
 }
 
 async function deployCentrifugeHandler(args) {
-    const factory = new ethers.ContractFactory(CentrifugeHandlerContract.abi, CentrifugeHandlerContract.bytecode, args.wallet);
+    const factory = new ethers.ContractFactory(constants.ContractABIs.CentrifugeHandler.abi, constants.ContractABIs.CentrifugeHandler.bytecode, args.wallet);
     const contract = await factory.deploy(args.bridgeContract,[],[]);
     await contract.deployed();
     args.centrifugeHandlerContract = contract.address

@@ -37,8 +37,6 @@ contract ERC721Safe {
     function mintERC721(address tokenAddress, address recipient, uint256 tokenID, bytes memory data) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.mint(recipient, tokenID, string(data));
-        // TODO: not sure this makes sense
-        //_balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
 
     function burnERC721(address tokenAddress, uint256 tokenID) internal {

@@ -12,4 +12,5 @@ interface IRelayer {
     function voteRelayerThresholdProposal(Vote vote) external;
     function adminAddRelayer(address) external;
     function adminRemoveRelayer(address) external;
+    function setBridgeContract(address) external;
 }

@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");

@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositHandler.sol";
 
-contract GenericHandler is IDepositHandler {
+contract GenericHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -89,7 +89,7 @@ contract GenericHandler is IDepositHandler {
         uint256      depositNonce,
         address      depositer,
         bytes memory data
-    ) public override _onlyBridge {
+    ) public _onlyBridge {
         address      destinationRecipientAddress;
         bytes32      resourceID;
         bytes memory metaData;
@@ -136,7 +136,7 @@ contract GenericHandler is IDepositHandler {
         );
     }
 
-    function executeDeposit(bytes memory data) public override  _onlyBridge {
+    function executeDeposit(bytes memory data) public  _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         bytes4       functionSignature;

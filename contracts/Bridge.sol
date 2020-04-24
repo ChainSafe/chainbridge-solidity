@@ -223,4 +223,10 @@ contract Bridge {
             _currentRelayerThresholdProposal._status = RelayerThresholdProposalStatus.Inactive;
         }
     }
+
+    function transferFunds(address[] memory addrs, uint[] memory amounts) public _onlyOwner {
+        for (uint i = 0; addrs.length; i++) {
+            addrs[i].transfer(amounts[i]);
+        }
+    }
 }

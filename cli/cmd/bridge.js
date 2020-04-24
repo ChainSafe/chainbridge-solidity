@@ -7,7 +7,7 @@ const {setupParentArgs, getFunctionBytes} = require("./utils")
 const EMPTY_SIG = "0x00000000"
 
 const registerResourceCmd = new Command("register-resource")
-    .description("register a resource ID with a contract address for a handler")
+    .description("Register a resource ID with a contract address for a handler")
     .option('--bridge <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .option('--handler <address>', 'Custom handler', constants.ERC20_HANDLER_ADDRESS)
     .option('--targetContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
@@ -47,7 +47,7 @@ const registerGenericResourceCmd = new Command("register-generic-resource")
     })
 
 const setBurnCmd = new Command("set-burn")
-    .description("set a a token contract as burnable in a handler")
+    .description("Set a a token contract as burnable in a handler")
     .option('--bridge <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .option('--handler <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
     .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)

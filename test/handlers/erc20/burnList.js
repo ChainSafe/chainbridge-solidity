@@ -61,7 +61,7 @@ contract('ERC20Handler - [Burn ERC20]', async () => {
 
     it('ERC20MintableInstance2.address should be marked true in _burnList after setBurnable is called', async () => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
-        await ERC20HandlerInstance.setBurnable(ERC20MintableInstance2.address);
+        await BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance2.address);
         const isBurnable = await ERC20HandlerInstance._burnList.call(ERC20MintableInstance2.address);
         assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
     });

@@ -6,6 +6,7 @@ import "./interfaces/IRelayer.sol";
 import "./interfaces/IDepositHandler.sol";
 import "./interfaces/IBridge.sol";
 import "./access/Ownable.sol";
+import "./interfaces/IMinterBurner.sol";
 
 contract Bridge is Ownable {
     using SafeMath for uint;
@@ -118,10 +119,15 @@ contract Bridge is Ownable {
         relayerContract.adminRemoveRelayer(relayerAddress);
     }
 
-        // remove relayer
+
     function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public _onlyOwner {
         IDepositHandler handler = IDepositHandler(handlerAddress);
         handler.setResourceIDAndContractAddress(resourceID, tokenAddress);
+    }
+
+    function adminSetBurnable(address handlerAddress, address tokenAddress) public _onlyOwner {
+        IMinterBurner handler = IMinterBurner(handlerAddress);
+        handler.setBurnable(tokenAddress);
     }
 
     function getDepositProposal(

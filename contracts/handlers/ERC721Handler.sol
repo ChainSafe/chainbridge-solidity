@@ -5,8 +5,9 @@ import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../ERC721MinterBurnerPauser.sol";
 import "../interfaces/IBridge.sol";
+import "../interfaces/IMinterBurner.sol";
 
-contract ERC721Handler is IDepositHandler, ERC721Safe {
+contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -55,7 +56,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            setBurnable(burnableContractAddresses[i]);
+            _setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -67,7 +68,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return _depositRecords[depositID];
     }
 
-    function setBurnable(address contractAddress) public {
+    function setBurnable(address contractAddress) public override _onlyBridge{
+        _setBurnable(contractAddress);
+    }
+
+    function _setBurnable(address contractAddress) internal {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
     }

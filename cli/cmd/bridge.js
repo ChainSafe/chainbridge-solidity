@@ -11,7 +11,7 @@ const registerResourceCmd = new Command("register-resource")
     .option('--targetContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
     .option('--resourceID <address>', `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
@@ -27,7 +27,7 @@ const setBurnCmd = new Command("set-burn")
     .option('--handler <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
     .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);

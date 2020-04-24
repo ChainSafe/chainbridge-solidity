@@ -9,7 +9,7 @@ const mintCmd = new Command("mint")
     .option('--id <id>', "ERC721 token id", 1)
     .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
         await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
@@ -25,7 +25,7 @@ const transferCmd = new Command("transfer")
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
 
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);

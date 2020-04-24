@@ -10,7 +10,7 @@ const getHashCmd = new Command('getHash')
     .requiredOption('--hash <value>', 'A hash to lookup', '0x0000000000000000000000000000000000000000000000000000000000000001')
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent);
+        await setupParentArgs(args, args.parent.parent);
         const centHandler = new ethers.Contract(args.centAddress, constants.ContractABIs.CentrifugeHandler.abi, args.wallet);
         const res = await centHandler.getHash(ethers.utils.hexZeroPad(args.hash, 32));
         console.log(`The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
@@ -24,7 +24,7 @@ const transferHashCmd = new Command('transferHash')
     .option('--centAddress <value>', 'Centrifuge handler contract address', constants.CENTRIFUGE_HANDLER)
     .option('--bridgeAddress <value>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
 
         

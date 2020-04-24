@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -26,7 +25,6 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
     const expectedDepositNonce = 1;
     const relayerThreshold = 3;
 
-    let RelayerInstance;
     let BridgeInstance;
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
@@ -41,15 +39,13 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([
+            BridgeContract.new(destinationChainID, [
                 relayer1Address,
                 relayer2Address,
                 relayer3Address,
-                relayer4Address], relayerThreshold).then(instance => RelayerInstance = instance),
+                relayer4Address], relayerThreshold).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
-
-        BridgeInstance = await BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold);
 
         resourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
 
@@ -78,7 +74,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
         assert.equal(await BridgeInstance._relayerThreshold(), relayerThreshold)
 
-        assert.equal(await RelayerInstance._totalRelayers(), 4)
+        assert.equal((await BridgeInstance._totalRelayers()).toString(), '4')
     })
 
     it('[sanity] depositProposal should be created with expected values', async () => {
@@ -182,7 +178,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
         const voteTx = await vote(relayer3Address);
 
-        TruffleAssert.eventEmitted(voteTx, 'DepositProposalFinalized', (event) => {
+        TruffleAssert.eventEmitted(voteTx, 'ProposalFinalized', (event) => {
             return event.originChainID.toNumber() === originChainID &&
                 event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce
@@ -192,7 +188,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
     it('DepositProposalVote event fired when proposal vote made', async () => {
         const voteTx = await vote(relayer1Address);
 
-        TruffleAssert.eventEmitted(voteTx, 'DepositProposalVote', (event) => {
+        TruffleAssert.eventEmitted(voteTx, 'ProposalVote', (event) => {
             return event.originChainID.toNumber() === originChainID &&
                 event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
@@ -207,7 +203,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
         const voteTx = await vote(relayer3Address);
 
-        TruffleAssert.eventEmitted(voteTx, 'DepositProposalFinalized', (event) => {
+        TruffleAssert.eventEmitted(voteTx, 'ProposalFinalized', (event) => {
             return event.originChainID.toNumber() === originChainID &&
                 event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce
@@ -215,7 +211,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
         const executionTx = await executeProposal(relayer1Address)
 
-        TruffleAssert.eventEmitted(executionTx, 'DepositProposalExecuted', (event) => {
+        TruffleAssert.eventEmitted(executionTx, 'ProposalExecuted', (event) => {
             return event.originChainID.toNumber() === originChainID &&
                 event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce

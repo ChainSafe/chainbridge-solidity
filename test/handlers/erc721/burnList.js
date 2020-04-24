@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
@@ -15,7 +14,6 @@ contract('ERC721Handler - [Burn ERC721]', async () => {
     const relayerThreshold = 2;
     const chainID = 1;
 
-    let RelayerInstance;
     let BridgeInstance;
     let ERC721MintableInstance1;
     let ERC721MintableInstance2;
@@ -27,12 +25,10 @@ contract('ERC721Handler - [Burn ERC721]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
         resourceID1 = Ethers.utils.hexZeroPad((ERC721MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
         resourceID2 = Ethers.utils.hexZeroPad((ERC721MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);

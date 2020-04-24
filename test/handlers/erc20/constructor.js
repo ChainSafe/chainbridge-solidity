@@ -27,11 +27,12 @@ contract('ERC20Handler - [constructor]', async () => {
     let burnableContractAddresses;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
-        ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
-        ERC20MintableInstance3 = await ERC20MintableContract.new("token", "TOK");
+        await Promise.all([
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance3 = instance)
+        ])
 
         initialResourceIDs = [];
         burnableContractAddresses = [];

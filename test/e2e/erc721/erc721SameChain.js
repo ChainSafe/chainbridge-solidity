@@ -34,7 +34,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold).then(instance => RelayerInstance = instance),
+            BridgeContract.new(chainID, [relayer1Address, relayer2Address], relayerThreshold).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
         
@@ -43,7 +43,6 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
 
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
         await ERC721MintableInstance.mint(depositerAddress, tokenID, "");
@@ -125,7 +124,8 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             chainID,
             expectedDepositNonce,
             ERC721HandlerInstance.address,
-            depositProposalData
+            depositProposalData,
+            { from: relayer2Address }
         ));
 
         // Assert ERC721 balance was transferred from depositerAddress

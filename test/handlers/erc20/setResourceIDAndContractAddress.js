@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -17,7 +16,6 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     const relayerThreshold = 2;
     const chainID = 1;
 
-    let RelayerInstance;
     let BridgeInstance;
     let ERC20MintableInstance1;
     let ERC20HandlerInstance;
@@ -26,8 +24,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let burnableContractAddresses;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], relayerThreshold);
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, [], relayerThreshold);
         ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];

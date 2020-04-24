@@ -5,7 +5,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -19,13 +18,14 @@ contract('Bridge - [admin]', async accounts => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     const expectedBridgeAdmin = accounts[0];
+    let ADMIN_ROLE;
 
     let RelayerInstance;
     let BridgeInstance;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new(initialRelayers, initialRelayerThreshold)
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, initialRelayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold);
+        ADMIN_ROLE = await BridgeInstance.ADMIN_ROLE()
     });
 
     // Testing pausable methods
@@ -61,32 +61,27 @@ contract('Bridge - [admin]', async accounts => {
     it('newRelayer should be added as a relayer', async () => {
         const newRelayer = accounts[1];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await RelayerInstance.isRelayer(newRelayer));
+        assert.isTrue(await BridgeInstance.isRelayer(newRelayer));
     });
 
     it('newRelayer should be removed as a relayer after being added', async () => {
         const newRelayer = accounts[1];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await RelayerInstance.isRelayer(newRelayer))
+        assert.isTrue(await BridgeInstance.isRelayer(newRelayer))
         TruffleAssert.passes(await BridgeInstance.adminRemoveRelayer(newRelayer));
-        assert.isFalse(await RelayerInstance.isRelayer(newRelayer));
+        assert.isFalse(await BridgeInstance.isRelayer(newRelayer));
     });
 
     // Testing ownership methods
 
     it('Bridge admin should be expectedBridgeAdmin', async () => {
-        assert.equal(await BridgeInstance.owner(), expectedBridgeAdmin);
+        assert.isTrue(await BridgeInstance.hasRole(ADMIN_ROLE, expectedBridgeAdmin));
     });
 
-    it('Bridge admin should be expectedBridgeAdmin', async () => {
+    it('Bridge admin should be changed to expectedBridgeAdmin', async () => {
         const expectedBridgeAdmin2 = accounts[1];
-        TruffleAssert.passes(await BridgeInstance.transferOwnership(expectedBridgeAdmin2))
-        assert.equal(await BridgeInstance.owner(), expectedBridgeAdmin2);
-    });
-
-    it('Bridge admin should be set to zero address', async () => {
-        TruffleAssert.passes(await BridgeInstance.renounceOwnership())
-        assert.equal(await BridgeInstance.owner(), zeroAddress);
+        TruffleAssert.passes(await BridgeInstance.renounceAdmin(expectedBridgeAdmin2))
+        assert.isTrue(await BridgeInstance.hasRole(ADMIN_ROLE, expectedBridgeAdmin2));
     });
 
     // Set resource ID

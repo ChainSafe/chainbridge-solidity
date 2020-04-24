@@ -101,39 +101,42 @@ contract Bridge is Ownable, Pausable {
         );
     }
 
+    // Pause deposits, voting and execution
     function adminPauseTransfers() public onlyOwner {
         _pause();
     }
 
+    // Unpause deposits, voting and execution
     function adminUnpauseTransfers() public onlyOwner {
         _unpause();
     }
 
-    // change relayer threshold
+    // Change relayer threshold
     function adminChangeRelayerThreshold(uint newThreshold) public onlyOwner {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
 
     }
 
-    // add relayer
+    // Add relayer
     function adminAddRelayer(address relayerAddress) public onlyOwner {
         IRelayer relayerContract = IRelayer(_relayerContract);
         relayerContract.adminAddRelayer(relayerAddress);
     }
 
-    // remove relayer
+    // Remove relayer
     function adminRemoveRelayer(address relayerAddress) public onlyOwner {
         IRelayer relayerContract = IRelayer(_relayerContract);
         relayerContract.adminRemoveRelayer(relayerAddress);
     }
 
-
+    // Register a resource ID and contract address for a handler
     function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyOwner {
         IDepositHandler handler = IDepositHandler(handlerAddress);
         handler.setResourceIDAndContractAddress(resourceID, tokenAddress);
     }
 
+    // Register a token contract as mintable/burnable in a handler
     function adminSetBurnable(address handlerAddress, address tokenAddress) public onlyOwner {
         IMinterBurner handler = IMinterBurner(handlerAddress);
         handler.setBurnable(tokenAddress);

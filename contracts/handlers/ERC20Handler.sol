@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import "../ERC20Safe.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../interfaces/IBridge.sol";
 import "../interfaces/IMinterBurner.sol";
 
 contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
@@ -238,8 +237,6 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
         if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);

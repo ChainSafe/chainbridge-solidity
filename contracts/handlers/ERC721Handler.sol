@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../ERC721MinterBurnerPauser.sol";
-import "../interfaces/IBridge.sol";
 import "../interfaces/IMinterBurner.sol";
 
 contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
@@ -280,8 +279,6 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
         if (_burnList[tokenAddress]) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);

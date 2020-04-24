@@ -45,12 +45,11 @@ const setBurnCmd = new Command("set-burn")
 
             // Instances
             const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-            const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
 
             // Whitelisting Addresses
             chainID = await bridgeInstance._chainID()
 
-            await erc721HandlerInstance.setBurnable(args.tokenContract);
+            await bridgeInstance.adminSetBurnable(args.erc721HandlerAddress, args.tokenContract);
             console.log(`[ERC721 Set Burn] Successfully set contract ${args.tokenContract} as burnable on handler ${args.erc721HandlerAddress}`);
 
     })

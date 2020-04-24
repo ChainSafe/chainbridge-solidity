@@ -44,12 +44,11 @@ const setBurnCmd = new Command("set-burn")
 
             // Instances
             const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-            const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc20Handler.abi, args.wallet);
 
             // Whitelisting Addresses
             chainID = await bridgeInstance._chainID()
 
-            await erc20HandlerInstance.setBurnable(args.tokenContract);
+            await bridgeInstance.adminSetBurnable(args.erc20HandlerAddress, args.tokenContract);
             console.log(`[ERC20 Set Burn] Successfully set contract ${args.tokenContract} as burnable on handler ${args.erc20HandlerAddress}`);
 
     })

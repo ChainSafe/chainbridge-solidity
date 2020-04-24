@@ -6,8 +6,7 @@ const ethers = require('ethers');
 
 const CONTRACT_PATH = "../"
 const ContractABIs = {
-    Bridge: require(CONTRACT_PATH + "/build/contracts/Bridge.json"),
-    Relayer: require(CONTRACT_PATH + "/build/contracts/Relayer.json"),
+    Bridge: require(CONTRACT_PATH + "build/contracts/Bridge.json"),
     Erc20Handler: require(CONTRACT_PATH + "/build/contracts/ERC20Handler.json"),
     Erc20Mintable: require(CONTRACT_PATH + "/build/contracts/ERC20PresetMinterPauser.json"),
     Erc721Handler: require(CONTRACT_PATH + "/build/contracts/ERC721Handler.json"),
@@ -38,12 +37,11 @@ module.exports.relayerPrivKeys = [
 
 
 // These are deterministic
-module.exports.BRIDGE_ADDRESS = "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF";
-module.exports.RELAYER_ADDRESS = "0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B";
-module.exports.ERC20_ADDRESS = "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E";
-module.exports.ERC20_HANDLER_ADDRESS = "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07";
-module.exports.ERC721_ADDRESS = "0x21605f71845f372A9ed84253d2D024B7B10999f4";
-module.exports.ERC721_HANDLER_ADDRESS = "0xd7E33e1bbf65dC001A0Eb1552613106CD7e40C31";
+module.exports.BRIDGE_ADDRESS = "0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B";
+module.exports.ERC20_ADDRESS = "0x3167776db165D8eA0f51790CA2bbf44Db5105ADF";
+module.exports.ERC20_HANDLER_ADDRESS = "0x3f709398808af36ADBA86ACC617FeB7F5B7B193E";
+module.exports.ERC721_ADDRESS = "0x2B6Ab4b880A45a07d83Cf4d664Df4Ab85705Bc07";
+module.exports.ERC721_HANDLER_ADDRESS = "0x21605f71845f372A9ed84253d2D024B7B10999f4";
 module.exports.CENTRIFUGE_HANDLER = "0xc279648CE5cAa25B9bA753dAb0Dfef44A069BaF4";
 
 module.exports.DEFAULT_SOURCE_ID = 0;

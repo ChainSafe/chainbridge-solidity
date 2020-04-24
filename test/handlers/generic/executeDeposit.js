@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
@@ -40,12 +39,10 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new(initialRelayers, relayerThreshold).then(instance => RelayerInstance = instance),
+            BridgeContract.new(chainID, initialRelayers, relayerThreshold).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
         ]);
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        
+
         initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [blankFunctionSig];
@@ -102,7 +99,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,
-            depositProposalData
+            depositProposalData,
+            { from: relayer2Address }
         ));
         
         // Verifying asset was marked as stored in CentrifugeAssetInstance
@@ -140,7 +138,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,
-            depositProposalData
+            depositProposalData,
+            { from: relayer2Address }
         );
 
         const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeDepositTx.tx);

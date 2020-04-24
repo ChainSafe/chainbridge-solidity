@@ -1,7 +1,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
@@ -22,7 +21,6 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     const tokenID = 1;
     const expectedDepositNonce = 1;
 
-    let OriginRelayerInstance;
     let OriginBridgeInstance;
     let OriginERC721MintableInstance;
     let OriginERC721HandlerInstance;
@@ -32,7 +30,6 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let originResourceID;
     let originBurnableContractAddresses;
 
-    let DestinationRelayerInstance;
     let DestinationBridgeInstance;
     let DestinationERC721MintableInstance;
     let DestinationERC721HandlerInstance;
@@ -44,15 +41,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginRelayerInstance = instance),
-            RelayerContract.new([destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationRelayerInstance = instance),
+            BridgeContract.new(originChainID, [originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginBridgeInstance = instance),
+            BridgeContract.new(destinationChainID, [destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
-        ]);
-
-        await Promise.all([
-            BridgeContract.new(originChainID, OriginRelayerInstance.address, originRelayerThreshold).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationChainID, DestinationRelayerInstance.address, destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance)
         ]);
 
         originResourceID = Ethers.utils.hexZeroPad((OriginERC721MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
@@ -163,7 +155,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             originChainID,
             expectedDepositNonce,
             DestinationERC721HandlerInstance.address,
-            originDepositProposalData
+            originDepositProposalData,
+            {from: destinationRelayer2Address}
         ));
 
         // Handler should still own tokenID of OriginERC721MintableInstance
@@ -214,7 +207,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             destinationChainID,
             expectedDepositNonce,
             OriginERC721HandlerInstance.address,
-            destinationDepositProposalData
+            destinationDepositProposalData,
+            {from: originRelayer2Address}
         ));
 
         // Assert Destination tokenID no longer exists

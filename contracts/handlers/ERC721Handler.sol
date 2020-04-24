@@ -4,9 +4,9 @@ pragma experimental ABIEncoderV2;
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../ERC721MinterBurnerPauser.sol";
-import "../interfaces/IBridge.sol";
+import "../interfaces/IMinterBurner.sol";
 
-contract ERC721Handler is IDepositHandler, ERC721Safe {
+contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -55,7 +55,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            setBurnable(burnableContractAddresses[i]);
+            _setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -67,7 +67,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return _depositRecords[depositID];
     }
 
-    function setBurnable(address contractAddress) public {
+    function setBurnable(address contractAddress) public override _onlyBridge{
+        _setBurnable(contractAddress);
+    }
+
+    function _setBurnable(address contractAddress) internal {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
     }
@@ -91,7 +95,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         _contractWhitelist[contractAddress] = true;
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -275,8 +279,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
         if (_burnList[tokenAddress]) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);

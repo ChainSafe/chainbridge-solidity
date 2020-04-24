@@ -15,47 +15,6 @@ const mintCmd = new Command("mint")
         console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
     })
 
-const registerResourceCmd = new Command("register-resource")
-    .description("register a resource ID with a token addresses for an ERC20 handler")
-    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
-    .option('--resourceID <address>', `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
-    .option('--erc20HandlerAddress <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
-    .action(async function (args) {
-        await setupParentArgs(args, args.parent.parent)
-
-        // Instances
-        const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-        const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc20Handler.abi, args.wallet);
-
-        // Whitelisting Addresses
-        chainID = await bridgeInstance._chainID()
-
-        await erc20HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
-        console.log(`[ERC20 Register Resource] Successfully registered contract ${args.tokenContract} with id ${args.resourceID} on handler ${args.erc20HandlerAddress}`);
-    
-    })
-
-const setBurnCmd = new Command("set-burn")
-    .description("set a a token contract as burnable in an ERC20 handler")
-    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC20_ADDRESS)
-    .option('--erc20HandlerAddress <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
-    .action(async function (args) {
-            setupParentArgs(args, args.parent.parent)
-
-            // Instances
-            const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-            const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc20Handler.abi, args.wallet);
-
-            // Whitelisting Addresses
-            chainID = await bridgeInstance._chainID()
-
-            await erc20HandlerInstance.setBurnable(args.tokenContract);
-            console.log(`[ERC20 Set Burn] Successfully set contract ${args.tokenContract} as burnable on handler ${args.erc20HandlerAddress}`);
-
-    })
-
 const transferCmd = new Command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
@@ -124,8 +83,6 @@ const balanceCmd = new Command("balance")
 const erc20Cmd = new Command("erc20")
 
 erc20Cmd.addCommand(mintCmd)
-erc20Cmd.addCommand(registerResourceCmd)
-erc20Cmd.addCommand(setBurnCmd)
 erc20Cmd.addCommand(transferCmd)
 erc20Cmd.addCommand(balanceCmd)
 

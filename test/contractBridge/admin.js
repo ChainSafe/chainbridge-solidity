@@ -67,9 +67,9 @@ contract('Bridge - [admin]', async accounts => {
     it('newRelayer should be removed as a relayer after being added', async () => {
         const newRelayer = accounts[1];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await RelayerInstance.isRelayer(newRelayer))
+        assert.isTrue(await RelayerInstance._relayers.call(newRelayer))
         TruffleAssert.passes(await BridgeInstance.adminRemoveRelayer(newRelayer));
-        assert.isFalse(await RelayerInstance.isRelayer(newRelayer));
+        assert.isFalse(await RelayerInstance._relayers.call(newRelayer));
     });
 
     // Testing ownership methods

@@ -48,7 +48,7 @@ contract Relayer is IRelayer {
     }
 
     modifier _onlyBridge() {
-        require(msg.sender == address(_bridgeContract), "sender must be bridge");
+        require(msg.sender == address(_bridgeContract), "sender must be bridge contract");
         _;
     }
 

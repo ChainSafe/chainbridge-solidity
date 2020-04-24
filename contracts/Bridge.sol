@@ -2,13 +2,14 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IRelayer.sol";
 import "./interfaces/IDepositHandler.sol";
 import "./interfaces/IBridge.sol";
-import "./access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IMinterBurner.sol";
 
-contract Bridge is Ownable {
+contract Bridge is Ownable, Pausable {
     using SafeMath for uint;
 
     uint8                    public _chainID;
@@ -101,31 +102,31 @@ contract Bridge is Ownable {
     }
 
     // change relayer threshold
-    function adminChangeRelayerThreshold(uint newThreshold) public _onlyOwner {
+    function adminChangeRelayerThreshold(uint newThreshold) public onlyOwner {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
 
     }
 
     // add relayer
-    function adminAddRelayer(address relayerAddress) public _onlyOwner {
+    function adminAddRelayer(address relayerAddress) public onlyOwner {
         IRelayer relayerContract = IRelayer(_relayerContract);
         relayerContract.adminAddRelayer(relayerAddress);
     }
 
     // remove relayer
-    function adminRemoveRelayer(address relayerAddress) public _onlyOwner {
+    function adminRemoveRelayer(address relayerAddress) public onlyOwner {
         IRelayer relayerContract = IRelayer(_relayerContract);
         relayerContract.adminRemoveRelayer(relayerAddress);
     }
 
 
-    function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public _onlyOwner {
+    function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyOwner {
         IDepositHandler handler = IDepositHandler(handlerAddress);
         handler.setResourceIDAndContractAddress(resourceID, tokenAddress);
     }
 
-    function adminSetBurnable(address handlerAddress, address tokenAddress) public _onlyOwner {
+    function adminSetBurnable(address handlerAddress, address tokenAddress) public onlyOwner {
         IMinterBurner handler = IMinterBurner(handlerAddress);
         handler.setBurnable(tokenAddress);
     }
@@ -141,7 +142,7 @@ contract Bridge is Ownable {
         uint8        destinationChainID,
         address      originChainHandlerAddress,
         bytes memory data
-    ) public _whenNotEmergencyHalt {
+    ) public whenNotPaused {
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
@@ -155,7 +156,7 @@ contract Bridge is Ownable {
         uint8   originChainID,
         uint256 depositNonce,
         bytes32 dataHash
-    ) public _onlyRelayers _whenNotEmergencyHalt {
+    ) public _onlyRelayers whenNotPaused {
         DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(uint(depositProposal._status) <= 1, "proposal has already been passed or transferred");
@@ -192,7 +193,7 @@ contract Bridge is Ownable {
         uint256      depositNonce,
         address      destinationChainHandlerAddress,
         bytes memory data
-    ) public _whenNotEmergencyHalt {
+    ) public whenNotPaused {
         DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
 
         require(depositProposal._status != DepositProposalStatus.Inactive, "proposal is not active");
@@ -207,7 +208,7 @@ contract Bridge is Ownable {
         emit DepositProposalExecuted(originChainID, _chainID, depositNonce);
     }
 
-    function createRelayerThresholdProposal(uint proposedValue) public _onlyRelayers _whenNotEmergencyHalt {
+    function createRelayerThresholdProposal(uint proposedValue) public _onlyRelayers whenNotPaused {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Inactive, "a proposal is currently active");
         require(proposedValue <= _relayerContract.getTotalRelayers(), "proposed value cannot be greater than the total number of relayers");
 
@@ -229,7 +230,7 @@ contract Bridge is Ownable {
         emit RelayerThresholdProposalCreated(proposedValue);
     }
 
-    function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers _whenNotEmergencyHalt {
+    function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers whenNotPaused {
         require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Active, "no proposal is currently active");
         require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
         require(uint8(vote) <= 1, "vote out of the vote enum range");

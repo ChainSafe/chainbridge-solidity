@@ -123,7 +123,7 @@ contract GenericHandler is IGenericHandler {
 
         if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0) &&
             _contractAddressToDepositFunctionSignature[contractAddress] == functionSignature) {
-            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            (bool success,) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }
 
@@ -167,7 +167,7 @@ contract GenericHandler is IGenericHandler {
 
         if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0) &&
             _contractAddressToExecuteFunctionSignature[contractAddress] == functionSignature) {
-            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            (bool success,) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }
     }

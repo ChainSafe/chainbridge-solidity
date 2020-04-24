@@ -101,6 +101,14 @@ contract Bridge is Ownable, Pausable {
         );
     }
 
+    function adminPauseTransfers() public onlyOwner {
+        _pause();
+    }
+
+    function adminUnpauseTransfers() public onlyOwner {
+        _unpause();
+    }
+
     // change relayer threshold
     function adminChangeRelayerThreshold(uint newThreshold) public onlyOwner {
         _relayerThreshold = newThreshold;

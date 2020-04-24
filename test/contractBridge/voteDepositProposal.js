@@ -55,7 +55,7 @@ contract('Bridge - [voteDepositProposal with relayerThreshold == 3]', async (acc
 
         initialResourceIDs = [resourceID];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
-        burnableContractAddresses = [];
+        burnableContractAddresses = [DestinationERC20MintableInstance.address];
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 

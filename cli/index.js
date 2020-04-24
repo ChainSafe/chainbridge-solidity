@@ -8,7 +8,7 @@ const {
     deploy,
     erc20,
     erc721,
-    centrifuge,
+    // centrifuge,
 } = require('./cmd/index');
 const constants = require('./constants');
 
@@ -21,7 +21,7 @@ program.option('--json-wallet-password <value>', '(Optional) Password for encryp
 program.addCommand(deploy)
 program.addCommand(erc20)
 program.addCommand(erc721)
-program.addCommand(centrifuge)
+// program.addCommand(centrifuge)
 
 program.allowUnknownOption(false);
 

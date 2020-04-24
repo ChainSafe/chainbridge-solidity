@@ -8,37 +8,51 @@ const Ethers = require('ethers');
 
 const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
+const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [deposit - Generic]', async (accounts) => {
+    const relayerThreshold = 2;
     const originChainID = 1;
     const destinationChainID = 2;
     const recipientAddress = accounts[1];
     const expectedDepositNonce = 1;
-    const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
-
-    const randomAddress = Ethers.utils.hexZeroPad('0x1', 20)
+    const blankFunctionSig = '0x00000000';
+    const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
 
     let RelayerInstance;
     let BridgeInstance;
     let GenericHandlerInstance;
     let depositData;
+    let initialResourceIDs;
+    let initialContractAddresses;
+    let initialDepositFunctionSignatures;
+    let initialExecuteFunctionSignatures;
 
     beforeEach(async () => {
-        RelayerInstance = await RelayerContract.new([], 0);
+        await Promise.all([
+            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
+        ]);
+
         BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
 
-        resourceID = Ethers.utils.hexZeroPad((randomAddress + Ethers.utils.hexlify(originChainID).substr(2)), 32)
-        initialResourceIDs = [resourceID];
-        initialContractAddresses = [randomAddress];
+        initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)];
+        initialContractAddresses = [CentrifugeAssetInstance.address];
+        initialDepositFunctionSignatures = [blankFunctionSig];
+        initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
 
-        GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
+        GenericHandlerInstance = await GenericHandlerContract.new(
+            BridgeInstance.address,
+            initialResourceIDs,
+            initialContractAddresses,
+            initialDepositFunctionSignatures,
+            initialExecuteFunctionSignatures);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            resourceID.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
-            Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +       // recipientAddress      (?? bytes)
+            initialResourceIDs[0].substr(2) +
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0), 32).substr(2) // len(metaData) (0 bytes)
     });
 
     it('Generic deposit can be made', async () => {

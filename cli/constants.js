@@ -12,7 +12,7 @@ const ContractABIs = {
     Erc20Mintable: require(CONTRACT_PATH + "/build/contracts/ERC20PresetMinterPauser.json"),
     Erc721Handler: require(CONTRACT_PATH + "/build/contracts/ERC721Handler.json"),
     Erc721Mintable: require(CONTRACT_PATH + "/build/contracts/ERC721MinterBurnerPauser.json"),
-    CentrifugeHandler: require(CONTRACT_PATH + "/build/contracts/CentrifugeAssetHandler.json")
+    // CentrifugeHandler: require(CONTRACT_PATH + "/build/contracts/CentrifugeAssetHandler.json")
 }
 
 module.exports.ContractABIs = ContractABIs

@@ -223,12 +223,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         bytes20 recipientAddress;
-        // bytes20 tokenAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            // tokenAddress := mload(add(data, 0x4B))
         }
 
         require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
@@ -238,13 +236,10 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         IBridge bridge = IBridge(_bridgeAddress);
         uint8 chainID = bridge._chainID();
 
-        if (uint8(resourceID[31]) == chainID) {
-            // token is from same chain
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
-        } else {
-            // token is not from chain
-
+        if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);
+        } else {
+            releaseERC20(tokenAddress, address(recipientAddress), amount);
         }
 
         // As we are only allowing for interaction with whitelisted contracts, this case no longer exists

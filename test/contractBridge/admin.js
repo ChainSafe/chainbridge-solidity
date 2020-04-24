@@ -58,7 +58,7 @@ contract('Bridge - [admin]', async accounts => {
     it('newRelayer should be added as a relayer', async () => {
         const newRelayer = accounts[1];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await RelayerInstance.isRelayer(newRelayer));
+        assert.isTrue(await RelayerInstance._relayers.call(newRelayer));
     });
 
     // Testing ownership methods

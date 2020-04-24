@@ -6,6 +6,7 @@ const program = new Command();
 // Comands
 const {
     deploy,
+    bridge,
     erc20,
     erc721,
     // centrifuge,
@@ -17,6 +18,7 @@ program.option('--url <value>', 'URL to connect to', "http://localhost:8545");
 program.option('--private-key <value>', 'Private key to use', constants.deployerPrivKey);
 
 program.addCommand(deploy)
+program.addCommand(bridge)
 program.addCommand(erc20)
 program.addCommand(erc721)
 // program.addCommand(centrifuge)

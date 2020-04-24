@@ -6,7 +6,7 @@ const ethers = require('ethers');
 
 const CONTRACT_PATH = "../"
 const ContractABIs = {
-    Bridge: require(CONTRACT_PATH + "/build/contracts/Bridge.json"),
+    Bridge: require(CONTRACT_PATH + "build/contracts/Bridge.json"),
     Relayer: require(CONTRACT_PATH + "/build/contracts/Relayer.json"),
     Erc20Handler: require(CONTRACT_PATH + "/build/contracts/ERC20Handler.json"),
     Erc20Mintable: require(CONTRACT_PATH + "/build/contracts/ERC20PresetMinterPauser.json"),

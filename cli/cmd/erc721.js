@@ -26,12 +26,11 @@ const setResourceCmd = new Command("register-resource")
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-        const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
 
         // Whitelisting Addresses
         chainID = await bridgeInstance._chainID()
 
-        await erc721HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
+        await bridgeInstance.adminSetResourceIDAndContractAddress(args.erc721HandlerAddress, args.resourceID, args.tokenContract);
         console.log(`[ERC721 Whitelist] Successfully whitelisted ${args.tokenContract} on handler ${args.erc721HandlerAddress}`);
 
     })

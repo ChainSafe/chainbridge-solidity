@@ -26,14 +26,12 @@ const registerResourceCmd = new Command("register-resource")
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-        const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc20Handler.abi, args.wallet);
 
         // Whitelisting Addresses
         chainID = await bridgeInstance._chainID()
 
-        await erc20HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
+        await bridgeInstance.adminSetResourceIDAndContractAddress(args.erc20HandlerAddress, args.resourceID, args.tokenContract);
         console.log(`[ERC20 Register Resource] Successfully registered contract ${args.tokenContract} with id ${args.resourceID} on handler ${args.erc20HandlerAddress}`);
-    
     })
 
 const setBurnCmd = new Command("set-burn")

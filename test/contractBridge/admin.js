@@ -25,7 +25,7 @@ contract('Bridge - [admin]', async accounts => {
 
     beforeEach(async () => {
         BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold);
-        ADMIN_ROLE = await BridgeInstance.ADMIN_ROLE()
+        ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
     });
 
     // Testing pausable methods

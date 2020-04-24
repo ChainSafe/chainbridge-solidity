@@ -79,11 +79,10 @@ contract Bridge is Pausable, AccessControl {
         uint256 indexed depositNonce
     );
 
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender));
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
         _;
     }
 
@@ -96,8 +95,8 @@ contract Bridge is Pausable, AccessControl {
     constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
-        _setupRole(ADMIN_ROLE, msg.sender);
-        _setRoleAdmin(RELAYER_ROLE, ADMIN_ROLE);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
 
         for (uint i; i < initialRelayers.length; i++) {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
@@ -113,7 +112,8 @@ contract Bridge is Pausable, AccessControl {
 
     // Replace current admin with new admin
     function renounceAdmin(address newAdmin) public onlyAdmin {
-        _setupRole(ADMIN_ROLE, newAdmin);
+        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     // Pause deposits, voting and execution

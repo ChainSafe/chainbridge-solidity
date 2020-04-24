@@ -23,6 +23,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     const relayerThreshold = 1;
 
     let RelayerInstance;
+    let DestRelayerInstance;
     let BridgeInstance;
     let DestBridgeInstance;
     let DestinationERC20MintableInstance;
@@ -35,13 +36,14 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => RelayerInstance = instance),
+            RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => DestRelayerInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
 
         await Promise.all([
             BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(destinationChainID, DestRelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
         ]);
 
         initialResourceIDs = [
@@ -161,6 +163,7 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     const relayerThreshold = 2;
 
     let RelayerInstance;
+    let DestRelayerInstance;
     let BridgeInstance;
     let DestBridgeInstance;
     let DestinationERC20MintableInstance;
@@ -174,12 +177,13 @@ contract('Bridge - [create a deposit proposal (voteDepositProposal) with relayer
     beforeEach(async () => {
         await Promise.all([
             RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => RelayerInstance = instance),
+            RelayerContract.new([originChainRelayerAddress], relayerThreshold).then(instance => DestRelayerInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
         await Promise.all([
             BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, RelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(destinationChainID, DestRelayerInstance.address, relayerThreshold).then(instance => DestBridgeInstance = instance)
         ]);
         
         initialResourceIDs = [

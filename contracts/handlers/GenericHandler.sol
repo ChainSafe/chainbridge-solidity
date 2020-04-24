@@ -1,9 +1,9 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/IDepositHandler.sol";
+import "../interfaces/IGenericHandler.sol";
 
-contract GenericHandler is IDepositHandler {
+contract GenericHandler is IGenericHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -73,7 +73,7 @@ contract GenericHandler is IDepositHandler {
         address contractAddress,
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
-    ) public {
+    ) public override {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
@@ -89,7 +89,7 @@ contract GenericHandler is IDepositHandler {
         uint256      depositNonce,
         address      depositer,
         bytes memory data
-    ) public override _onlyBridge {
+    ) public _onlyBridge {
         address      destinationRecipientAddress;
         bytes32      resourceID;
         bytes memory metaData;
@@ -123,7 +123,7 @@ contract GenericHandler is IDepositHandler {
 
         if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0) &&
             _contractAddressToDepositFunctionSignature[contractAddress] == functionSignature) {
-            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            (bool success,) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }
 
@@ -136,7 +136,7 @@ contract GenericHandler is IDepositHandler {
         );
     }
 
-    function executeDeposit(bytes memory data) public override  _onlyBridge {
+    function executeDeposit(bytes memory data) public  _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         bytes4       functionSignature;
@@ -167,7 +167,7 @@ contract GenericHandler is IDepositHandler {
 
         if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0) &&
             _contractAddressToExecuteFunctionSignature[contractAddress] == functionSignature) {
-            (bool success, bytes memory returnedData) = contractAddress.call(metaData);
+            (bool success,) = contractAddress.call(metaData);
             require(success, "delegatecall to contractAddress failed");
         }
     }

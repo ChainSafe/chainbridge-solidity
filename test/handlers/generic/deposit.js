@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
@@ -22,7 +21,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
     const expectedDepositNonce = 1;
 
-    let RelayerInstance;
     let BridgeInstance;
     let CentrifugeAssetInstance;
     let initialResourceIDs;
@@ -34,12 +32,10 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
         ]);
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
-        
+
         initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [blankFunctionSig];

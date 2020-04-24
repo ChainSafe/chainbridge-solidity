@@ -6,6 +6,7 @@ const program = new Command();
 // Comands
 const {
     deploy,
+    bridge,
     erc20,
     erc721,
     // centrifuge,
@@ -19,6 +20,7 @@ program.option('--json-wallet <path>', '(Optional) Encrypted JSON wallet');
 program.option('--json-wallet-password <value>', '(Optional) Password for encrypted JSON wallet');
 
 program.addCommand(deploy)
+program.addCommand(bridge)
 program.addCommand(erc20)
 program.addCommand(erc721)
 // program.addCommand(centrifuge)

@@ -4,9 +4,9 @@ pragma experimental ABIEncoderV2;
 import "../ERC20Safe.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../interfaces/IBridge.sol";
+import "../interfaces/IMinterBurner.sol";
 
-contract ERC20Handler is IDepositHandler, ERC20Safe {
+contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
     address public _bridgeAddress;
     bool    public _useContractWhitelist;
 
@@ -59,7 +59,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            setBurnable(burnableContractAddresses[i]);
+            _setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -76,7 +76,11 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // return true;
     }
 
-    function setBurnable(address contractAddress) public {
+    function setBurnable(address contractAddress) public override _onlyBridge {
+        _setBurnable(contractAddress);
+    }
+
+    function _setBurnable(address contractAddress) internal {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
     }
@@ -91,7 +95,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // }
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -233,8 +237,6 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
         if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);

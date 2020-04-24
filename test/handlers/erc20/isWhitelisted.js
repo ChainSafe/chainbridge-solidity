@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -17,7 +16,6 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
     const relayerThreshold = 2;
     const chainID = 1;
 
-    let RelayerInstance;
     let BridgeInstance;
     let ERC20MintableInstance1;
     let ERC20MintableInstance2;
@@ -27,12 +25,10 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
         initialResourceIDs = [];
         resourceID1 = Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);

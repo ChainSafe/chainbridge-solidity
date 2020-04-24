@@ -1,7 +1,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -37,7 +36,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     let originInitialContractAddresses;
     let originBurnableContractAddresses;
     
-    let DestinationRelayerInstance;
     let DestinationBridgeInstance;
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
@@ -51,15 +49,10 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginRelayerInstance = instance),
-            RelayerContract.new([destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationRelayerInstance = instance),
+            BridgeContract.new(originChainID, [originRelayer1Address, originRelayer2Address], originRelayerThreshold).then(instance => OriginBridgeInstance = instance),
+            BridgeContract.new(destinationChainID, [destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
-        ]);
-
-        await Promise.all([
-            BridgeContract.new(originChainID, OriginRelayerInstance.address, originRelayerThreshold).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationChainID, DestinationRelayerInstance.address, destinationRelayerThreshold).then(instance => DestinationBridgeInstance = instance)
         ]);
 
         originResourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
@@ -167,7 +160,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             originChainID,
             expectedDepositNonce,
             DestinationERC20HandlerInstance.address,
-            originDepositProposalData
+            originDepositProposalData,
+            { from: destinationRelayer2Address }
         ));
 
 
@@ -222,7 +216,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             destinationChainID,
             expectedDepositNonce,
             OriginERC20HandlerInstance.address,
-            destinationDepositProposalData
+            destinationDepositProposalData,
+            { from: originRelayer2Address }
         ));
 
         // Assert ERC20 balance was transferred from recipientAddress

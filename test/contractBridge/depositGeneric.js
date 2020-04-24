@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
@@ -31,11 +30,9 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
+            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
+            BridgeInstance = BridgeContract.new(originChainID, [], 0).then(instance => BridgeInstance = instance)
         ]);
-
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, 0);
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)];
         initialContractAddresses = [CentrifugeAssetInstance.address];

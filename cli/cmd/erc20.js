@@ -9,7 +9,7 @@ const mintCmd = new Command("mint")
     .option('--value <amount>', 'Amount to mint', 100)
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
         await erc20Instance.mint(args.wallet.address, args.value);
         console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
@@ -22,7 +22,7 @@ const registerResourceCmd = new Command("register-resource")
     .option('--resourceID <address>', `Custom resourceID to be whitelisted`, constants.ERC20_RESOURCEID)
     .option('--erc20HandlerAddress <address>', 'Custom erc20 handler', constants.ERC20_HANDLER_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);

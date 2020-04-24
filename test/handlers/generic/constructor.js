@@ -6,7 +6,6 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
@@ -18,7 +17,6 @@ contract('GenericHandler - [constructor]', async () => {
     const blankFunctionSig = '0x00000000';
     const centrifugeAssetStoreFuncSig = 'store(bytes32)';
 
-    let RelayerInstance;
     let BridgeInstance;
     let CentrifugeAssetInstance1;
     let CentrifugeAssetInstance2;

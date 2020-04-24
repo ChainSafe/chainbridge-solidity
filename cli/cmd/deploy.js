@@ -18,7 +18,7 @@ const deployCmd = new Command("deploy")
         await deployERC20Handler(args);
         await deployERC721(args)
         await deployERC721Handler(args)
-        await deployCentrifugeHandler(args);
+        // await deployCentrifugeHandler(args);
         args.cost = startBal.sub((await args.provider.getBalance(args.wallet.address)))
         displayLog(args)
     })

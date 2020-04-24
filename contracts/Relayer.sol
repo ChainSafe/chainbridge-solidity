@@ -1,14 +1,15 @@
 pragma solidity 0.6.4;
 
 import "./interfaces/IRelayer.sol";
+import "./interfaces/IBridge.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Relayer is IRelayer {
     using SafeMath for uint;
 
-    uint public _relayerThreshold;
-    uint public _totalRelayers;
-    address public _bridgeAddress;
+    uint    public _relayerThreshold;
+    uint    public _totalRelayers;
+    IBridge public _bridgeContract;
 
     RelayerThresholdProposal private _currentRelayerThresholdProposal;
 
@@ -47,7 +48,7 @@ contract Relayer is IRelayer {
     }
 
     modifier _onlyBridge() {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+        require(msg.sender == address(_bridgeContract), "sender must be bridge");
         _;
     }
 
@@ -59,16 +60,21 @@ contract Relayer is IRelayer {
         _relayerThreshold = initialRelayerThreshold;
     }
 
+    function setBridgeContract(address bridgeAddress) public override {
+        require(address(_bridgeContract) == address(0), "bridge contract has already been set");
+        _bridgeContract = IBridge(bridgeAddress);
+    }
+
     function isRelayer(address relayerAddress) public override returns (bool) {
         return _relayers[relayerAddress];
     }
 
-    function adminAddRelayer(address relayerAddress) public override _onlyBridge {
+    function adminAddRelayer(address relayerAddress) public override _onlyBridgeOwner {
         _addRelayer(relayerAddress);
 
     }
 
-    function adminRemoveRelayer(address relayerAddress) public override _onlyBridge {
+    function adminRemoveRelayer(address relayerAddress) public override _onlyBridgeOwner {
         _removeRelayer(relayerAddress);
     }
 

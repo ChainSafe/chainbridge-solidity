@@ -69,12 +69,12 @@ contract Relayer is IRelayer {
         return _relayers[relayerAddress];
     }
 
-    function adminAddRelayer(address relayerAddress) public override _onlyBridgeOwner {
+    function adminAddRelayer(address relayerAddress) public override _onlyBridge {
         _addRelayer(relayerAddress);
 
     }
 
-    function adminRemoveRelayer(address relayerAddress) public override _onlyBridgeOwner {
+    function adminRemoveRelayer(address relayerAddress) public override _onlyBridge {
         _removeRelayer(relayerAddress);
     }
 

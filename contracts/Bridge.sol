@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IDepositHandler.sol";
+import "./interfaces/IGenericHandler.sol";
 import "./interfaces/IBridge.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -149,6 +150,11 @@ contract Bridge is Pausable, AccessControl {
     function adminSetResourceIDAndContractAddress(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyAdmin {
         IDepositHandler handler = IDepositHandler(handlerAddress);
         handler.setResourceIDAndContractAddress(resourceID, tokenAddress);
+    }
+
+    function adminSetResourceIdInGenericHandler(address handlerAddress, bytes32 resourceID, address contractAddress, bytes4 depositFunctionSig, bytes4 executeFunctionSig) public onlyAdmin{
+        IGenericHandler handler = IGenericHandler(handlerAddress);
+        handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
     // Register a token contract as mintable/burnable in a handler

@@ -1,9 +1,9 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/IDepositHandler.sol";
+import "../interfaces/IGenericHandler.sol";
 
-contract GenericHandler {
+contract GenericHandler is IGenericHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -73,7 +73,7 @@ contract GenericHandler {
         address contractAddress,
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
-    ) public {
+    ) public override {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];

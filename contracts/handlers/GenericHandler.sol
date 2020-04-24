@@ -37,8 +37,6 @@ contract GenericHandler is IDepositHandler {
         _;
     }
 
-    event EBytes4(bytes4 functionSig);
-
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -164,12 +162,8 @@ contract GenericHandler is IDepositHandler {
             functionSignature := mload(add(data, 0x60))
         }
 
-        emit EBytes4(functionSignature);
-
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
-
-        emit EBytes4(_contractAddressToExecuteFunctionSignature[contractAddress]);
 
         if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0) &&
             _contractAddressToExecuteFunctionSignature[contractAddress] == functionSignature) {

@@ -89,6 +89,8 @@ contract Bridge is Ownable, Pausable {
         _chainID = chainID;
         _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
+
+        _relayerContract.setBridgeContract(address(this));
     }
 
     function getCurrentRelayerThresholdProposal() public view returns (

@@ -45,8 +45,6 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         _;
     }
 
-    event DebugUint(uint);
-
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,

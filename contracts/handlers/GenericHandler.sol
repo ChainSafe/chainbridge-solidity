@@ -9,7 +9,6 @@ contract GenericHandler is IGenericHandler {
     struct DepositRecord {
         uint8   _destinationChainID;
         bytes32 _resourceID;
-        address _destinationRecipientAddress;
         address _depositer;
         bytes   _metaData;
     }
@@ -84,62 +83,64 @@ contract GenericHandler is IGenericHandler {
         _setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
+    // Data includes:
+    // - ResourceID (32bytes)
+    // - len(Data) (32 bytes)
+    // - Data (? bytes)
+    //
     function deposit(
         uint8        destinationChainID,
         uint256      depositNonce,
         address      depositer,
         bytes memory data
     ) public _onlyBridge {
-        address      destinationRecipientAddress;
         bytes32      resourceID;
-        bytes memory metaData;
-        bytes4       functionSignature;
+        bytes32      lenMetadata;
+        bytes memory metadata;
 
         assembly {
-            // These are all fixed 32 bytes
-            // first 32 bytes of bytes is the length
-            destinationRecipientAddress    := mload(add(data, 0x20))
-            resourceID                     := mload(add(data, 0x40))
+            // Load resource ID from data + 32
+            resourceID := mload(add(data, 0x20))
+            // Load length of metadata from data + 64
+            lenMetadata  := mload(add(data, 0x40))
+            // Load free memory pointer
+            metadata := mload(0x40)
 
-            // metadata has variable length
-            // load free memory pointer to store metadata
-            metaData := mload(0x40)
-            // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x60, data))
-            mstore(0x40, add(0x60, add(metaData, lenMeta)))
+            mstore(0x40, add(0x20, add(metadata, lenMetadata)))
 
-            // in the calldata, metadata is stored @0xC4 after accounting for function signature, and 3 previous params
+            // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
+            // bytes length (32) + resourceId (32) + length (32) = 0xC4
+
             calldatacopy(
-                metaData,                     // copy to metaData
-                0xE4,                        // copy from calldata after data length declaration at 0xC4
-                sub(calldatasize(), 0xE4)   // copy size (calldatasize - 0xC4)
+                metadata, // copy to metadata
+                0xC4, // copy from calldata after metadata length declaration @0xC4
+                sub(calldatasize(), 0xC4)      // copy size (calldatasize - (0xC4 + the space metaData takes up))
             )
-
-            functionSignature := mload(add(data, 0x40))
         }
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0) &&
-            _contractAddressToDepositFunctionSignature[contractAddress] == functionSignature) {
-            (bool success,) = contractAddress.call(metaData);
+        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0)) {
+            (bool success,) = contractAddress.call(metadata);
             require(success, "delegatecall to contractAddress failed");
         }
 
         _depositRecords[depositNonce] = DepositRecord(
             destinationChainID,
             resourceID,
-            destinationRecipientAddress,
             depositer,
-            metaData
+            metadata
         );
     }
 
+    // Data contains:
+    // - Resource ID
+    // - len(metadata)
+    // - metadata
     function executeDeposit(bytes memory data) public  _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
-        bytes4       functionSignature;
         assembly {
             // These are all fixed 32 bytes
             // first 32 bytes of bytes is the length
@@ -158,16 +159,15 @@ contract GenericHandler is IGenericHandler {
                 0x64,                        // copy from calldata after data length declaration at 0x64
                 sub(calldatasize(), 0x64)   // copy size (calldatasize - 0x64)
             )
-
-            functionSignature := mload(add(data, 0x60))
         }
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        if (_contractAddressToExecuteFunctionSignature[contractAddress] != bytes4(0) &&
-            _contractAddressToExecuteFunctionSignature[contractAddress] == functionSignature) {
-            (bool success,) = contractAddress.call(metaData);
+        bytes4 sig = _contractAddressToExecuteFunctionSignature[contractAddress];
+        if (sig != bytes4(0)) {
+            bytes memory callData = abi.encodePacked(sig, metaData);
+            (bool success,) = contractAddress.call(callData);
             require(success, "delegatecall to contractAddress failed");
         }
     }

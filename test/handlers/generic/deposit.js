@@ -49,9 +49,9 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialExecuteFunctionSignatures);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +       // recipientAddress      (?? bytes)
             initialResourceIDs[0].substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0), 32).substr(2) // len(metaData) (0 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(4), 32).substr(2) + // len(metaData) (32 bytes)
+            Ethers.utils.hexZeroPad('0xdeadbeef', 4).substr(2) // metadata (4 bytes)
     });
 
     it('deposit can be made successfully', async () => {
@@ -67,9 +67,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[0],
-            _destinationRecipientAddress: recipientAddress,
             _depositer: depositerAddress,
-            _metaData: null
+            _metaData: '0xdeadbeef'
         };
 
         TruffleAssert.passes(await BridgeInstance.deposit(

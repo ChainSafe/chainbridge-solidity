@@ -47,9 +47,9 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
             initialExecuteFunctionSignatures);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +       // recipientAddress      (?? bytes)
             initialResourceIDs[0].substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0), 32).substr(2) // len(metaData) (0 bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(4), 32).substr(2) // len(metaData)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0xdeadbeef), 4).substr(2) // metaData
     });
 
     it('Generic deposit can be made', async () => {

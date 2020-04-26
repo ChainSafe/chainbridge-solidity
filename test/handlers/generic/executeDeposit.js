@@ -27,7 +27,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const blankFunctionSig = '0x00000000';
     const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
 
-    let RelayerInstance;
     let BridgeInstance;
     let CentrifugeAssetInstance;
     let initialResourceIDs;
@@ -56,15 +55,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialExecuteFunctionSignatures);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +          // recipientAddress      (?? bytes)
             initialResourceIDs[0].substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(36), 32).substr(2) +  // len(metaData) (36 bytes)
-            centrifugeAssetFuncSig.substr(2) + hashOfCentrifugeAsset.substr(2)
+            hashOfCentrifugeAsset.substr(2)
 
         depositProposalData = '0x' +
             initialResourceIDs[0].substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(36), 32).substr(2) +  // len(metaData) (36 bytes)
-            centrifugeAssetFuncSig.substr(2) + hashOfCentrifugeAsset.substr(2)
+            hashOfCentrifugeAsset.substr(2)
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositProposalData.substr(2));
     });
 

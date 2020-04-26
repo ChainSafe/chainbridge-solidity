@@ -15,7 +15,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     const relayer2Address = accounts[4];
 
     const tokenID = 1;
-    const depositMetadata = "0xdeadbeef"
+    const depositMetadata = "somemetadata"
     const expectedDepositNonce = 1;
 
     let RelayerInstance;
@@ -28,7 +28,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     let resourceID;
     let depositData;
-    let depositProposalData;
+    let proposalData;
     let depositProposalDataHash;
 
     beforeEach(async () => {
@@ -44,27 +44,25 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        await ERC721MintableInstance.mint(depositerAddress, tokenID, "");
+        await ERC721MintableInstance.mint(depositerAddress, tokenID, depositMetadata);
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
 
         depositData = '0x' +
             resourceID.substr(2) +                                                  // resourceID            (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexlify(recipientAddress).substr(2) +                // recipientAddress      (?? bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData
+            Ethers.utils.hexlify(recipientAddress).substr(2)                // recipientAddress      (?? bytes)
 
-        depositProposalData = '0x' +
+        proposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes) 
             resourceID.substr(2) +                                                  // resourceID            (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2) +                      // recipientAddress      (?? bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData              (?? bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata.length), 32).substr(2) +       // len(metaData)         (32 bytes)
+            Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(depositMetadata)).substr(2);         // metaData              (?? bytes)
 
             
-        depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + depositProposalData.substr(2));
+        depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + proposalData.substr(2));
     });
 
     it("[sanity] depositerAddress' should own tokenID", async () => {
@@ -94,7 +92,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         assert.strictEqual(record[4], recipientAddress.toLowerCase())
         assert.strictEqual(record[5], depositerAddress)
         assert.strictEqual(Number(record[6]), tokenID)
-        assert.strictEqual(record[7], Ethers.utils.hexZeroPad(depositMetadata, 32))
+        assert.strictEqual(Ethers.utils.toUtf8String(record[7]), depositMetadata)
 
         // Handler should have a balance of depositAmount
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
@@ -123,7 +121,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             chainID,
             expectedDepositNonce,
             ERC721HandlerInstance.address,
-            depositProposalData,
+            proposalData,
             { from: relayer2Address }
         ));
 

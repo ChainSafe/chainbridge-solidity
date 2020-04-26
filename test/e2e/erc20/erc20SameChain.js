@@ -60,8 +60,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
 
         depositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
             resourceID.substr(2) +                                                          // resourceID            (32 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
 
@@ -93,7 +93,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         assert.strictEqual(handlerBalance.toNumber(), depositAmount);
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -103,7 +103,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -111,7 +111,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         ));
 
         // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             ERC20HandlerInstance.address,

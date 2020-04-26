@@ -2,13 +2,13 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
-import "../interfaces/IDepositHandler.sol";
+import "../interfaces/IDepositExecute.sol";
 import "../ERC721MinterBurnerPauser.sol";
-import "../interfaces/IMinterBurner.sol";
+import "../interfaces/IERCHandler.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
-contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
+contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
     using ERC165Checker for address;
     address public _bridgeAddress;
 
@@ -57,7 +57,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
+            _setResource(initialResourceIDs[i], initialContractAddresses[i]);
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
@@ -94,14 +94,14 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         return resourceID;
     }
 
-    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
+    function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
         _contractWhitelist[contractAddress] = true;
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -109,7 +109,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _setResourceIDAndContractAddress(resourceID, contractAddress);
+        _setResource(resourceID, contractAddress);
     }
 
     // Make a deposit

@@ -34,7 +34,7 @@ const transferHashCmd = new Command('transferHash')
 
         const data = `0x` + resourceID.substr(2) + hash.substr(2);
 
-        let tx = await bridgeInstance.voteDepositProposal(
+        let tx = await bridgeInstance.deposit(
             args.destId,
             args.centAddress,
             hash,

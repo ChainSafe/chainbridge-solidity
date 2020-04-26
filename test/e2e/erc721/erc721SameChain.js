@@ -99,7 +99,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -109,7 +109,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -117,7 +117,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         ));
         
         // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             ERC721HandlerInstance.address,

@@ -115,20 +115,20 @@ contract Bridge is Pausable, AccessControl {
         _unpause();
     }
 
-    // Change relayer threshold
+    // Modifies the number of votes required for a proposal to be executed
     function adminChangeRelayerThreshold(uint newThreshold) public onlyAdmin {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
     }
 
-    // Add relayer
+    // Add address to relayer set
     function adminAddRelayer(address relayerAddress) public onlyAdmin {
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
         _totalRelayers++;
     }
 
-    // Remove relayer
+    // Remove address from relayer set
     function adminRemoveRelayer(address relayerAddress) public onlyAdmin {
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);

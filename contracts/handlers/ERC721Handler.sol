@@ -155,28 +155,6 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
         address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
 
-        // we are currently only allowing for interactions with whitelisted tokenContracts
-        // there should not be a case where we recieve an empty resourceID
-
-        // bytes32 resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        // bytes memory emptyBytes;
-
-        // if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
-        //     // The case where we have never seen this token address before
-
-        //     // If we have never seen this token and someone was able to perform a deposit,
-        //     // it follows that the token is native to the current chain.
-
-        //     IBridge bridge = IBridge(_bridgeAddress);
-        //     uint8 chainID = bridge._chainID();
-
-        //     resourceID = createResourceID(originChainTokenAddress, chainID);
-
-        //      _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
-        //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
-
-        // }
-
         // Check if the contract supports metadata, fetch it if it does
         if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
             IERC721Metadata erc721 = IERC721Metadata(originChainTokenAddress);
@@ -267,28 +245,12 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
-
-        // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
-        // token exists
-
         if (_burnList[tokenAddress]) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
 
-        // As we are only allowing for interaction with whitelisted contracts, this case no longer exists
-
-        // } else {
-        //     // Token doesn't exist
-        //     ERC721Mintable erc721 = new ERC721Mintable();
-
-        //     // Create a relationship between the originAddress and the synthetic
-        //     _resourceIDToTokenContractAddress[resourceID] = address(erc721);
-        //     _tokenContractAddressToResourceID[address(erc721)] = resourceID;
-
-        //     erc721.safeMint(address(recipientAddress), tokenID, metaData);
-        // }
     }
 
     function withdraw(address tokenAddress, address recipient, uint tokenID) public _onlyBridge {

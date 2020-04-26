@@ -5,9 +5,14 @@ import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
 import "../ERC721MinterBurnerPauser.sol";
 import "../interfaces/IMinterBurner.sol";
+import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
 contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
+    using ERC165Checker for address;
     address public _bridgeAddress;
+
+    bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
 
     struct DepositRecord {
         address _originChainTokenAddress;
@@ -39,6 +44,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
+
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -115,8 +121,6 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
     // destinationRecipientAddress     length      uint256    bytes    64 - 96
     // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
     // --------------------------------------------------------------------------------------------------------------------
-    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
-    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
         bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
@@ -137,8 +141,6 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
             destinationRecipientAddress := mload(0x40)
             // Store recipient address
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
-            // Load length of metadata
-            let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
 
             // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
             // bytes lenght (32) + resourceId (32) + tokenId (32) + length (32) = 0xE4
@@ -146,24 +148,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
             calldatacopy(
                 destinationRecipientAddress,    // copy to destinationRecipientAddress
                 0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
-                sub(calldatasize(), add(0xE4, add(0x20, lenMeta)))       // copy size (calldatasize - (0xE4 + lenMeta + 0x20))
-            )
-
-            // metadata has variable length
-            // load free memory pointer to store metadata
-            metaData := mload(0x40)
-
-            // incrementing free memory pointer
-            mstore(0x40, add(0x40, add(metaData, lenMeta)))
-
-            // metadata is located at (0xE4 + 0x20 + lenDestinationRecipientAddress) in calldata
-            let metaDataLoc := add(0x104, lenDestinationRecipientAddress)
-
-            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
-            calldatacopy(
-                metaData,                           // copy to metaData
-                metaDataLoc,                       // copy from calldata after metaData length declaration
-                sub(calldatasize(), metaDataLoc)   // copy size (calldatasize - metaDataLoc)
+                sub(calldatasize(), 0xE4)       // copy size (calldatasize - (0xE4 + 0x20))
             )
         }
 
@@ -191,6 +176,12 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
 
         // }
+
+        // Check if the contract supports metadata, fetch it if it does
+        if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
+            IERC721Metadata erc721 = IERC721Metadata(originChainTokenAddress);
+            metaData = bytes(erc721.tokenURI(tokenID));
+        }
 
         if (_burnList[originChainTokenAddress]) {
             burnERC721(originChainTokenAddress, tokenID);

@@ -3,11 +3,16 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../erc/ERC721/ERC721Mintable.sol";
-import "../interfaces/IBridge.sol";
+import "../ERC721MinterBurnerPauser.sol";
+import "../interfaces/IMinterBurner.sol";
+import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
-contract ERC721Handler is IDepositHandler, ERC721Safe {
+contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
+    using ERC165Checker for address;
     address public _bridgeAddress;
+
+    bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
 
     struct DepositRecord {
         address _originChainTokenAddress;
@@ -39,6 +44,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
+
     constructor(
         address bridgeAddress,
         bytes32[] memory initialResourceIDs,
@@ -55,7 +61,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            setBurnable(burnableContractAddresses[i]);
+            _setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -67,7 +73,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         return _depositRecords[depositID];
     }
 
-    function setBurnable(address contractAddress) public {
+    function setBurnable(address contractAddress) public override _onlyBridge{
+        _setBurnable(contractAddress);
+    }
+
+    function _setBurnable(address contractAddress) internal {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
     }
@@ -91,7 +101,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         _contractWhitelist[contractAddress] = true;
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -111,10 +121,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
     // destinationRecipientAddress     length      uint256    bytes    64 - 96
     // destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
     // --------------------------------------------------------------------------------------------------------------------
-    // metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
-    // metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
-        // address      originChainTokenAddress;
         bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
@@ -134,8 +141,6 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             destinationRecipientAddress := mload(0x40)
             // Store recipient address
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
-            // Load length of metadata
-            let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
 
             // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
             // bytes lenght (32) + resourceId (32) + tokenId (32) + length (32) = 0xE4
@@ -143,24 +148,7 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
             calldatacopy(
                 destinationRecipientAddress,    // copy to destinationRecipientAddress
                 0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
-                sub(calldatasize(), add(0xE4, add(0x20, lenMeta)))       // copy size (calldatasize - (0xE4 + lenMeta + 0x20))
-            )
-
-            // metadata has variable length
-            // load free memory pointer to store metadata
-            metaData := mload(0x40)
-
-            // incrementing free memory pointer
-            mstore(0x40, add(0x40, add(metaData, lenMeta)))
-
-            // metadata is located at (0xE4 + 0x20 + lenDestinationRecipientAddress) in calldata
-            let metaDataLoc := add(0x104, lenDestinationRecipientAddress)
-
-            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
-            calldatacopy(
-                metaData,                           // copy to metaData
-                metaDataLoc,                       // copy from calldata after metaData length declaration
-                sub(calldatasize(), metaDataLoc)   // copy size (calldatasize - metaDataLoc)
+                sub(calldatasize(), 0xE4)       // copy size (calldatasize - (0xE4 + 0x20))
             )
         }
 
@@ -188,6 +176,12 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
         //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
 
         // }
+
+        // Check if the contract supports metadata, fetch it if it does
+        if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
+            IERC721Metadata erc721 = IERC721Metadata(originChainTokenAddress);
+            metaData = bytes(erc721.tokenURI(tokenID));
+        }
 
         if (_burnList[originChainTokenAddress]) {
             burnERC721(originChainTokenAddress, tokenID);
@@ -276,17 +270,11 @@ contract ERC721Handler is IDepositHandler, ERC721Safe {
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
-        if (uint8(resourceID[31]) == chainID) {
-            // token is from same chain
-            releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
+        if (_burnList[tokenAddress]) {
+            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
-            // token is not from chain
-
-            ERC721Mintable erc721 = ERC721Mintable(tokenAddress);
-            erc721.safeMint(address(recipientAddress), tokenID, metaData);
+            releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
 
         // As we are only allowing for interaction with whitelisted contracts, this case no longer exists

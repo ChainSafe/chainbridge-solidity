@@ -2,11 +2,11 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../ERC20Safe.sol";
-import "../erc/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "../interfaces/IDepositHandler.sol";
-import "../interfaces/IBridge.sol";
+import "../interfaces/IMinterBurner.sol";
 
-contract ERC20Handler is IDepositHandler, ERC20Safe {
+contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
     address public _bridgeAddress;
     bool    public _useContractWhitelist;
 
@@ -59,7 +59,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            setBurnable(burnableContractAddresses[i]);
+            _setBurnable(burnableContractAddresses[i]);
         }
     }
 
@@ -76,7 +76,11 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // return true;
     }
 
-    function setBurnable(address contractAddress) public {
+    function setBurnable(address contractAddress) public override _onlyBridge {
+        _setBurnable(contractAddress);
+    }
+
+    function _setBurnable(address contractAddress) internal {
         require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
     }
@@ -91,7 +95,7 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         // }
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public {
+    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -223,28 +227,21 @@ contract ERC20Handler is IDepositHandler, ERC20Safe {
         }
 
         bytes20 recipientAddress;
-        // bytes20 tokenAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            // tokenAddress := mload(add(data, 0x4B))
         }
 
         require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
         // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
         // token exists
-        IBridge bridge = IBridge(_bridgeAddress);
-        uint8 chainID = bridge._chainID();
 
-        if (uint8(resourceID[31]) == chainID) {
-            // token is from same chain
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
-        } else {
-            // token is not from chain
-
+        if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);
+        } else {
+            releaseERC20(tokenAddress, address(recipientAddress), amount);
         }
 
         // As we are only allowing for interaction with whitelisted contracts, this case no longer exists

@@ -6,9 +6,8 @@
  const TruffleAssert = require('truffle-assertions');
  const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
@@ -20,7 +19,6 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     const tokenID = 1;
 
-    let RelayerInstance;
     let BridgeInstance;
     let ERC721MintableInstance1;
     let ERC721MintableInstance2;
@@ -34,12 +32,10 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance1 = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance2 = instance)
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
         resourceID1 = Ethers.utils.hexZeroPad((ERC721MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
         resourceID2 = Ethers.utils.hexZeroPad((ERC721MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
@@ -49,7 +45,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
         await Promise.all([
             ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
-            ERC721MintableInstance1.mint(depositerAddress, tokenID)
+            ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
         ]);
 
         await ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
@@ -87,11 +83,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
         const depositerBalance = await ERC721MintableInstance1.balanceOf(depositerAddress);
         assert.strictEqual(depositerBalance.toNumber(), 0);
 
-        // This would be the ideal test for verifying the token
-        // has been transferred to address(0), however
-        // this test fails when executed using Geth
-        // await TruffleAssert.reverts(
-        //     ERC721MintableInstance1.ownerOf(tokenID),
-        //     'ERC721: owner query for nonexistent token');
-    });
+        await TruffleAssert.reverts(
+            ERC721MintableInstance1.ownerOf(tokenID),
+            'ERC721: owner query for nonexistent token');    });
 });

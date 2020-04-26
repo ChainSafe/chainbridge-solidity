@@ -5,9 +5,8 @@
 
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
@@ -20,7 +19,6 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
 
-    let RelayerInstance;
     let BridgeInstance;
     let ERC20MintableInstance1;
     let ERC20MintableInstance2;
@@ -34,18 +32,16 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => ERC20MintableInstance1 = instance),
-            ERC20MintableContract.new().then(instance => ERC20MintableInstance2 = instance)
+            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
-        
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold);
 
         resourceID1 = Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
         resourceID2 = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address];
-        burnableContractAddresses = [ERC20MintableInstance1.address]
+        burnableContractAddresses = [ERC20MintableInstance1.address];
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC20HandlerInstance = instance),

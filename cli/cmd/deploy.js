@@ -9,16 +9,15 @@ const deployCmd = new Command("deploy")
     .option('--relayers <value>', 'List of initial relayers', splitCommaList, constants.relayerAddresses)
     .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .action(async (args, a) => {
-        setupParentArgs(args, args.parent)
+        await setupParentArgs(args, args.parent)
         let startBal = await args.provider.getBalance(args.wallet.address)
         console.log("Deploying contracts...")
-        await deployRelayerContract(args);
         await deployBridgeContract(args);
         await deployERC20(args)
         await deployERC20Handler(args);
         await deployERC721(args)
         await deployERC721Handler(args)
-        await deployCentrifugeHandler(args);
+        // await deployCentrifugeHandler(args);
         args.cost = startBal.sub((await args.provider.getBalance(args.wallet.address)))
         displayLog(args)
     })
@@ -38,8 +37,6 @@ Contract Addresses
 ================================================================
 Bridge:             ${args.bridgeContract}
 ----------------------------------------------------------------
-Relayer:            ${args.relayerContract}
-----------------------------------------------------------------
 Erc20:              ${args.erc20Contract}
 ----------------------------------------------------------------
 Erc20 Handler:      ${args.erc20HandlerContract}
@@ -53,19 +50,6 @@ Centrifuge Handler: ${args.centrifugeHandlerContract}
         `)
 }
 
-async function deployRelayerContract(cfg) {
-    // Create an instance of a Contract Factory
-    let factory = new ethers.ContractFactory(constants.ContractABIs.Relayer.abi, constants.ContractABIs.Relayer.bytecode, cfg.wallet);
-
-    // Deploy
-    let contract = await factory.deploy(
-        cfg.relayers,
-        cfg.relayerThreshold
-    );
-    await contract.deployed();
-    cfg.relayerContract = contract.address
-    console.log("✓ Relayer contract deployed")
-}
 
 async function deployBridgeContract(args) {
     // Create an instance of a Contract Factory
@@ -74,7 +58,7 @@ async function deployBridgeContract(args) {
     // Deploy
     let contract = await factory.deploy(
         args.chainId,
-        args.relayerContract,
+        args.relayers,
         args.relayerThreshold
     );
     await contract.deployed();
@@ -84,7 +68,7 @@ async function deployBridgeContract(args) {
 
 async function deployERC20(args) {
     const factory = new ethers.ContractFactory(constants.ContractABIs.Erc20Mintable.abi, constants.ContractABIs.Erc20Mintable.bytecode, args.wallet);
-    const contract = await factory.deploy();
+    const contract = await factory.deploy("", "");
     await contract.deployed();
     args.erc20Contract = contract.address
     console.log("✓ ERC20 contract deployed")
@@ -102,7 +86,7 @@ async function deployERC20Handler(args) {
 
 async function deployERC721(args) {
     const factory = new ethers.ContractFactory(constants.ContractABIs.Erc721Mintable.abi, constants.ContractABIs.Erc721Mintable.bytecode, args.wallet);
-    const contract = await factory.deploy();
+    const contract = await factory.deploy("", "", "");
     await contract.deployed();
     args.erc721Contract = contract.address
     console.log("✓ ERC721 contract deployed")

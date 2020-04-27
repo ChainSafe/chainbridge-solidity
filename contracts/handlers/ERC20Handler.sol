@@ -3,10 +3,10 @@ pragma experimental ABIEncoderV2;
 
 import "../ERC20Safe.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
-import "../interfaces/IDepositHandler.sol";
-import "../interfaces/IMinterBurner.sol";
+import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IERCHandler.sol";
 
-contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
+contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
     address public _bridgeAddress;
     bool    public _useContractWhitelist;
 
@@ -45,17 +45,14 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
         bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses,
         address[] memory burnableContractAddresses
-        // bool             useContractWhitelist
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "mismatch length between initialResourceIDs and initialContractAddresses");
 
         _bridgeAddress = bridgeAddress;
-        // we are currently requiring a whitelist
-        // _useContractWhitelist = useContractWhitelist;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
+            _setResource(initialResourceIDs[i], initialContractAddresses[i]);
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
@@ -68,12 +65,7 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
     }
 
     function isWhitelisted(address contractAddress) public view returns (bool) {
-        // we are currently requiring a whitelist
-        // if (_useContractWhitelist) {
         return _contractWhitelist[contractAddress];
-        // }
-
-        // return true;
     }
 
     function setBurnable(address contractAddress) public override _onlyBridge {
@@ -85,17 +77,14 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
         _burnList[contractAddress] = true;
     }
 
-    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
+    function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
-        // we are currently requiring a whitelist
-        // if (_useContractWhitelist) {
         _contractWhitelist[contractAddress] = true;
-        // }
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -103,103 +92,68 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _setResourceIDAndContractAddress(resourceID, contractAddress);
+        _setResource(resourceID, contractAddress);
     }
 
-    // Make a deposit
-    // bytes memory data passed into the function should be constructed as follows:
+    // Initiate a transfer by completing a deposit (transferFrom).
+    // Data passed into the function should be constructed as follows:
     //
     // resourceID                             bytes32     bytes   0 - 32
     // amount                                 uint256     bytes  32 - 64
-    // destinationRecipientAddress length     uint256     bytes  64 - 96
-    // destinationRecipientAddress            bytes       bytes  96 - END
+    // recipientAddress length     uint256     bytes  64 - 96
+    // recipientAddress            bytes       bytes  96 - END
     function deposit(
         uint8 destinationChainID,
         uint256 depositNonce,
         address depositer,
         bytes memory data
     ) public override _onlyBridge {
-        // address      originChainTokenAddress;
         bytes32        resourceID;
-        bytes   memory destinationRecipientAddress;
+        bytes   memory recipientAddress;
         uint256        amount;
-        uint256        lenDestinationRecipientAddress;
+        uint256        lenRecipientAddress;
 
         assembly {
 
-            resourceID                      := mload(add(data, 0x20))
-            amount                          := mload(add(data, 0x40))
+            resourceID := mload(add(data, 0x20))
+            amount := mload(add(data, 0x40))
 
-            destinationRecipientAddress     := mload(0x40)
-            lenDestinationRecipientAddress  := mload(add(0x60, data))
-            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+            recipientAddress := mload(0x40)
+            lenRecipientAddress := mload(add(0x60, data))
+            mstore(0x40, add(0x20, add(recipientAddress, lenRecipientAddress)))
 
             calldatacopy(
-                destinationRecipientAddress, // copy to destinationRecipientAddress
-                0xE4,                        // copy from calldata @ 0x104
-                sub(calldatasize(), 0xE4)    // copy size (calldatasize - 0x104)
+                recipientAddress, // copy to destinationRecipientAddress
+                0xE4, // copy from calldata @ 0x104
+                sub(calldatasize(), 0xE4) // copy size (calldatasize - 0x104)
             )
         }
 
-        address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
+        address originTokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        require(isWhitelisted(originTokenAddress), "provided originTokenAddress is not whitelisted");
 
-        // we are currently only allowing for interactions with whitelisted tokenContracts
-        // there should not be a case where we recieve an empty resourceID
-
-        // bytes32      emptyBytes;
-
-        // if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
-        //     // The case where we have never seen this token address before
-
-        //     // If we have never seen this token and someone was able to perform a deposit,
-        //     // it follows that the token is native to the current chain.
-
-        //     IBridge bridge = IBridge(_bridgeAddress);
-        //     uint8 chainID = uint8(bridge._chainID());
-
-        //     resourceID = createResourceID(originChainTokenAddress,chainID);
-
-        //      _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
-        //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
-
-        // }
-
-        if (_burnList[originChainTokenAddress]) {
-            burnERC20(originChainTokenAddress, depositer, amount);
+        if (_burnList[originTokenAddress]) {
+            burnERC20(originTokenAddress, depositer, amount);
         } else {
-            lockERC20(originChainTokenAddress, depositer, address(this), amount);
+            lockERC20(originTokenAddress, depositer, address(this), amount);
         }
 
         _depositRecords[depositNonce] = DepositRecord(
-            originChainTokenAddress,
+            originTokenAddress,
             destinationChainID,
             resourceID,
-            lenDestinationRecipientAddress,
-            destinationRecipientAddress,
+            lenRecipientAddress,
+            recipientAddress,
             depositer,
             amount
         );
     }
 
-    function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
-        bytes11 padding;
-        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(originChainTokenAddress, chainID));
-        bytes32 resourceID;
-
-        assembly {
-            resourceID := mload(add(encodedResourceID, 0x20))
-        }
-
-        return resourceID;
-    }
-
-
     // execute a deposit
     // bytes memory data passed into the function should be constructed as follows:
 
-    // amount                                 uint256     bytes   0 - 32
-    // resourceID                             bytes32     bytes  32 - 64
+    // resourceID                             bytes32     bytes  0 - 32
+    // amount                                 uint256     bytes   32 - 64
     // --------------------------------------------------------------------
     // destinationRecipientAddress length     uint256     bytes  64 - 96
     // destinationRecipientAddress            bytes       bytes  96 - END
@@ -210,20 +164,19 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
 
 
         assembly {
-            amount                      := mload(add(data, 0x20))
-            resourceID                  := mload(add(data, 0x40))
+            resourceID := mload(add(data, 0x20))
+            amount := mload(add(data, 0x40))
 
-            destinationRecipientAddress         := mload(0x40)
-            let lenDestinationRecipientAddress  := mload(add(0x60, data))
+            destinationRecipientAddress := mload(0x40)
+            let lenDestinationRecipientAddress := mload(add(0x60, data))
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
             
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
-                destinationRecipientAddress,        // copy to destinationRecipientAddress
-                0x84,                               // copy from calldata @ 0x84
-                sub(calldatasize(), 0x84)           // copy size to the end of calldata
+                destinationRecipientAddress, // copy to destinationRecipientAddress
+                0x84, // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84) // copy size to the end of calldata
             )
-
         }
 
         bytes20 recipientAddress;
@@ -235,27 +188,11 @@ contract ERC20Handler is IDepositHandler, IMinterBurner, ERC20Safe {
 
         require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
-        // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
-        // token exists
-
         if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), amount);
         }
-
-        // As we are only allowing for interaction with whitelisted contracts, this case no longer exists
-
-        // } else {
-        //     // Token doesn't exist
-        //     ERC20Mintable erc20 = new ERC20Mintable();
-            
-        //     // Create a relationship between the originAddress and the synthetic
-        //     _resourceIDToTokenContractAddress[resourceID] = address(erc20);
-        //     _tokenContractAddressToResourceID[address(erc20)] = resourceID;
-
-        //     mintERC20(address(erc20), address(recipientAddress), amount);
-        // }
     }
 
     function withdraw(address tokenAddress, address recipient, uint amount) public _onlyBridge {

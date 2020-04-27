@@ -83,17 +83,13 @@ contract GenericHandler is IGenericHandler {
         _setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
-    // Data includes:
-    // - ResourceID (32bytes)
-    // - len(Data) (32 bytes)
-    // - Data (? bytes)
+    // Initiate a generic deposit. The deposit function associated with the resource ID
+    // will be called using data as the parameters, if a function signature exists.
     //
-    function deposit(
-        uint8        destinationChainID,
-        uint256      depositNonce,
-        address      depositer,
-        bytes memory data
-    ) public _onlyBridge {
+    // resourceID                             bytes32     bytes  0 - 32
+    // len(data)                              uint256     bytes  32 - 64
+    // data                                   bytes       bytes  96 - END
+    function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public _onlyBridge {
         bytes32      resourceID;
         bytes32      lenMetadata;
         bytes memory metadata;
@@ -134,16 +130,17 @@ contract GenericHandler is IGenericHandler {
         );
     }
 
-    // Data contains:
-    // - Resource ID
-    // - len(metadata)
-    // - metadata
+    // Execute a generic proposal. The The deposit function associated with the resource ID
+    // will be called using data as the parameters, if a function signature exists.
+    //
+    // resourceID                             bytes32     bytes  0 - 32
+    // len(data)                              uint256     bytes  32 - 64
+    // data                                   bytes       bytes  96 - END
     function executeDeposit(bytes memory data) public  _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         assembly {
-            // These are all fixed 32 bytes
-            // first 32 bytes of bytes is the length
+
             resourceID                     := mload(add(data, 0x20))
 
             // metadata has variable length

@@ -2,13 +2,13 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../ERC721Safe.sol";
-import "../interfaces/IDepositHandler.sol";
+import "../interfaces/IDepositExecute.sol";
 import "../ERC721MinterBurnerPauser.sol";
-import "../interfaces/IMinterBurner.sol";
+import "../interfaces/IERCHandler.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
-contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
+contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
     using ERC165Checker for address;
     address public _bridgeAddress;
 
@@ -57,7 +57,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         _bridgeAddress = bridgeAddress;
 
         for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResourceIDAndContractAddress(initialResourceIDs[i], initialContractAddresses[i]);
+            _setResource(initialResourceIDs[i], initialContractAddresses[i]);
         }
 
         for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
@@ -94,14 +94,14 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         return resourceID;
     }
 
-    function _setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) internal {
+    function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
 
         _contractWhitelist[contractAddress] = true;
     }
 
-    function setResourceIDAndContractAddress(bytes32 resourceID, address contractAddress) public override _onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -109,7 +109,7 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
             "contract address already has corresponding resourceID");
 
-        _setResourceIDAndContractAddress(resourceID, contractAddress);
+        _setResource(resourceID, contractAddress);
     }
 
     // Make a deposit
@@ -154,28 +154,6 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
 
         address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
-
-        // we are currently only allowing for interactions with whitelisted tokenContracts
-        // there should not be a case where we recieve an empty resourceID
-
-        // bytes32 resourceID = _tokenContractAddressToResourceID[originChainTokenAddress];
-        // bytes memory emptyBytes;
-
-        // if (keccak256(abi.encodePacked((resourceID))) == keccak256(abi.encodePacked((emptyBytes)))) {
-        //     // The case where we have never seen this token address before
-
-        //     // If we have never seen this token and someone was able to perform a deposit,
-        //     // it follows that the token is native to the current chain.
-
-        //     IBridge bridge = IBridge(_bridgeAddress);
-        //     uint8 chainID = bridge._chainID();
-
-        //     resourceID = createResourceID(originChainTokenAddress, chainID);
-
-        //      _tokenContractAddressToResourceID[originChainTokenAddress] = resourceID;
-        //      _resourceIDToTokenContractAddress[resourceID] = originChainTokenAddress;
-
-        // }
 
         // Check if the contract supports metadata, fetch it if it does
         if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
@@ -267,28 +245,12 @@ contract ERC721Handler is IDepositHandler, IMinterBurner, ERC721Safe {
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
 
-
-        // if (_resourceIDToTokenContractAddress[resourceID] != address(0)) {
-        // token exists
-
         if (_burnList[tokenAddress]) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
 
-        // As we are only allowing for interaction with whitelisted contracts, this case no longer exists
-
-        // } else {
-        //     // Token doesn't exist
-        //     ERC721Mintable erc721 = new ERC721Mintable();
-
-        //     // Create a relationship between the originAddress and the synthetic
-        //     _resourceIDToTokenContractAddress[resourceID] = address(erc721);
-        //     _tokenContractAddressToResourceID[address(erc721)] = resourceID;
-
-        //     erc721.safeMint(address(recipientAddress), tokenID, metaData);
-        // }
     }
 
     function withdraw(address tokenAddress, address recipient, uint tokenID) public _onlyBridge {

@@ -145,7 +145,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
-                event.originChainHandlerAddress === OriginERC721HandlerInstance.address &&
+                event.handlerAddress === OriginERC721HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });
     });

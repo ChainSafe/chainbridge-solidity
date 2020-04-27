@@ -75,7 +75,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -85,7 +85,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -93,7 +93,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,
@@ -114,7 +114,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -124,7 +124,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -132,7 +132,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 will execute the deposit proposal
-        const executeDepositTx = await BridgeInstance.executeDepositProposal(
+        const executeDepositTx = await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,

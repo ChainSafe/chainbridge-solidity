@@ -46,7 +46,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
-        await BridgeInstance.adminSetResourceIDAndContractAddress(ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance2.address);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance2.address);
 
         const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(secondERC20ResourceID);
         assert.strictEqual(Ethers.utils.getAddress(ERC20MintableInstance2.address).toLowerCase(), retrievedTokenAddress.toLowerCase());
@@ -56,7 +56,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     });
 
     it('should revert because resourceID should already be set', async () => {
-        await TruffleAssert.reverts(BridgeInstance.adminSetResourceIDAndContractAddress(
+        await TruffleAssert.reverts(BridgeInstance.adminSetResource(
             ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address),
             "resourceID already has a corresponding contract address");
     });
@@ -65,7 +65,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
-        await TruffleAssert.reverts(BridgeInstance.adminSetResourceIDAndContractAddress(
+        await TruffleAssert.reverts(BridgeInstance.adminSetResource(
             ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance1.address),
             'contract address already has corresponding resourceID');
     });

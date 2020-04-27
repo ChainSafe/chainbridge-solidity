@@ -85,8 +85,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
 
         originDepositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
             destinationResourceID.substr(2) +                                               // resourceID            (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
             
@@ -99,8 +99,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);                           // recipientAddress      (?? bytes)
 
         destinationDepositProposalData = '0x' +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +      // Deposit Amount        (32 bytes) 
             originResourceID.substr(2) +                                                      // resourceID            (64 bytes) for now
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +      // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +                 // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(depositerAddress).substr(2);                                 // recipientAddress      (?? bytes)
             
@@ -136,7 +136,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
             originChainID,
             expectedDepositNonce,
             originDepositProposalDataHash,
@@ -147,7 +147,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await DestinationBridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
             originChainID,
             expectedDepositNonce,
             originDepositProposalDataHash,
@@ -156,7 +156,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
 
         // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await DestinationBridgeInstance.executeProposal(
             originChainID,
             expectedDepositNonce,
             DestinationERC20HandlerInstance.address,
@@ -194,7 +194,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         assert.strictEqual(recipientBalance.toNumber(), 0);
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
             destinationDepositProposalDataHash,
@@ -204,7 +204,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await OriginBridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
             destinationDepositProposalDataHash,
@@ -212,7 +212,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
         // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await OriginBridgeInstance.executeProposal(
             destinationChainID,
             expectedDepositNonce,
             OriginERC20HandlerInstance.address,

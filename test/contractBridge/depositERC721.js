@@ -66,9 +66,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             originResourceID.substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(originChainTokenID), 32).substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // len of next arg in bytes
-            Ethers.utils.hexZeroPad(genericBytes, 32).substr(2);
+            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2)
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -147,7 +145,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
-                event.originChainHandlerAddress === OriginERC721HandlerInstance.address &&
+                event.handlerAddress === OriginERC721HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });
     });

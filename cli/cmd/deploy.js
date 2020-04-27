@@ -17,7 +17,8 @@ const deployCmd = new Command("deploy")
         await deployERC20Handler(args);
         await deployERC721(args)
         await deployERC721Handler(args)
-        // await deployCentrifugeHandler(args);
+        await deployGenericHandler(args)
+        await deployCentrifugeAssetStore(args);
         args.cost = startBal.sub((await args.provider.getBalance(args.wallet.address)))
         displayLog(args)
     })
@@ -45,7 +46,9 @@ Erc721:             ${args.erc721Contract}
 ----------------------------------------------------------------
 Erc721 Handler:     ${args.erc721HandlerContract}
 ----------------------------------------------------------------
-Centrifuge Handler: ${args.centrifugeHandlerContract}
+Generic Handler:    ${args.genericHandlerContract}
+----------------------------------------------------------------
+Centrifuge Asset:   ${args.centrifugeAssetStoreContract}
 ================================================================
         `)
 }
@@ -100,12 +103,20 @@ async function deployERC721Handler(args) {
     console.log("✓ ERC721Handler contract deployed")
 }
 
-async function deployCentrifugeHandler(args) {
-    const factory = new ethers.ContractFactory(constants.ContractABIs.CentrifugeHandler.abi, constants.ContractABIs.CentrifugeHandler.bytecode, args.wallet);
-    const contract = await factory.deploy(args.bridgeContract,[],[]);
+async function deployGenericHandler(args) {
+    const factory = new ethers.ContractFactory(constants.ContractABIs.GenericHandler.abi, constants.ContractABIs.GenericHandler.bytecode, args.wallet)
+    const contract = await factory.deploy(args.bridgeContract, [], [], [], [])
     await contract.deployed();
-    args.centrifugeHandlerContract = contract.address
-    console.log("✓ CentrifugeHandler contract deployed")
+    args.genericHandlerContract = contract.address
+    console.log("✓ GenericHandler contract deployed")
+}
+
+async function deployCentrifugeAssetStore(args) {
+    const factory = new ethers.ContractFactory(constants.ContractABIs.CentrifugeAssetStore.abi, constants.ContractABIs.CentrifugeAssetStore.bytecode, args.wallet);
+    const contract = await factory.deploy();
+    await contract.deployed();
+    args.centrifugeAssetStoreContract = contract.address
+    console.log("✓ CentrifugeAssetStore contract deployed")
 }
 
 module.exports = deployCmd

@@ -27,7 +27,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const blankFunctionSig = '0x00000000';
     const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
 
-    let RelayerInstance;
     let BridgeInstance;
     let CentrifugeAssetInstance;
     let initialResourceIDs;
@@ -56,15 +55,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialExecuteFunctionSignatures);
 
         depositData = '0x' +
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2) +          // recipientAddress      (?? bytes)
             initialResourceIDs[0].substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(36), 32).substr(2) +  // len(metaData) (36 bytes)
-            centrifugeAssetFuncSig.substr(2) + hashOfCentrifugeAsset.substr(2)
+            hashOfCentrifugeAsset.substr(2)
 
         depositProposalData = '0x' +
             initialResourceIDs[0].substr(2) +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(36), 32).substr(2) +  // len(metaData) (36 bytes)
-            centrifugeAssetFuncSig.substr(2) + hashOfCentrifugeAsset.substr(2)
+            hashOfCentrifugeAsset.substr(2)
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositProposalData.substr(2));
     });
 
@@ -77,7 +75,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -87,7 +85,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -95,7 +93,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,
@@ -116,7 +114,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -126,7 +124,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -134,7 +132,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         // relayer1 will execute the deposit proposal
-        const executeDepositTx = await BridgeInstance.executeDepositProposal(
+        const executeDepositTx = await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             GenericHandlerInstance.address,

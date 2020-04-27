@@ -4,9 +4,9 @@ install-deps:
 	@echo " > \033[32mInstalling dependencies... \033[0m "
 	./scripts/install_deps.sh
 
-install-cli:
+install-cli: compile
 	@echo " > \033[32mInstalling cb-sol-cli... \033[0m "
-	npm install --global ./cli
+	npm link ./cli 
 
 .PHONY: test
 test:

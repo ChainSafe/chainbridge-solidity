@@ -17,7 +17,12 @@ const splitCommaList = (str) => {
     return str.split(",")
 }
 
+const getFunctionBytes = (sig) => {
+    return ethers.utils.keccak256(ethers.utils.hexlify(ethers.utils.toUtf8Bytes(sig))).substr(0, 10)
+}
+
 module.exports = {
     setupParentArgs,
-    splitCommaList
+    splitCommaList,
+    getFunctionBytes
 }

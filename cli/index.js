@@ -9,7 +9,7 @@ const {
     bridge,
     erc20,
     erc721,
-    // centrifuge,
+    centrifuge,
 } = require('./cmd/index');
 const constants = require('./constants');
 
@@ -23,7 +23,7 @@ program.addCommand(deploy)
 program.addCommand(bridge)
 program.addCommand(erc20)
 program.addCommand(erc721)
-// program.addCommand(centrifuge)
+program.addCommand(centrifuge)
 
 program.allowUnknownOption(false);
 

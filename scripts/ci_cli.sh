@@ -21,5 +21,6 @@ cb-sol-cli bridge register-resource --handler $ERC721_HANDLER --resourceID $ERC7
 cb-sol-cli bridge set-burn --handler $ERC721_HANDLER --tokenContract $ERC721_CONTRACT
 cb-sol-cli erc721 transfer
 
-#cb-sol-cli cent transferHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
-#cb-sol-cli cent getHash --hash 0x736f796c656e745f677265656e5f69735f70656f706c65
+cb-sol-cli bridge register-generic-resource --execute "store(bytes32)" --hash
+
+cb-sol-cli cent getHash

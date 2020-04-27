@@ -110,10 +110,11 @@ contract('Bridge - [admin]', async accounts => {
 
 
     it('Should set fee', async () => {
-        assert.equal((await BridgeInstance._fee.call()).toNumber(), 0);
+        assert.equal(await BridgeInstance._fee.call(), 0);
 
         const fee = Ethers.utils.parseEther("0.05");
         await BridgeInstance.adminChangeFee(fee);
-        assert.equal(await BridgeInstance._fee.call(), fee)
+        const newFee = await BridgeInstance._fee.call()
+        assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05")
     })
 });

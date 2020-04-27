@@ -166,7 +166,9 @@ contract Bridge is Pausable, AccessControl {
     }
 
     // Initiates a transfer accros the bridge by calling the specified handler
-    function deposit (uint8 destinationChainID, address handler, bytes memory data) public whenNotPaused {
+    function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
+        require(msg.value == _fee, "Incorrect fee supplied");
+        
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 

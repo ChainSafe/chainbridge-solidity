@@ -50,7 +50,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     });
 
     it('[sanity] Generic deposit can be made', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             destinationChainID,
             GenericHandlerInstance.address,
             depositData
@@ -59,10 +59,10 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
 
     it('deposit reverts if invalid amount supplied', async () => {
         // current fee is set to 0
-        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0)
+        assert.equal(await BridgeInstance._fee.call(), 0)
         
-        TruffleAssert.fails(
-            await BridgeInstance.deposit(
+        await TruffleAssert.reverts(
+            BridgeInstance.deposit(
                 destinationChainID,
                 GenericHandlerInstance.address,
                 depositData,
@@ -73,15 +73,15 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         )
     });
 
-    it('deposit reverts if invalid amount supplied', async () => {
+    it('deposit passes if valid amount supplied', async () => {
         // current fee is set to 0
-        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0)
+        assert.equal(await BridgeInstance._fee.call(), 0)
         // Change fee to 0.5 ether
         await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("0.5"), {from: relayer})
-        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0.5)
+        assert.equal(web3.utils.fromWei((await BridgeInstance._fee.call()), "ether"), "0.5");
 
-        TruffleAssert.passes(
-            await BridgeInstance.deposit(
+        await TruffleAssert.passes(
+            BridgeInstance.deposit(
                 destinationChainID,
                 GenericHandlerInstance.address,
                 depositData,
@@ -94,15 +94,11 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
 
     it('distribute fees', async () => {
         await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("1"), {from: relayer});
-        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0.5);
+        assert.equal(web3.utils.fromWei((await BridgeInstance._fee.call()), "ether"), "1");
 
         // check the balance is 0
-        assert.equals(await web3.eth.getBalance(BridgeInstance.address).toNumber(), 0);
+        assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
         await BridgeInstance.deposit(destinationChainID, GenericHandlerInstance.address, depositData, {value: Ethers.utils.parseEther("1")})
-
-        // check the balance of the future recipients
-        assert.equals(await web3.eth.getBalance(accounts[1]).toNumber(), 0);
-        assert.equals(await web3.eth.getBalance(accounts[2]).toNumber(), 0);
 
         // Transfer the funds
         TruffleAssert.passes(
@@ -111,8 +107,9 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
                 [Ethers.utils.parseEther("0.5"), Ethers.utils.parseEther("0.5")]
             )
         )
-
-        assert.equals(await web3.eth.getBalance(accounts[1]).toNumber(), 0.5);
-        assert.equals(await web3.eth.getBalance(accounts[2]).toNumber(), 0.5);
+        b1 = await web3.eth.getBalance(accounts[1]);
+        b2 = await web3.eth.getBalance(accounts[2]);
+        assert.equal(web3.utils.fromWei(b1), "100.5");
+        assert.equal(web3.utils.fromWei(b2), "100.5");
     })
 });

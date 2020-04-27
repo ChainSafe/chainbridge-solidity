@@ -1,13 +1,12 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
+import "../interfaces/IDepositExecute.sol";
+import "./HandlerHelpers.sol";
 import "../ERC20Safe.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
-import "../interfaces/IDepositExecute.sol";
-import "../interfaces/IERCHandler.sol";
 
-contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
-    address public _bridgeAddress;
+contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     bool    public _useContractWhitelist;
 
     struct DepositRecord {
@@ -20,25 +19,8 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
         uint    _amount;
     }
 
-    // resourceID => token contract address
-    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
-
-    // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
-
-    // token contract address => is whitelisted
-    mapping (address => bool) public _contractWhitelist;
-
-    // token contract address => is burnable
-    mapping (address => bool) public _burnList;
-
     // depositNonce => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
-
-    modifier _onlyBridge() {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
-        _;
-    }
 
     constructor(
         address          bridgeAddress,
@@ -62,37 +44,6 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
 
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
-    }
-
-    function isWhitelisted(address contractAddress) public view returns (bool) {
-        return _contractWhitelist[contractAddress];
-    }
-
-    function setBurnable(address contractAddress) public override _onlyBridge {
-        _setBurnable(contractAddress);
-    }
-
-    function _setBurnable(address contractAddress) internal {
-        require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
-        _burnList[contractAddress] = true;
-    }
-
-    function _setResource(bytes32 resourceID, address contractAddress) internal {
-        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
-        _tokenContractAddressToResourceID[contractAddress] = resourceID;
-
-        _contractWhitelist[contractAddress] = true;
-    }
-
-    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
-        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
-
-        bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes32 emptyBytes;
-        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding resourceID");
-
-        _setResource(resourceID, contractAddress);
     }
 
     // Initiate a transfer by completing a deposit (transferFrom).
@@ -130,7 +81,7 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
+        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
             burnERC20(tokenAddress, depositer, amount);
@@ -186,7 +137,7 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
-        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
+        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);

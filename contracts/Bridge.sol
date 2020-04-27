@@ -155,6 +155,11 @@ contract Bridge is Pausable, AccessControl {
         handler.setBurnable(tokenAddress);
     }
 
+    function adminChangeFee(uint newFee) public onlyAdmin {
+        require(_fee != newFee, "Current fee is equal to proposed new fee");
+        _fee = newFee;
+    }
+
     function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
         return _proposals[originChainID][depositNonce];
     }
@@ -217,8 +222,8 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalExecuted(originChainID, _chainID, depositNonce);
     }
 
-    function transferFunds(address[] memory addrs, uint[] memory amounts) public onlyAdmin {
-        for (uint i = 0; addrs.length; i++) {
+    function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
+        for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }
     }

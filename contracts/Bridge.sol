@@ -168,7 +168,7 @@ contract Bridge is Pausable, AccessControl {
     // Initiates a transfer accros the bridge by calling the specified handler
     function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
-        
+
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
@@ -225,6 +225,8 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalExecuted(originChainID, _chainID, depositNonce);
     }
 
+    // Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+    // This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
     function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);

@@ -15,7 +15,7 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
 
     struct DepositRecord {
-        address _originChainTokenAddress;
+        address _tokenAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
@@ -82,9 +82,9 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
         _burnList[contractAddress] = true;
     }
 
-    function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
+    function createResourceID (address tokenAddress, uint8 chainID) internal pure returns (bytes32) {
         bytes11 padding;
-        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(originChainTokenAddress, chainID));
+        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(tokenAddress, chainID));
         bytes32 resourceID;
 
         assembly {
@@ -152,23 +152,23 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
             )
         }
 
-        address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
         // Check if the contract supports metadata, fetch it if it does
-        if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
-            IERC721Metadata erc721 = IERC721Metadata(originChainTokenAddress);
+        if (tokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
+            IERC721Metadata erc721 = IERC721Metadata(tokenAddress);
             metaData = bytes(erc721.tokenURI(tokenID));
         }
 
-        if (_burnList[originChainTokenAddress]) {
-            burnERC721(originChainTokenAddress, tokenID);
+        if (_burnList[tokenAddress]) {
+            burnERC721(tokenAddress, tokenID);
         } else {
-            lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+            lockERC721(tokenAddress, depositer, address(this), tokenID);
         }
 
         _depositRecords[depositNonce] = DepositRecord(
-            originChainTokenAddress,
+            tokenAddress,
             uint8(destinationChainID),
             resourceID,
             lenDestinationRecipientAddress,

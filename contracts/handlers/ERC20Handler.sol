@@ -11,7 +11,7 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
     bool    public _useContractWhitelist;
 
     struct DepositRecord {
-        address _originChainTokenAddress;
+        address _tokenAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
@@ -129,17 +129,17 @@ contract ERC20Handler is IDepositExecute, IERCHandler, ERC20Safe {
             )
         }
 
-        address originTokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(originTokenAddress), "provided originTokenAddress is not whitelisted");
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        require(isWhitelisted(tokenAddress), "provided tokenAddress is not whitelisted");
 
-        if (_burnList[originTokenAddress]) {
-            burnERC20(originTokenAddress, depositer, amount);
+        if (_burnList[tokenAddress]) {
+            burnERC20(tokenAddress, depositer, amount);
         } else {
-            lockERC20(originTokenAddress, depositer, address(this), amount);
+            lockERC20(tokenAddress, depositer, address(this), amount);
         }
 
         _depositRecords[depositNonce] = DepositRecord(
-            originTokenAddress,
+            tokenAddress,
             destinationChainID,
             resourceID,
             lenRecipientAddress,

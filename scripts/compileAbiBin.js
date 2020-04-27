@@ -45,6 +45,5 @@ fs.readdir("./build/contracts", function (err, files) {
         if (abi.length === 0) return;
         fs.writeFileSync(ABI_PATH + basename + ".abi"  , JSON.stringify(abi));
         fs.writeFileSync(BIN_PATH + basename + ".bin", bytecode);
-        fs.writeFileSync(RUNTIME_PATH + basename + ".bin", bytecode);
     });
 });

@@ -15,8 +15,9 @@ contract Bridge is Pausable, AccessControl {
 
     uint8                    public _chainID;
     uint256                  public _relayerThreshold;
-    uint256                 public _totalRelayers;
+    uint256                  public _totalRelayers;
     uint256                  public _totalProposals;
+    uint256                  public _fee;
 
     enum Vote {No, Yes}
     enum ProposalStatus {Inactive, Active, Passed, Transferred}
@@ -81,9 +82,11 @@ contract Bridge is Pausable, AccessControl {
     }
 
     // Instantiate a bridge, msg.sender becomes the admin
-    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold) public {
+    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
+        _fee = fee;
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
 
@@ -152,6 +155,12 @@ contract Bridge is Pausable, AccessControl {
         handler.setBurnable(tokenAddress);
     }
 
+    // Change the fee taken on deposits
+    function adminChangeFee(uint newFee) public onlyAdmin {
+        require(_fee != newFee, "Current fee is equal to proposed new fee");
+        _fee = newFee;
+    }
+
     function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
         return _proposals[originChainID][depositNonce];
     }
@@ -212,5 +221,11 @@ contract Bridge is Pausable, AccessControl {
 
         proposal._status = ProposalStatus.Transferred;
         emit ProposalExecuted(originChainID, _chainID, depositNonce);
+    }
+
+    function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
+        for (uint i = 0;i < addrs.length; i++) {
+            addrs[i].transfer(amounts[i]);
+        }
     }
 }

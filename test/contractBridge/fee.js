@@ -11,15 +11,12 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [deposit - Generic]', async (accounts) => {
-    const relayerThreshold = 2;
     const originChainID = 1;
     const destinationChainID = 2;
-    const recipientAddress = accounts[1];
     const expectedDepositNonce = 1;
     const blankFunctionSig = '0x00000000';
-    const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
+    const relayer = accounts[0];
 
-    let RelayerInstance;
     let BridgeInstance;
     let GenericHandlerInstance;
     let depositData;
@@ -31,13 +28,13 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originChainID, [], 0, 0).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(originChainID, [relayer], 0, 0).then(instance => BridgeInstance = instance)
         ]);
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [blankFunctionSig];
-        initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
+        initialExecuteFunctionSignatures = [blankFunctionSig];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address,
@@ -52,7 +49,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0xdeadbeef), 4).substr(2) // metaData
     });
 
-    it('Generic deposit can be made', async () => {
+    it('[sanity] Generic deposit can be made', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
             destinationChainID,
             GenericHandlerInstance.address,
@@ -60,39 +57,42 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         ));
     });
 
-    it('_depositCounts is incremented correctly after deposit', async () => {
-        await BridgeInstance.deposit(
-            destinationChainID,
-            GenericHandlerInstance.address,
-            depositData
-        );
-
-        const depositCount = await BridgeInstance._depositCounts.call(destinationChainID);
-        assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
-    });
-
-    it('Generic deposit is stored correctly', async () => {
-        await BridgeInstance.deposit(
-            destinationChainID,
-            GenericHandlerInstance.address,
-            depositData
-        );
+    it('deposit reverts if invalid amount supplied', async () => {
+        // current fee is set to 0
+        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0)
         
-        const depositRecord = await BridgeInstance._depositRecords.call(destinationChainID, expectedDepositNonce);
-        assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
+        TruffleAssert.fails(
+            await BridgeInstance.deposit(
+                destinationChainID,
+                GenericHandlerInstance.address,
+                depositData,
+                {
+                    value: Ethers.utils.parseEther("1.0")
+                }
+            )
+        )
     });
 
-    it('Deposit event is fired with expected value after Generic deposit', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            destinationChainID,
-            GenericHandlerInstance.address,
-            depositData
-        );
+    it('deposit reverts if invalid amount supplied', async () => {
+        // current fee is set to 0
+        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0)
+        // Change fee to 0.5 ether
+        await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("0.5"), {from: relayer})
+        assert.equals((await BridgeInstance._fee.call()).toNumber(), 0.5)
 
-        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationChainID.toNumber() === destinationChainID &&
-                event.handlerAddress === GenericHandlerInstance.address &&
-                event.depositNonce.toNumber() === expectedDepositNonce
-        });
+        TruffleAssert.passes(
+            await BridgeInstance.deposit(
+                destinationChainID,
+                GenericHandlerInstance.address,
+                depositData,
+                {
+                    value: Ethers.utils.parseEther("0.5")
+                }
+            )
+        )
     });
+
+    it('distribute fees', async () => {
+
+    })
 });

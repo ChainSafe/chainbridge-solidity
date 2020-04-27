@@ -34,8 +34,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance),
-            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, [originChainRelayerAddress], relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationChainID, [originChainRelayerAddress], relayerThreshold, 0).then(instance => DestBridgeInstance = instance)
         ]);
 
         initialResourceIDs = [
@@ -168,8 +168,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance),
-            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold).then(instance => BridgeInstance = instance),
-            BridgeContract.new(destinationChainID, [originChainRelayerAddress], relayerThreshold).then(instance => DestBridgeInstance = instance)
+            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationChainID, [originChainRelayerAddress], relayerThreshold, 0).then(instance => DestBridgeInstance = instance)
         ]);
         
         initialResourceIDs = [

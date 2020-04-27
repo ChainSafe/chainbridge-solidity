@@ -1,9 +1,8 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC721MintableContract = artifacts.require("ERC721Mintable");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Same Chain', async accounts => {
@@ -16,7 +15,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     const relayer2Address = accounts[4];
 
     const tokenID = 1;
-    const depositMetadata = "0xdeadbeef"
+    const depositMetadata = "somemetadata"
     const expectedDepositNonce = 1;
 
     let RelayerInstance;
@@ -29,13 +28,13 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     let resourceID;
     let depositData;
-    let depositProposalData;
+    let proposalData;
     let depositProposalDataHash;
 
     beforeEach(async () => {
         await Promise.all([
-            RelayerContract.new([relayer1Address, relayer2Address], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC721MintableContract.new().then(instance => ERC721MintableInstance = instance)
+            BridgeContract.new(chainID, [relayer1Address, relayer2Address], relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
         
         resourceID = Ethers.utils.hexZeroPad((ERC721MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
@@ -43,30 +42,27 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
 
-        BridgeInstance = await BridgeContract.new(chainID, RelayerInstance.address, relayerThreshold, 0);
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        await ERC721MintableInstance.mint(depositerAddress, tokenID);        
+        await ERC721MintableInstance.mint(depositerAddress, tokenID, depositMetadata);
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
 
         depositData = '0x' +
             resourceID.substr(2) +                                                  // resourceID            (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes)
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexlify(recipientAddress).substr(2) +                // recipientAddress      (?? bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData
+            Ethers.utils.hexlify(recipientAddress).substr(2)                // recipientAddress      (?? bytes)
 
-        depositProposalData = '0x' +
+        proposalData = '0x' +
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +  // Deposit Amount        (32 bytes) 
             resourceID.substr(2) +                                                  // resourceID            (32 bytes) for now
             Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             Ethers.utils.hexlify(recipientAddress).substr(2) +                      // recipientAddress      (?? bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +       // len(metaData)         (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata), 32).substr(2);         // metaData              (?? bytes)
+            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositMetadata.length), 32).substr(2) +       // len(metaData)         (32 bytes)
+            Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(depositMetadata)).substr(2);         // metaData              (?? bytes)
 
             
-        depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + depositProposalData.substr(2));
+        depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + proposalData.substr(2));
     });
 
     it("[sanity] depositerAddress' should own tokenID", async () => {
@@ -96,14 +92,14 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         assert.strictEqual(record[4], recipientAddress.toLowerCase())
         assert.strictEqual(record[5], depositerAddress)
         assert.strictEqual(Number(record[6]), tokenID)
-        assert.strictEqual(record[7], Ethers.utils.hexZeroPad(depositMetadata, 32))
+        assert.strictEqual(Ethers.utils.toUtf8String(record[7]), depositMetadata)
 
         // Handler should have a balance of depositAmount
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -113,7 +109,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
             chainID,
             expectedDepositNonce,
             depositProposalDataHash,
@@ -121,11 +117,12 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         ));
         
         // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeDepositProposal(
+        TruffleAssert.passes(await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             ERC721HandlerInstance.address,
-            depositProposalData
+            proposalData,
+            { from: relayer2Address }
         ));
 
         // Assert ERC721 balance was transferred from depositerAddress

@@ -7,52 +7,12 @@ const {setupParentArgs, splitCommaList} = require("./utils")
 const mintCmd = new Command("mint")
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .option('--id <id>', "ERC721 token id", 1)
+    .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
         let erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
-        await erc721Instance.mint(args.wallet.address, args.id);
+        await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
-    })
-
-const setResourceCmd = new Command("register-resource")
-    .description("set a a token contract as burnable in an ERC721 handler")
-    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option(`--tokenContract <address>`, `Custom addresses to be whitelisted`, constants.ERC721_ADDRESS)
-    .option(`--resourceID <address>`, `Custom resourceID to be whitelisted`, constants.ERC721_RESOURCEID)
-    .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
-    .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
-
-        // Instances
-        const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-        const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
-
-        // Whitelisting Addresses
-        chainID = await bridgeInstance._chainID()
-
-        await erc721HandlerInstance.setResourceIDAndContractAddress(args.resourceID, args.tokenContract);
-        console.log(`[ERC721 Whitelist] Successfully whitelisted ${args.tokenContract} on handler ${args.erc721HandlerAddress}`);
-
-    })
-
-const setBurnCmd = new Command("set-burn")
-    .description("set a a token contract as burnable in an ERC721 handler")
-    .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
-    .option('--tokenContract <address>', `Custom addresses to be whitelisted`, constants.ERC721_ADDRESS)
-    .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
-    .action(async function (args) {
-            setupParentArgs(args, args.parent.parent)
-
-            // Instances
-            const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
-            const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
-
-            // Whitelisting Addresses
-            chainID = await bridgeInstance._chainID()
-
-            await erc721HandlerInstance.setBurnable(args.tokenContract);
-            console.log(`[ERC721 Set Burn] Successfully set contract ${args.tokenContract} as burnable on handler ${args.erc721HandlerAddress}`);
-
     })
 
 const transferCmd = new Command("transfer")
@@ -65,7 +25,7 @@ const transferCmd = new Command("transfer")
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
 
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
@@ -98,8 +58,6 @@ const transferCmd = new Command("transfer")
 const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
-erc721Cmd.addCommand(setResourceCmd)
-erc721Cmd.addCommand(setBurnCmd)
 erc721Cmd.addCommand(transferCmd)
 
 module.exports = erc721Cmd

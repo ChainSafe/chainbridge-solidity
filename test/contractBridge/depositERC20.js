@@ -6,9 +6,8 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const RelayerContract = artifacts.require("Relayer");
 const BridgeContract = artifacts.require("Bridge");
-const ERC20MintableContract = artifacts.require("ERC20Mintable");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [deposit - ERC20]', async (accounts) => {
@@ -34,12 +33,10 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         const AbiCoder = new Ethers.utils.AbiCoder();
 
         await Promise.all([
-            RelayerContract.new([], relayerThreshold).then(instance => RelayerInstance = instance),
-            ERC20MintableContract.new().then(instance => OriginERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
+            BridgeInstance = await BridgeContract.new(originChainID, [], relayerThreshold, 0)
         ]);
         
-        BridgeInstance = await BridgeContract.new(originChainID, RelayerInstance.address, relayerThreshold, 0);
-
         resourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [OriginERC20MintableInstance.address];
@@ -125,7 +122,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
-                event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
+                event.handlerAddress === OriginERC20HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });
 
@@ -138,7 +135,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
-                event.originChainHandlerAddress === OriginERC20HandlerInstance.address &&
+                event.handlerAddress === OriginERC20HandlerInstance.address &&
                 event.depositNonce.toNumber() === expectedDepositNonce + 1
         });
     });

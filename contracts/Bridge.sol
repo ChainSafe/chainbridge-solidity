@@ -1,230 +1,223 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "./helpers/SafeMath.sol";
-import "./interfaces/IRelayer.sol";
-import "./interfaces/IDepositHandler.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IBridge.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./interfaces/IERCHandler.sol";
+import "./interfaces/IGenericHandler.sol";
 
-contract Bridge {
+contract Bridge is Pausable, AccessControl {
     using SafeMath for uint;
 
     uint8                    public _chainID;
-    IRelayer                 public _relayerContract;
     uint256                  public _relayerThreshold;
-    RelayerThresholdProposal public _currentRelayerThresholdProposal;
-    uint256                  public _totalDepositProposals;
+    uint256                  public _totalRelayers;
+    uint256                  public _totalProposals;
     uint256                  public _fee;
 
     enum Vote {No, Yes}
-    enum RelayerThresholdProposalStatus {Inactive, Active}
-    enum DepositProposalStatus {Inactive, Active, Passed, Transferred}
+    enum ProposalStatus {Inactive, Active, Passed, Transferred}
 
-    struct DepositProposal {
+    struct Proposal {
         bytes32                  _dataHash;
         address[]                _yesVotes;
         address[]                _noVotes;
-        DepositProposalStatus    _status;
-    }
-
-    struct RelayerThresholdProposal {
-        uint256                        _proposedValue;
-        mapping(address => bool)       _hasVoted;
-        address[]                      _yesVotes;
-        address[]                      _noVotes;
-        RelayerThresholdProposalStatus _status;
+        ProposalStatus    _status;
     }
 
     // destinationChainID => number of deposits
     mapping(uint8 => uint256) public _depositCounts;
     // destinationChainID => depositNonce => bytes
     mapping(uint8 => mapping(uint256 => bytes)) public _depositRecords;
-    // destinationChainID => depositNonce => depositProposal
-    mapping(uint8 => mapping(uint256 => DepositProposal)) public _depositProposals;
+    // destinationChainID => depositNonce => Proposal
+    mapping(uint8 => mapping(uint256 => Proposal)) public _proposals;
     // destinationChainID => depositNonce => relayerAddress => bool
-    mapping(uint8 => mapping(uint256 => mapping(address => bool))) public _hasVotedOnDepositProposal;
+    mapping(uint8 => mapping(uint256 => mapping(address => bool))) public _hasVotedOnProposal;
 
-    event RelayerThresholdProposalCreated(uint indexed proposedValue);
-    event RelayerThresholdProposalVote(Vote vote);
     event RelayerThresholdChanged(uint indexed newThreshold);
+    event RelayerAdded(address indexed relayer);
+    event RelayerRemoved(address indexed relayer);
     event Deposit(
         uint8   indexed destinationChainID,
-        address indexed originChainHandlerAddress,
+        address indexed handlerAddress,
         uint256 indexed depositNonce
     );
-    event DepositProposalCreated(
+    event ProposalCreated(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
         uint256 indexed depositNonce,
         bytes32         dataHash
     );
-    event DepositProposalVote(
+    event ProposalVote(
         uint8   indexed       originChainID,
         uint8   indexed       destinationChainID,
         uint256 indexed       depositNonce,
-        DepositProposalStatus status
+        ProposalStatus status
     );
-    event DepositProposalFinalized(
+    event ProposalFinalized(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
         uint256 indexed depositNonce
     );
-    event DepositProposalExecuted(
+    event ProposalExecuted(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
         uint256 indexed depositNonce
     );
 
-    modifier _onlyRelayers() {
-        IRelayer relayerContract = IRelayer(_relayerContract);
-        require(relayerContract.isRelayer(msg.sender), "sender must be a relayer");
+    bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
+
+    modifier onlyAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
         _;
     }
 
-    constructor (uint8 chainID, address relayerContract, uint initialRelayerThreshold, uint256 fee) public {
+    modifier onlyRelayers() {
+        require(hasRole(RELAYER_ROLE, msg.sender));
+        _;
+    }
+
+    // Instantiate a bridge, msg.sender becomes the admin
+    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee) public {
         _chainID = chainID;
-        _relayerContract = IRelayer(relayerContract);
         _relayerThreshold = initialRelayerThreshold;
         _fee = fee;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
+
+        for (uint i; i < initialRelayers.length; i++) {
+            grantRole(RELAYER_ROLE, initialRelayers[i]);
+            _totalRelayers++;
+        }
+
     }
 
-    function getCurrentRelayerThresholdProposal() public view returns (
-        uint256, address[] memory, address[] memory, RelayerThresholdProposalStatus) {
-        return (
-            _currentRelayerThresholdProposal._proposedValue,
-            _currentRelayerThresholdProposal._yesVotes,
-            _currentRelayerThresholdProposal._noVotes,
-            _currentRelayerThresholdProposal._status
-        );
+    // Returns true if address has relayer role, otherwise false.
+    function isRelayer(address relayer) public view returns (bool) {
+        return hasRole(RELAYER_ROLE, relayer);
     }
 
-    function getDepositProposal(
-        uint8 destinationChainID,
-        uint256 depositNonce
-    ) public view returns (DepositProposal memory) {
-        return _depositProposals[destinationChainID][depositNonce];
+    // Replace current admin with new admin
+    function renounceAdmin(address newAdmin) public onlyAdmin {
+        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function deposit(
-        uint8        destinationChainID,
-        address      originChainHandlerAddress,
-        bytes calldata data
-    ) external payable {
-        require(msg.value == _fee, "Incorrect amount for fee supplied");
+    // Pause deposits, voting and execution
+    function adminPauseTransfers() public onlyAdmin {
+        _pause();
+    }
+
+    // Unpause deposits, voting and execution
+    function adminUnpauseTransfers() public onlyAdmin {
+        _unpause();
+    }
+
+    // Modifies the number of votes required for a proposal to be executed
+    function adminChangeRelayerThreshold(uint newThreshold) public onlyAdmin {
+        _relayerThreshold = newThreshold;
+        emit RelayerThresholdChanged(newThreshold);
+    }
+
+    // Add address to relayer set
+    function adminAddRelayer(address relayerAddress) public onlyAdmin {
+        grantRole(RELAYER_ROLE, relayerAddress);
+        emit RelayerAdded(relayerAddress);
+        _totalRelayers++;
+    }
+
+    // Remove address from relayer set
+    function adminRemoveRelayer(address relayerAddress) public onlyAdmin {
+        revokeRole(RELAYER_ROLE, relayerAddress);
+        emit RelayerRemoved(relayerAddress);
+        _totalRelayers--;
+    }
+
+    // Register a resource ID and contract address for a handler
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.setResource(resourceID, tokenAddress);
+    }
+
+    function adminSetGenericResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes4 depositFunctionSig, bytes4 executeFunctionSig) public onlyAdmin{
+        IGenericHandler handler = IGenericHandler(handlerAddress);
+        handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
+    }
+
+    // Register a token contract as mintable/burnable in a handler
+    function adminSetBurnable(address handlerAddress, address tokenAddress) public onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.setBurnable(tokenAddress);
+    }
+
+    function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
+        return _proposals[originChainID][depositNonce];
+    }
+
+    // Initiates a transfer accros the bridge by calling the specified handler
+    function deposit (uint8 destinationChainID, address handler, bytes memory data) public whenNotPaused {
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
-        IDepositHandler depositHandler = IDepositHandler(originChainHandlerAddress);
+        IDepositExecute depositHandler = IDepositExecute(handler);
         depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
 
-        emit Deposit(destinationChainID, originChainHandlerAddress, depositNonce);
+        emit Deposit(destinationChainID, handler, depositNonce);
     }
 
-    function voteDepositProposal(
-        uint8   originChainID,
-        uint256 depositNonce,
-        bytes32 dataHash
-    ) public _onlyRelayers {
-        DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
+    function voteProposal(uint8 originChainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
+        Proposal storage proposal = _proposals[uint8(originChainID)][depositNonce];
 
-        require(uint(depositProposal._status) <= 1, "proposal has already been passed or transferred");
-        require(!_hasVotedOnDepositProposal[originChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
+        require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
+        require(!_hasVotedOnProposal[originChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
-        if (uint(depositProposal._status) == 0) {
-            ++_totalDepositProposals;
-            _depositProposals[originChainID][depositNonce] = DepositProposal({
+        if (uint(proposal._status) == 0) {
+            ++_totalProposals;
+            _proposals[originChainID][depositNonce] = Proposal({
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
                 _noVotes: new address[](0),
-                _status: DepositProposalStatus.Active
-            });
+                _status: ProposalStatus.Active
+                });
 
-            depositProposal._yesVotes[0] = msg.sender;
-            emit DepositProposalCreated(originChainID, _chainID, depositNonce, dataHash);
+            proposal._yesVotes[0] = msg.sender;
+            emit ProposalCreated(originChainID, _chainID, depositNonce, dataHash);
         } else {
-            depositProposal._yesVotes.push(msg.sender);
+            proposal._yesVotes.push(msg.sender);
         }
 
-        _hasVotedOnDepositProposal[originChainID][depositNonce][msg.sender] = true;
-        emit DepositProposalVote(originChainID, _chainID, depositNonce, depositProposal._status);
+        _hasVotedOnProposal[originChainID][depositNonce][msg.sender] = true;
+        emit ProposalVote(originChainID, _chainID, depositNonce, proposal._status);
 
         // If _depositThreshold is set to 1, then auto finalize
         // or if _relayerThreshold has been exceeded
-        if (_relayerThreshold <= 1 || depositProposal._yesVotes.length >= _relayerThreshold) {
-            depositProposal._status = DepositProposalStatus.Passed;
-            emit DepositProposalFinalized(originChainID, _chainID, depositNonce);
+        if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
+            proposal._status = ProposalStatus.Passed;
+            emit ProposalFinalized(originChainID, _chainID, depositNonce);
         }
     }
 
-    function executeDepositProposal(
-        uint8        originChainID,
-        uint256      depositNonce,
-        address      destinationChainHandlerAddress,
-        bytes memory data
-    ) public {
-        DepositProposal storage depositProposal = _depositProposals[uint8(originChainID)][depositNonce];
+    function executeProposal(uint8 originChainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
+        Proposal storage proposal = _proposals[uint8(originChainID)][depositNonce];
 
-        require(depositProposal._status != DepositProposalStatus.Inactive, "proposal is not active");
-        require(depositProposal._status == DepositProposalStatus.Passed, "proposal was not passed or has already been transferred");
-        require(keccak256(abi.encodePacked(destinationChainHandlerAddress, data)) == depositProposal._dataHash,
+        require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
+        require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
+        require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
             "provided data does not match proposal's data hash");
 
-        IDepositHandler depositHandler = IDepositHandler(destinationChainHandlerAddress);
+        IDepositExecute depositHandler = IDepositExecute(handler);
         depositHandler.executeDeposit(data);
 
-        depositProposal._status = DepositProposalStatus.Transferred;
-        emit DepositProposalExecuted(originChainID, _chainID, depositNonce);
+        proposal._status = ProposalStatus.Transferred;
+        emit ProposalExecuted(originChainID, _chainID, depositNonce);
     }
 
-    function createRelayerThresholdProposal(uint proposedValue) public _onlyRelayers {
-        require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Inactive, "a proposal is currently active");
-        require(proposedValue <= _relayerContract.getTotalRelayers(), "proposed value cannot be greater than the total number of relayers");
-
-        _currentRelayerThresholdProposal = RelayerThresholdProposal({
-            _proposedValue: proposedValue,
-            _yesVotes: new address[](1),
-            _noVotes: new address[](0),
-            _status: RelayerThresholdProposalStatus.Active
-            });
-
-        if (_relayerThreshold <= 1) {
-            _relayerThreshold = _currentRelayerThresholdProposal._proposedValue;
-            _currentRelayerThresholdProposal._status = RelayerThresholdProposalStatus.Inactive;
-            emit RelayerThresholdChanged(proposedValue);
-        }
-        // Record vote
-        _currentRelayerThresholdProposal._yesVotes[0] = msg.sender;
-        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
-        emit RelayerThresholdProposalCreated(proposedValue);
-    }
-
-    function voteRelayerThresholdProposal(Vote vote) public _onlyRelayers {
-        require(_currentRelayerThresholdProposal._status == RelayerThresholdProposalStatus.Active, "no proposal is currently active");
-        require(!_currentRelayerThresholdProposal._hasVoted[msg.sender], "relayer has already voted");
-        require(uint8(vote) <= 1, "vote out of the vote enum range");
-
-        // Cast vote
-        if (vote == Vote.Yes) {
-            _currentRelayerThresholdProposal._yesVotes.push(msg.sender);
-        } else {
-            _currentRelayerThresholdProposal._noVotes.push(msg.sender);
-        }
-
-        _currentRelayerThresholdProposal._hasVoted[msg.sender] = true;
-        emit RelayerThresholdProposalVote(vote);
-
-        // Todo: Edge case if relayer threshold changes?
-        // Todo: For a proposal to pass does the number of yes votes just need to be higher than the threshold, or does it also have to be greater than the number of no votes?
-        if (_currentRelayerThresholdProposal._yesVotes.length >= _relayerThreshold) {
-            _relayerThreshold = _currentRelayerThresholdProposal._proposedValue;
-            _currentRelayerThresholdProposal._status = RelayerThresholdProposalStatus.Inactive;
-            emit RelayerThresholdChanged(_currentRelayerThresholdProposal._proposedValue);
-        } else if (_relayerContract.getTotalRelayers().sub(_currentRelayerThresholdProposal._noVotes.length) < _relayerThreshold) {
-            _currentRelayerThresholdProposal._status = RelayerThresholdProposalStatus.Inactive;
-        }
-    }
-
-    function transferFunds(address[] memory addrs, uint[] memory amounts) public _onlyOwner {
+    function transferFunds(address[] memory addrs, uint[] memory amounts) public onlyAdmin {
         for (uint i = 0; addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }

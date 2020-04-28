@@ -1,21 +1,21 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "../ERC721Safe.sol";
 import "../interfaces/IDepositExecute.sol";
+import "./HandlerHelpers.sol";
+import "../ERC721Safe.sol";
 import "../ERC721MinterBurnerPauser.sol";
-import "../interfaces/IERCHandler.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
-contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
+contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     using ERC165Checker for address;
-    address public _bridgeAddress;
+    // address public _bridgeAddress;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
 
     struct DepositRecord {
-        address _originChainTokenAddress;
+        address _tokenAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
         uint    _lenDestinationRecipientAddress;
@@ -27,23 +27,6 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
 
     // DepositID => Deposit Record
     mapping (uint256 => DepositRecord) public _depositRecords;
-
-    // resourceID => token contract address
-    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
-
-    // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
-
-    // token contract address => is whitelisted
-    mapping (address => bool) public _contractWhitelist;
-
-    // token contract address => is burnable
-    mapping (address => bool) public _burnList;
-
-    modifier _onlyBridge() {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
-        _;
-    }
 
     constructor(
         address bridgeAddress,
@@ -65,51 +48,8 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
         }
     }
 
-    function isWhitelisted(address contractAddress) internal view returns (bool) {
-        return _contractWhitelist[contractAddress];
-    }
-
     function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
         return _depositRecords[depositID];
-    }
-
-    function setBurnable(address contractAddress) public override _onlyBridge{
-        _setBurnable(contractAddress);
-    }
-
-    function _setBurnable(address contractAddress) internal {
-        require(isWhitelisted(contractAddress), "provided contract is not whitelisted");
-        _burnList[contractAddress] = true;
-    }
-
-    function createResourceID (address originChainTokenAddress, uint8 chainID) internal pure returns (bytes32) {
-        bytes11 padding;
-        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(originChainTokenAddress, chainID));
-        bytes32 resourceID;
-
-        assembly {
-            resourceID := mload(add(encodedResourceID, 0x20))
-        }
-
-        return resourceID;
-    }
-
-    function _setResource(bytes32 resourceID, address contractAddress) internal {
-        _resourceIDToTokenContractAddress[resourceID] = contractAddress;
-        _tokenContractAddressToResourceID[contractAddress] = resourceID;
-
-        _contractWhitelist[contractAddress] = true;
-    }
-
-    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
-        require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
-
-        bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes32 emptyBytes;
-        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding resourceID");
-
-        _setResource(resourceID, contractAddress);
     }
 
     // Make a deposit
@@ -152,23 +92,23 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
             )
         }
 
-        address originChainTokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(originChainTokenAddress), "provided originChainTokenAddress is not whitelisted");
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         // Check if the contract supports metadata, fetch it if it does
-        if (originChainTokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
-            IERC721Metadata erc721 = IERC721Metadata(originChainTokenAddress);
+        if (tokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
+            IERC721Metadata erc721 = IERC721Metadata(tokenAddress);
             metaData = bytes(erc721.tokenURI(tokenID));
         }
 
-        if (_burnList[originChainTokenAddress]) {
-            burnERC721(originChainTokenAddress, tokenID);
+        if (_burnList[tokenAddress]) {
+            burnERC721(tokenAddress, tokenID);
         } else {
-            lockERC721(originChainTokenAddress, depositer, address(this), tokenID);
+            lockERC721(tokenAddress, depositer, address(this), tokenID);
         }
 
         _depositRecords[depositNonce] = DepositRecord(
-            originChainTokenAddress,
+            tokenAddress,
             uint8(destinationChainID),
             resourceID,
             lenDestinationRecipientAddress,
@@ -243,7 +183,7 @@ contract ERC721Handler is IDepositExecute, IERCHandler, ERC721Safe {
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(isWhitelisted(address(tokenAddress)), "provided tokenAddress is not whitelisted");
+        require(_contractWhitelist[address(tokenAddress)], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);

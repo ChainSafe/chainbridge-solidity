@@ -242,6 +242,23 @@ contract Bridge is Pausable, AccessControl {
     }
 
     /**
+        @notice Used to manually withdraw funds from ERC safes.
+        @param handlerAddress Address of handler to withdraw from.
+        @param tokenAddress Address of token to withdraw.
+        @param recipient Address to withdraw tokens to.
+        @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to withdraw.
+     */
+    function adminWithdraw(
+        address handlerAddress,
+        address tokenAddress,
+        address recipient,
+        uint256 amountOrTokenID
+    ) public onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.withdraw(tokenAddress, recipient, amountOrTokenID);
+    }
+
+    /**
         @notice Initiates a transfer using a specified handler contract.
         @notice Only callable when Bridge is not paused.
         @param destinationChainID ID of chain deposit will be bridged to.
@@ -331,8 +348,12 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }
 
-    // Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
-    // This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
+    /**
+        @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+        This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
+        @param addrs Array of addresses to transfer {amounts} to.
+        @param amounts Array of amonuts to transfer to {addrs}.
+     */
     function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);

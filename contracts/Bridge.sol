@@ -10,23 +10,27 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 
+/**
+    @title Facilitates deposits, creation and votiing of deposit proposals, and deposit executions.
+    @author ChainSafe Systems.
+ */
 contract Bridge is Pausable, AccessControl {
     using SafeMath for uint;
 
-    uint8                    public _chainID;
-    uint256                  public _relayerThreshold;
-    uint256                  public _totalRelayers;
-    uint256                  public _totalProposals;
-    uint256                  public _fee;
+    uint8   public _chainID;
+    uint256 public _relayerThreshold;
+    uint256 public _totalRelayers;
+    uint256 public _totalProposals;
+    uint256 public _fee;
 
     enum Vote {No, Yes}
     enum ProposalStatus {Inactive, Active, Passed, Transferred}
 
     struct Proposal {
-        bytes32                  _dataHash;
-        address[]                _yesVotes;
-        address[]                _noVotes;
-        ProposalStatus    _status;
+        bytes32         _dataHash;
+        address[]       _yesVotes;
+        address[]       _noVotes;
+        ProposalStatus  _status;
     }
 
     // destinationChainID => number of deposits
@@ -72,16 +76,22 @@ contract Bridge is Pausable, AccessControl {
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender does not have admin role");
         _;
     }
 
     modifier onlyRelayers() {
-        require(hasRole(RELAYER_ROLE, msg.sender));
+        require(hasRole(RELAYER_ROLE, msg.sender), "sender does not have relayer role");
         _;
     }
 
-    // Instantiate a bridge, msg.sender becomes the admin
+    /**
+        @notice Initializes Bridge, creates and grants {msg.sender} the admin role,
+        creates and grants {initialRelayers} the relayer role.
+        @param chainID ID of chain the Bridge contract exists on.
+        @param initialRelayers Addresses that should be initially granted the relayer role.
+        @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
+     */
     constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
@@ -97,64 +107,135 @@ contract Bridge is Pausable, AccessControl {
 
     }
 
-    // Returns true if address has relayer role, otherwise false.
+    /**
+        @notice Returns true if {relayer} has the relayer role.
+        @param relayer Address to check.
+     */
     function isRelayer(address relayer) public view returns (bool) {
         return hasRole(RELAYER_ROLE, relayer);
     }
 
-    // Replace current admin with new admin
+    /**
+        @notice Removes admin role from {msg.sender} and grants it to {newAdmin}.
+        @notice Only callable by an address that currently has the admin role.
+        @param newAdmin Address that admin role will be granted to.
+     */
     function renounceAdmin(address newAdmin) public onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    // Pause deposits, voting and execution
+    /**
+        @notice Pauses deposits, proposal creation and voting, and deposit executions.
+        @notice Only callable by an address that currently has the admin role.
+     */
     function adminPauseTransfers() public onlyAdmin {
         _pause();
     }
 
-    // Unpause deposits, voting and execution
+    /**
+        @notice Unpauses deposits, proposal creation and voting, and deposit executions.
+        @notice Only callable by an address that currently has the admin role.
+     */
     function adminUnpauseTransfers() public onlyAdmin {
         _unpause();
     }
 
-    // Modifies the number of votes required for a proposal to be executed
+    /**
+        @notice Modifies the number of votes required for a proposal to be considered passed.
+        @notice Only callable by an address that currently has the admin role.
+        @param newThreshold Value {_relayerThreshold} will be changed to.
+        @notice Emits {RelayerThresholdChanged} event.
+     */
     function adminChangeRelayerThreshold(uint newThreshold) public onlyAdmin {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
     }
 
-    // Add address to relayer set
+    /**
+        @notice Grants {relayerAddress} the relayer role and increases {_totalRelayer} count.
+        @notice Only callable by an address that currently has the admin role.
+        @param relayerAddress Address of relayer to be added.
+        @notice Emits {RelayerAdded} event.
+     */
     function adminAddRelayer(address relayerAddress) public onlyAdmin {
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
         _totalRelayers++;
     }
 
-    // Remove address from relayer set
+    /**
+        @notice Removes relayer role for {relayerAddress} and decreases {_totalRelayer} count.
+        @notice Only callable by an address that currently has the admin role.
+        @param relayerAddress Address of relayer to be removed.
+        @notice Emits {RelayerRemoved} event.
+     */
     function adminRemoveRelayer(address relayerAddress) public onlyAdmin {
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);
         _totalRelayers--;
     }
 
-    // Register a resource ID and contract address for a handler
+    /**
+        @notice Sets a new resource for handler contracts that use the IERCHandler interface.
+        @notice Only callable by an address that currently has the admin role.
+        @param handlerAddress Address of handler resource will be set for.
+        @param resourceID ResourceID to be used when making deposits.
+        @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
+     */
     function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
     }
 
-    function adminSetGenericResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes4 depositFunctionSig, bytes4 executeFunctionSig) public onlyAdmin{
+    /**
+        @notice Sets a new resource for handler contracts that use the IGenericHandler interface.
+        @notice Only callable by an address that currently has the admin role.
+        @param handlerAddress Address of handler resource will be set for.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+     */
+    function adminSetGenericResource(
+        address handlerAddress,
+        bytes32 resourceID,
+        address contractAddress,
+        bytes4 depositFunctionSig,
+        bytes4 executeFunctionSig
+    ) public onlyAdmin {
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
-    // Register a token contract as mintable/burnable in a handler
+    /**
+        @notice Sets a resource as burnable for handler contracts that use the IERCHandler interface.
+        @notice Only callable by an address that currently has the admin role.
+        @param handlerAddress Address of handler resource will be set for.
+        @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
+     */
     function adminSetBurnable(address handlerAddress, address tokenAddress) public onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setBurnable(tokenAddress);
     }
 
+    /**
+        @notice Returns a proposal.
+        @param originChainID Chain ID deposit originated from.
+        @param depositNonce ID of proposal generated by proposal's origin Bridge contract.
+        @return Proposal which consists of:
+        - _dataHash Hash of data to be provided when deposit proposal is executed.
+        - _yesVotes Number of votes in favor of proposal.
+        - _noVotes Number of votes against proposal.
+        - _status Current status of proposal.
+     */
+    function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
+        return _proposals[originChainID][depositNonce];
+    }
+
+    /**
+        @notice Changes deposit fee.
+        @notice Only callable by admin.
+        @param newFee Value {_fee} will be updated to.
+     */
     function adminChangeFee(uint newFee) public onlyAdmin {
         require(_fee != newFee, "Current fee is equal to proposed new fee");
         _fee = newFee;
@@ -177,11 +258,14 @@ contract Bridge is Pausable, AccessControl {
         handler.withdraw(tokenAddress, recipient, amountOrTokenID);
     }
 
-    function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
-        return _proposals[originChainID][depositNonce];
-    }
-
-    // Initiates a transfer accros the bridge by calling the specified handler
+    /**
+        @notice Initiates a transfer using a specified handler contract.
+        @notice Only callable when Bridge is not paused.
+        @param destinationChainID ID of chain deposit will be bridged to.
+        @param handler Address of handler to be used for deposit.
+        @param data Additional data to be passed to specified handler.
+        @notice Emits {Deposit} event.
+     */
     function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
@@ -194,6 +278,19 @@ contract Bridge is Pausable, AccessControl {
         emit Deposit(destinationChainID, handler, depositNonce);
     }
 
+    /**
+        @notice When called, {msg.sender} will be marked as voting in favor of proposal.
+        @notice Only callable by relayers when Bridge is not paused.
+        @param chainID ID of chain deposit originated from.
+        @param depositNonce ID of deposited generated by origin Bridge contract.
+        @param dataHash Hash of data provided when deposit was made.
+        @notice Proposal must not have already been passed or transferred.
+        @notice {msg.sender} must not have already voted on proposal.
+        @notice Emits {ProposalCreated} event when no proposal exists for deposit.
+        @notice Emits {ProposalVote} event.
+        @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
+        {_relayerThreshold}.
+     */
     function voteProposal(uint8 chainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
@@ -226,6 +323,16 @@ contract Bridge is Pausable, AccessControl {
         }
     }
 
+    /**
+        @notice Executes a deposit proposal that is considered passed using a specified handler contract.
+        @notice Only callable by relayers when Bridge is not paused.
+        @param chainID ID of chain deposit originated from.
+        @param depositNonce ID of deposited generated by origin Bridge contract.
+        @param data Data originally provided when deposit was made.
+        @notice Proposal must have Passed status.
+        @notice Hash of {data} must equal proposal's {dataHash}.
+        @notice Emits {ProposalExecuted} event.
+     */
     function executeProposal(uint8 chainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
@@ -241,8 +348,12 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }
 
-    // Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
-    // This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
+    /**
+        @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+        This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
+        @param addrs Array of addresses to transfer {amounts} to.
+        @param amounts Array of amonuts to transfer to {addrs}.
+     */
     function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);

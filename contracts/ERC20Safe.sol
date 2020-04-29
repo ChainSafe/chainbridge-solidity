@@ -49,7 +49,7 @@ contract ERC20Safe {
     }
 
     /**
-        @notice Used to return custody of tokens to owner.
+        @notice Transfers custody of token to recipient.
         @param tokenAddress Address of ERC20 to transfer.
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.

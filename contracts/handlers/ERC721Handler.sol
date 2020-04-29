@@ -35,7 +35,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
-        @param initialResourceIDs Resource IDs are composed of chain ID + contract address, and used to identify a specific contract address.
+        @param initialResourceIDs Resource IDs are used to identify a specific contract address.
         These are the Resource IDs this contract will initially support.
         @param initialContractAddresses These are the addresses the {initialResourceIDs} will point to, and are the contracts that will be
         called to perform various deposit calls.
@@ -159,7 +159,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     }
 
     /**
-        @notice Deposit execution should be initiated when a proposal is executed in the Bridge contract.
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         by a relayer on the deposit's destination chain.
         @param data Consists of {tokenID}, {resourceID}, {lenDestinationRecipientAddress},
         {destinationRecipientAddress}, {lenMeta}, and {metaData} all padded to 32 bytes.
@@ -241,4 +241,3 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 }
-

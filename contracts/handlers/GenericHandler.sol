@@ -43,10 +43,10 @@ contract GenericHandler is IGenericHandler {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
-        @param initialResourceIDs Resource IDs are composed of chain ID + contract address, and used to identify a specific contract address.
+        @param initialResourceIDs Resource IDs used to identify a specific contract address.
         These are the Resource IDs this contract will initially support.
         @param initialContractAddresses These are the addresses the {initialResourceIDs} will point to, and are the contracts that will be
-        called to perform various deposit calls.
+        called to perform deposit and execution calls.
         @param initialDepositFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
         and are the function that will be called when executing {deposit}
         @param initialExecuteFunctionSignatures These are the function signatures {initialContractAddresses} will point to,

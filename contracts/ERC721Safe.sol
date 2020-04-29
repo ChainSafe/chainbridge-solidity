@@ -19,7 +19,7 @@ contract ERC721Safe {
     mapping(address => uint256) public _burnedTokens;
 
     /**
-        @notice Used to transfer tokens from an existing Bridge to a new Bridge.
+        @notice Used to transfer tokens into the safe to fund proposals.
         @param tokenAddress Address of ERC721 to transfer.
         @param owner Address of current token owner.
         @param tokenID ID of token to transfer.
@@ -48,7 +48,7 @@ contract ERC721Safe {
     }
 
     /**
-        @notice Used to return custody of token to owner.
+        @notice Transfers custody of token to recipient.
         @param tokenAddress Address of ERC721 to transfer.
         @param owner Address of current token owner.
         @param recipient Address to transfer token to.

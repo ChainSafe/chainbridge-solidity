@@ -32,7 +32,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
+            BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
         ]);
 
@@ -78,7 +78,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         ));
 
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce);
+        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
         assert.containsAllKeys(retrievedDepositRecord, Object.keys(expectedDepositRecord));
 
         for(const depositRecordProperty of Object.keys(expectedDepositRecord)) {

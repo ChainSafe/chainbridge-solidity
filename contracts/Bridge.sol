@@ -17,18 +17,11 @@ import "./interfaces/IGenericHandler.sol";
 contract Bridge is Pausable, AccessControl {
     using SafeMath for uint;
 
-<<<<<<< HEAD
     uint8   public _chainID;
     uint256 public _relayerThreshold;
     uint256 public _totalRelayers;
     uint256 public _totalProposals;
-=======
-    uint8                    public _chainID;
-    uint256                  public _relayerThreshold;
-    uint256                  public _totalRelayers;
-    uint256                  public _totalProposals;
-    uint256                  public _fee;
->>>>>>> master
+    uint256 public _fee;
 
     enum Vote {No, Yes}
     enum ProposalStatus {Inactive, Active, Passed, Transferred}
@@ -92,7 +85,6 @@ contract Bridge is Pausable, AccessControl {
         _;
     }
 
-<<<<<<< HEAD
     /**
         @notice Initializes Bridge, creates and grants {msg.sender} the admin role,
         creates and grants {initialRelayers} the relayer role.
@@ -100,11 +92,7 @@ contract Bridge is Pausable, AccessControl {
         @param initialRelayers Addresses that should be initially granted the relayer role.
         @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
      */
-    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold) public {
-=======
-    // Instantiate a bridge, msg.sender becomes the admin
     constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee) public {
->>>>>>> master
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
         _fee = fee;
@@ -229,7 +217,6 @@ contract Bridge is Pausable, AccessControl {
         handler.setBurnable(tokenAddress);
     }
 
-<<<<<<< HEAD
     /**
         @notice Returns a proposal.
         @param chainID Chain ID deposit proposal was made for.
@@ -244,6 +231,16 @@ contract Bridge is Pausable, AccessControl {
     }
 
     /**
+        @notice Changes deposit fee.
+        @notice Only callable by admin.
+        @param newFee Value {_fee} will be updated to.
+     */
+    function adminChangeFee(uint newFee) public onlyAdmin {
+        require(_fee != newFee, "Current fee is equal to proposed new fee");
+        _fee = newFee;
+    }
+
+    /**
         @notice Initiates a transfer using a specified handler contract.
         @notice Only callable when Bridge is not paused.
         @param destinationChainID ID of chain deposit will be bridged to.
@@ -251,22 +248,9 @@ contract Bridge is Pausable, AccessControl {
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit (uint8 destinationChainID, address handler, bytes memory data) public whenNotPaused {
-=======
-    function adminChangeFee(uint newFee) public onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to proposed new fee");
-        _fee = newFee;
-    }
-
-    function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
-        return _proposals[originChainID][depositNonce];
-    }
-
-    // Initiates a transfer accros the bridge by calling the specified handler
     function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
->>>>>>> master
         uint256 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
@@ -276,7 +260,6 @@ contract Bridge is Pausable, AccessControl {
         emit Deposit(destinationChainID, handler, depositNonce);
     }
 
-<<<<<<< HEAD
     /**
         @notice When called, {msg.sender} will be marked as voting in favor of proposal.
         @notice Only callable by relayers when Bridge is not paused.
@@ -290,8 +273,6 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
         {_relayerThreshold}.
      */
-=======
->>>>>>> master
     function voteProposal(uint8 chainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
@@ -324,7 +305,6 @@ contract Bridge is Pausable, AccessControl {
         }
     }
 
-<<<<<<< HEAD
     /**
         @notice Executes a deposit proposal that is considered passed using a specified handler contract.
         @notice Only callable by relayers when Bridge is not paused.
@@ -335,8 +315,6 @@ contract Bridge is Pausable, AccessControl {
         @notice Hash of {data} must equal proposal's {dataHash}.
         @notice Emits {ProposalExecuted} event.
      */
-=======
->>>>>>> master
     function executeProposal(uint8 chainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
@@ -350,8 +328,6 @@ contract Bridge is Pausable, AccessControl {
 
         proposal._status = ProposalStatus.Transferred;
         emit ProposalExecuted(chainID, _chainID, depositNonce);
-<<<<<<< HEAD
-=======
     }
 
     // Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
@@ -360,6 +336,5 @@ contract Bridge is Pausable, AccessControl {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }
->>>>>>> master
     }
 }

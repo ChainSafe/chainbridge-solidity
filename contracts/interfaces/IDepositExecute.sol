@@ -15,7 +15,7 @@ interface IDepositExecute {
     function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes calldata data) external;
 
     /**
-        @notice It is intended that deposit are executed using the Bridge contract.
+        @notice It is intended that proposals are executed by the Bridge contract.
         @param data Consists of additional data needed for a specific deposit execution.
      */
     function executeDeposit(bytes calldata data) external;

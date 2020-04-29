@@ -12,7 +12,7 @@ interface IERCHandler {
      */
     function setResource(bytes32 resourceID, address contractAddress) external;
     /**
-        @notice Marks {contractAddress} as burnable.
+        @notice Marks {contractAddress} as mintable/burnable.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
     function setBurnable(address contractAddress) external;

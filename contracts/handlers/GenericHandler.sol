@@ -14,7 +14,7 @@ contract GenericHandler is IGenericHandler {
     }
 
     // depositNonce => Deposit Record
-    mapping (uint256 => DepositRecord) public _depositRecords;
+    mapping (uint8 => mapping(uint256 => DepositRecord)) public _depositRecords;
 
     // resourceID => contract address
     mapping (bytes32 => address) public _resourceIDToContractAddress;
@@ -63,8 +63,8 @@ contract GenericHandler is IGenericHandler {
         }
     }
 
-    function getDepositRecord(uint256 depositNonce) public view returns (DepositRecord memory) {
-        return _depositRecords[depositNonce];
+    function getDepositRecord(uint256 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
+        return _depositRecords[destId][depositNonce];
     }
 
     function setResource(
@@ -122,7 +122,7 @@ contract GenericHandler is IGenericHandler {
             require(success, "delegatecall to contractAddress failed");
         }
 
-        _depositRecords[depositNonce] = DepositRecord(
+        _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             destinationChainID,
             resourceID,
             depositer,

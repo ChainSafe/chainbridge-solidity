@@ -20,7 +20,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     }
 
     // depositNonce => Deposit Record
-    mapping (uint256 => DepositRecord) public _depositRecords;
+    mapping (uint8 => mapping(uint256 => DepositRecord)) public _depositRecords;
 
     constructor(
         address          bridgeAddress,
@@ -42,8 +42,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         }
     }
 
-    function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
-        return _depositRecords[depositID];
+    function getDepositRecord(uint256 depositID, uint8 destId) public view returns (DepositRecord memory) {
+        return _depositRecords[destId][depositID];
     }
 
     // Initiate a transfer by completing a deposit (transferFrom).
@@ -89,7 +89,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
             lockERC20(tokenAddress, depositer, address(this), amount);
         }
 
-        _depositRecords[depositNonce] = DepositRecord(
+        _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
             destinationChainID,
             resourceID,

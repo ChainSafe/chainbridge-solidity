@@ -26,7 +26,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     }
 
     // DepositID => Deposit Record
-    mapping (uint256 => DepositRecord) public _depositRecords;
+    mapping (uint8 => mapping (uint256 => DepositRecord)) public _depositRecords;
 
     constructor(
         address bridgeAddress,
@@ -48,8 +48,8 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         }
     }
 
-    function getDepositRecord(uint256 depositID) public view returns (DepositRecord memory) {
-        return _depositRecords[depositID];
+    function getDepositRecord(uint256 depositID, uint8 destId) public view returns (DepositRecord memory) {
+        return _depositRecords[destId][depositID];
     }
 
     // Make a deposit
@@ -107,7 +107,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
             lockERC721(tokenAddress, depositer, address(this), tokenID);
         }
 
-        _depositRecords[depositNonce] = DepositRecord(
+        _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
             uint8(destinationChainID),
             resourceID,

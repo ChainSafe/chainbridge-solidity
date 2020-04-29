@@ -29,9 +29,4 @@ do
 
     # Build the go package
     abigen --abi $ABI_DIR/${value}.abi --pkg $value --type $value --bin $BIN_DIR/${value}.bin --out $GO_DIR/$value/$value.go
-
-    # Capture build temp
-    bytecode=`cat ${RUNTIME_DIR}/${value}.bin`
-    variable="var RuntimeBytecode = \"${bytecode}\""
-    echo $variable >> $GO_DIR/$value/$value.go
 done

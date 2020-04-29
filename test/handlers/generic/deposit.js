@@ -78,7 +78,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         ));
 
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce);
+        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
         assert.containsAllKeys(retrievedDepositRecord, Object.keys(expectedDepositRecord));
 
         for(const depositRecordProperty of Object.keys(expectedDepositRecord)) {

@@ -155,7 +155,6 @@ contract Bridge is Pausable, AccessControl {
         handler.setBurnable(tokenAddress);
     }
 
-    // Change the fee taken on deposits
     function adminChangeFee(uint newFee) public onlyAdmin {
         require(_fee != newFee, "Current fee is equal to proposed new fee");
         _fee = newFee;
@@ -178,15 +177,15 @@ contract Bridge is Pausable, AccessControl {
         emit Deposit(destinationChainID, handler, depositNonce);
     }
 
-    function voteProposal(uint8 originChainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
-        Proposal storage proposal = _proposals[uint8(originChainID)][depositNonce];
+    function voteProposal(uint8 chainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
+        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
-        require(!_hasVotedOnProposal[originChainID][depositNonce][msg.sender], "relayer has already voted on proposal");
+        require(!_hasVotedOnProposal[chainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;
-            _proposals[originChainID][depositNonce] = Proposal({
+            _proposals[chainID][depositNonce] = Proposal({
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
                 _noVotes: new address[](0),
@@ -194,24 +193,24 @@ contract Bridge is Pausable, AccessControl {
                 });
 
             proposal._yesVotes[0] = msg.sender;
-            emit ProposalCreated(originChainID, _chainID, depositNonce, dataHash);
+            emit ProposalCreated(chainID, _chainID, depositNonce, dataHash);
         } else {
             proposal._yesVotes.push(msg.sender);
         }
 
-        _hasVotedOnProposal[originChainID][depositNonce][msg.sender] = true;
-        emit ProposalVote(originChainID, _chainID, depositNonce, proposal._status);
+        _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
+        emit ProposalVote(chainID, _chainID, depositNonce, proposal._status);
 
         // If _depositThreshold is set to 1, then auto finalize
         // or if _relayerThreshold has been exceeded
         if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
             proposal._status = ProposalStatus.Passed;
-            emit ProposalFinalized(originChainID, _chainID, depositNonce);
+            emit ProposalFinalized(chainID, _chainID, depositNonce);
         }
     }
 
-    function executeProposal(uint8 originChainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
-        Proposal storage proposal = _proposals[uint8(originChainID)][depositNonce];
+    function executeProposal(uint8 chainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
+        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
         require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
@@ -222,7 +221,7 @@ contract Bridge is Pausable, AccessControl {
         depositHandler.executeDeposit(data);
 
         proposal._status = ProposalStatus.Transferred;
-        emit ProposalExecuted(originChainID, _chainID, depositNonce);
+        emit ProposalExecuted(chainID, _chainID, depositNonce);
     }
 
     // Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.

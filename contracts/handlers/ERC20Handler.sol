@@ -139,7 +139,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     }
 
     /**
-        @notice Deposit execution should be initiated when a proposal is executed in the Bridge contract.
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         by a relayer on the deposit's destination chain.
         @param data Consists of {resourceID}, {amount}, {lenDestinationRecipientAddress},
         and {destinationRecipientAddress} all padded to 32 bytes.

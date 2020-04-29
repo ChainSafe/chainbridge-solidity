@@ -31,7 +31,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originChainID, [], 0).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(originChainID, [], 0, 0).then(instance => BridgeInstance = instance)
         ]);
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)];

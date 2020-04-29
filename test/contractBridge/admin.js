@@ -24,7 +24,7 @@ contract('Bridge - [admin]', async accounts => {
     let BridgeInstance;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold);
+        BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0);
         ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
     });
 
@@ -107,4 +107,14 @@ contract('Bridge - [admin]', async accounts => {
         TruffleAssert.passes(await BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance.address));
         assert.isTrue(await ERC20HandlerInstance._burnList.call(ERC20MintableInstance.address));
     });
+
+
+    it('Should set fee', async () => {
+        assert.equal(await BridgeInstance._fee.call(), 0);
+
+        const fee = Ethers.utils.parseEther("0.05");
+        await BridgeInstance.adminChangeFee(fee);
+        const newFee = await BridgeInstance._fee.call()
+        assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05")
+    })
 });

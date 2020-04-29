@@ -32,7 +32,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold).then(instance => BridgeInstance = instance),
+            BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
         ]);
 

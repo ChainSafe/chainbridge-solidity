@@ -193,7 +193,13 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     }
 
-    function withdraw(address tokenAddress, address recipient, uint tokenID) public _onlyBridge {
+    /**
+        @notice Used to manually release ERC721 tokens from ERC721Safe.
+        @param tokenAddress Address of token contract to release.
+        @param recipient Address to release token to.
+        @param tokenID The ERC721 token ID to release.
+     */
+    function withdraw(address tokenAddress, address recipient, uint tokenID) public override _onlyBridge {
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 }

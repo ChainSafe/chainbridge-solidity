@@ -15,12 +15,10 @@ contract('Bridge - [admin]', async accounts => {
     const chainID = 1;
     const initialRelayers = accounts.slice(0, 3);
     const initialRelayerThreshold = 2;
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     const expectedBridgeAdmin = accounts[0];
     let ADMIN_ROLE;
-
-    let RelayerInstance;
+    
     let BridgeInstance;
 
     beforeEach(async () => {
@@ -108,6 +106,7 @@ contract('Bridge - [admin]', async accounts => {
         assert.isTrue(await ERC20HandlerInstance._burnList.call(ERC20MintableInstance.address));
     });
 
+    // Set fee
 
     it('Should set fee', async () => {
         assert.equal(await BridgeInstance._fee.call(), 0);
@@ -116,5 +115,34 @@ contract('Bridge - [admin]', async accounts => {
         await BridgeInstance.adminChangeFee(fee);
         const newFee = await BridgeInstance._fee.call()
         assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05")
-    })
+    });
+
+    // Withdraw
+
+    it('Should withdraw funds', async () => {
+        const numTokens = 10;
+        const tokenOwner = accounts[0];
+        
+        let ownerBalance;
+        let handlerBalance;
+
+        const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
+        const resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [resourceID], [ERC20MintableInstance.address], []);
+
+        await ERC20MintableInstance.mint(tokenOwner, numTokens);
+        ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
+        assert.equal(ownerBalance, numTokens);
+            
+        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, numTokens);
+        await ERC20HandlerInstance.fundERC20(ERC20MintableInstance.address, tokenOwner, numTokens);
+        ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
+        assert.equal(ownerBalance, 0);
+        handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
+        assert.equal(handlerBalance, numTokens);
+
+        await BridgeInstance.adminWithdraw(ERC20HandlerInstance.address, ERC20MintableInstance.address, tokenOwner, numTokens);
+        ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
+        assert.equal(ownerBalance, numTokens);
+    });
 });

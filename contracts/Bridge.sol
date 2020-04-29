@@ -160,6 +160,23 @@ contract Bridge is Pausable, AccessControl {
         _fee = newFee;
     }
 
+    /**
+        @notice Used to manually withdraw funds from ERC safes.
+        @param handlerAddress Address of handler to withdraw from.
+        @param tokenAddress Address of token to withdraw.
+        @param recipient Address to withdraw tokens to.
+        @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to withdraw.
+     */
+    function adminWithdraw(
+        address handlerAddress,
+        address tokenAddress,
+        address recipient,
+        uint256 amountOrTokenID
+    ) public onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.withdraw(tokenAddress, recipient, amountOrTokenID);
+    }
+
     function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
         return _proposals[originChainID][depositNonce];
     }

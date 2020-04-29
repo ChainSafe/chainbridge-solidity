@@ -20,7 +20,7 @@ contract ERC20Safe {
     mapping(address => uint256) public _burnedTokens;
 
     /**
-        @notice Used to transfer tokens from an existing Bridge to a new Bridge.
+        @notice Used to transfer tokens into the safe to fund proposals.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.
         @param amount Amount of tokens to transfer.

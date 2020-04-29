@@ -71,12 +71,12 @@ contract Bridge is Pausable, AccessControl {
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender does not have admin role");
         _;
     }
 
     modifier onlyRelayers() {
-        require(hasRole(RELAYER_ROLE, msg.sender));
+        require(hasRole(RELAYER_ROLE, msg.sender), "sender does not have relayer role");
         _;
     }
 

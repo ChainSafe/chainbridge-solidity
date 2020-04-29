@@ -2,6 +2,11 @@ pragma solidity 0.6.4;
 
 import "../interfaces/IERCHandler.sol";
 
+/**
+    @title Function used across handler contracts.
+    @author ChainSafe Systems.
+    @notice This contract is intended to be used with the Bridge contract.
+ */
 contract HandlerHelpers is IERCHandler {
     address public _bridgeAddress;
 
@@ -22,6 +27,15 @@ contract HandlerHelpers is IERCHandler {
         _;
     }
 
+    /**
+        @notice First verifies {_resourceIDToContractAddress}[{resourceID}] and
+        {_contractAddressToResourceID}[{contractAddress}] are not already set,
+        then sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID},
+        and {_contractWhitelist} to true for {contractAddress}.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+     */
     function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
@@ -33,6 +47,11 @@ contract HandlerHelpers is IERCHandler {
         _setResource(resourceID, contractAddress);
     }
 
+    /**
+        @notice First verifies {contractAddress} is whitelisted, then sets {_burnList}[{contractAddress}]
+        to true.
+        @param contractAddress Address of contract to be used when making or executing deposits.
+     */
     function setBurnable(address contractAddress) public override _onlyBridge{
         _setBurnable(contractAddress);
     }

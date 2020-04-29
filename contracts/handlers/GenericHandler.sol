@@ -198,7 +198,7 @@ contract GenericHandler is IGenericHandler {
     // data                                   bytes       bytes  96 - END
 
     /**
-        @notice Deposit execution should be initiated when a proposal is executed in the Bridge contract.
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         @param data Consists of {resourceID}, {lenMetaData}, and {metaData}.
         @notice Data passed into the function should be constructed as follows:
         resourceID                             bytes32     bytes  0 - 32

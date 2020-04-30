@@ -6,40 +6,51 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers = require('../../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
+const TestContract = artifacts.require("TestContract");
 
 contract('GenericHandler - [deposit]', async (accounts) => {
     const relayerThreshold = 2;
     const chainID = 1;
+    const expectedDepositNonce = 1;
 
     const depositerAddress = accounts[1];
-    const recipientAddress = accounts[2];
-    
-    const blankFunctionSig = '0x00000000';
-    const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
-    const expectedDepositNonce = 1;
 
     let BridgeInstance;
     let CentrifugeAssetInstance;
+    let TestContractInstance;
+
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
     let initialExecuteFunctionSignatures;
     let GenericHandlerInstance;
-    let depositData;
+    let depositData
 
     beforeEach(async () => {
         await Promise.all([
             BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
+            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
+            TestContract.new().then(instance => TestContractInstance = instance)
         ]);
 
-        initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
-        initialContractAddresses = [CentrifugeAssetInstance.address];
-        initialDepositFunctionSignatures = [blankFunctionSig];
-        initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
+        initialResourceIDs = [
+            Helpers.createResourceID(CentrifugeAssetInstance.address, chainID),
+            Helpers.createResourceID(TestContractInstance.address, chainID),
+        ];
+        initialContractAddresses = [CentrifugeAssetInstance.address, TestContractInstance.address];
+        initialDepositFunctionSignatures = [
+            Helpers.blankFunctionSig,
+            Helpers.getFunctionSignature(TestContractInstance, 'noArguments')
+        ];
+        initialExecuteFunctionSignatures = [
+            Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store'),
+            Helpers.blankFunctionSig
+        ];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address,
@@ -47,11 +58,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialContractAddresses,
             initialDepositFunctionSignatures,
             initialExecuteFunctionSignatures);
-
-        depositData = '0x' +
-            initialResourceIDs[0].substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(4), 32).substr(2) + // len(metaData) (32 bytes)
-            Ethers.utils.hexZeroPad('0xdeadbeef', 4).substr(2) // metadata (4 bytes)
+                
+        depositData = Helpers.createGenericDepositData(initialResourceIDs[0], '0xdeadbeef');
     });
 
     it('deposit can be made successfully', async () => {
@@ -79,18 +87,28 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        assert.containsAllKeys(retrievedDepositRecord, Object.keys(expectedDepositRecord));
+        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
+    });
 
-        for(const depositRecordProperty of Object.keys(expectedDepositRecord)) {
-            let retrievedValue = retrievedDepositRecord[depositRecordProperty];
-            let expectedValue = expectedDepositRecord[depositRecordProperty];
-            
-            retrievedValue = retrievedValue != null && retrievedValue.toNumber ? retrievedValue.toNumber() : retrievedValue;
-            retrievedValue = retrievedValue != null && retrievedValue.toLowerCase ? retrievedValue.toLowerCase() : retrievedValue;
-            expectedValue = expectedValue != null && expectedValue.toLowerCase ? expectedValue.toLowerCase() : expectedValue;
+    it('noArguments can be called successfully and depositRecord is created with expected values', async () => {
+        const expectedDepositRecord = {
+            _destinationChainID: chainID,
+            _resourceID: initialResourceIDs[1],
+            _depositer: depositerAddress,
+            _metaData: null
+        };
 
-            assert.equal(retrievedValue, expectedValue,
-                `expected ${depositRecordProperty} does not match retrieved value`);
-        }
+        const depositTx = await BridgeInstance.deposit(
+            chainID,
+            GenericHandlerInstance.address,
+            Helpers.createGenericDepositData(initialResourceIDs[1], null),
+            { from: depositerAddress }
+        );
+
+        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
+        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
+
+        const internalTx = await TruffleAssert.createTransactionResult(TestContractInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'WasCalled');
     });
 });

@@ -72,7 +72,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         await BridgeInstance.deposit(
             chainID,
             ERC20HandlerInstance.address,
-            Helpers.createDepositData(
+            Helpers.createERCDepositData(
                 resourceID,
                 tokenAmount,
                 lenRecipientAddress,
@@ -100,7 +100,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         await BridgeInstance.deposit(
             chainID,
             ERC20HandlerInstance.address,
-            Helpers.createDepositData(
+            Helpers.createERCDepositData(
                 resourceID,
                 tokenAmount,
                 lenRecipientAddress,

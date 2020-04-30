@@ -3,50 +3,43 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const ethers = require("ethers");
+ const Ethers = require('ethers');
 
-const RelayerActionType = {
-    Add: 0,
-    Remove: 1
+ const createDepositData = (resourceID, tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
+    return '0x' +
+        resourceID.substr(2) +
+        Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenAmountOrID), 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
+        Ethers.utils.hexZeroPad(Ethers.utils.hexlify(lenRecipientAddress), 32).substr(2) + // len(recipientAddress)          (32 bytes)
+        recipientAddress.substr(2);                                                        // recipientAddress               (?? bytes)
 };
 
-const Vote = {
-    Yes: 0,
-    No: 1,
-}
+const assertObjectsMatch = (expectedObj, actualObj) => {
+    for (const expectedProperty of Object.keys(expectedObj)) {
+        assert.property(actualObj, expectedProperty, `actualObj does not have property: ${expectedProperty}`);
 
-const VoteStatus = {
-    Inactive: 0,
-    Active: 1,
-    Finalized: 2
-}
+        let expectedValue = expectedObj[expectedProperty];
+        let actualValue = actualObj[expectedProperty];
 
-const ThresholdType = {
-    Relayer: 0,
-    Deposit: 1,
-}
+        // Handling mixed case ETH addresses
+        if (expectedValue.toLowerCase !== undefined) {
+            expectedValue = expectedValue.toLowerCase();
+        }
 
-// TODO format differently
-const dummyData = {
-    type: "erc20",
-    value: 100,
-    to: "0x1",
-    from: "0x2"
-}
+        // Handling mixed case ETH addresses
+        if (actualValue.toLowerCase !== undefined) {
+            actualValue = actualValue.toLowerCase();
+        }
 
-const CreateDepositData = (data = dummyData, depositNonce = 0, originChain = 0) => {
-    const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(data));
-    return [
-        hash,
-        depositNonce,
-        originChain,
-    ];
-}
+        // Handling BigNumber.js instances
+        if (actualValue.toNumber !== undefined) {
+            actualValue = actualValue.toNumber();
+        }
+
+        assert.equal(expectedValue, actualValue, `expectedValue does not match actualValue`);
+    }
+};
 
 module.exports = {
-    RelayerActionType,
-    Vote,
-    VoteStatus,
-    CreateDepositData,
-    ThresholdType,
-}
+    createDepositData,
+    assertObjectsMatch
+};

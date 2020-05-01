@@ -9,25 +9,25 @@ contract NoArgument {
 }
 
 contract OneArgument {
-    event OneArgumentCalled(uint256 num);
+    event OneArgumentCalled(uint256 indexed argumentOne);
 
-    function oneArgument(uint256 num) public {
-        emit OneArgumentCalled(num);
+    function oneArgument(uint256 argumentOne) public {
+        emit OneArgumentCalled(argumentOne);
     }
 }
 
 contract TwoArguments {
-    event TwoArgumentsCalled(address[] addresses, bytes4 randBytes4);
+    event TwoArgumentsCalled(address[] indexed argumentOne, bytes4 indexed argumentTwo);
 
-    function twoArguments(address[] memory addresses, bytes4 randBytes4) public {
-        emit TwoArgumentsCalled(addresses, randBytes4);
+    function twoArguments(address[] memory argumentOne, bytes4 argumentTwo) public {
+        emit TwoArgumentsCalled(argumentOne, argumentTwo);
     }
 }
 
 contract ThreeArguments {
-    event ThreeArgumentsCalled(string randString, int256 randInt, bool randBool);
+    event ThreeArgumentsCalled(string indexed argumentOne, int8 indexed argumentTwo, bool indexed argumentThree);
 
-    function threeArguments(string memory randString, int256 randInt, bool randBool) public {
-        emit ThreeArgumentsCalled(randString, randInt, randBool);
+    function threeArguments(string memory argumentOne, int8 argumentTwo, bool argumentThree) public {
+        emit ThreeArgumentsCalled(argumentOne, argumentTwo, argumentThree);
     }
 }

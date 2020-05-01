@@ -6,6 +6,15 @@
  const Ethers = require('ethers');
 
  const blankFunctionSig = '0x00000000';
+ const AbiCoder = new Ethers.utils.AbiCoder;
+
+ const toHex = (covertThis, padding) => {
+    return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(covertThis), padding);
+ };
+
+ const abiEncode = (valueTypes, values) => {
+    return AbiCoder.encode(valueTypes, values)
+ };
 
  const getFunctionSignature = (contractInstance, functionName) => {
     return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
@@ -14,8 +23,8 @@
  const createERCDepositData = (resourceID, tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
     return '0x' +
         resourceID.substr(2) +
-        Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenAmountOrID), 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
-        Ethers.utils.hexZeroPad(Ethers.utils.hexlify(lenRecipientAddress), 32).substr(2) + // len(recipientAddress)          (32 bytes)
+        toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
+        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
         recipientAddress.substr(2);                                                        // recipientAddress               (?? bytes)
 };
 
@@ -23,18 +32,18 @@ const createGenericDepositData = (resourceID, hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
             resourceID.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0), 32).substr(2) // len(metaData) (32 bytes)
+            toHex(0, 32).substr(2) // len(metaData) (32 bytes)
     }
     
-    const metaDataLength = (hexMetaData.substr(2)).length / 2;
+    const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
     return '0x' +
         resourceID.substr(2) +
-        Ethers.utils.hexZeroPad(Ethers.utils.hexlify(metaDataLength), 32).substr(2) + // len(metaData) (32 bytes)
-        hexMetaData.substr(2);
+        toHex(hexMetaDataLength, 32).substr(2) +
+        hexMetaData.substr(2)
 };
 
 const createResourceID = (contractAddress, chainID) => {
-    return Ethers.utils.hexZeroPad((contractAddress + Ethers.utils.hexlify(chainID).substr(2)), 32)
+    return toHex(contractAddress + toHex(chainID, 0).substr(2), 32)
 };
 
 const assertObjectsMatch = (expectedObj, actualObj) => {
@@ -65,6 +74,8 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
 
 module.exports = {
     blankFunctionSig,
+    toHex,
+    abiEncode,
     getFunctionSignature,
     createERCDepositData,
     createGenericDepositData,

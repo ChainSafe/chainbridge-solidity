@@ -32,8 +32,8 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
             BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ])
-
-        resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
         burnableContractAddresses = []

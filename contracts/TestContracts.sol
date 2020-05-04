@@ -17,7 +17,7 @@ contract OneArgument {
 }
 
 contract TwoArguments {
-    event TwoArgumentsCalled(address[] indexed argumentOne, bytes4 indexed argumentTwo);
+    event TwoArgumentsCalled(address[] argumentOne, bytes4 argumentTwo);
 
     function twoArguments(address[] memory argumentOne, bytes4 argumentTwo) public {
         emit TwoArgumentsCalled(argumentOne, argumentTwo);
@@ -25,7 +25,7 @@ contract TwoArguments {
 }
 
 contract ThreeArguments {
-    event ThreeArgumentsCalled(string indexed argumentOne, int8 indexed argumentTwo, bool indexed argumentThree);
+    event ThreeArgumentsCalled(string argumentOne, int8 argumentTwo, bool argumentThree);
 
     function threeArguments(string memory argumentOne, int8 argumentTwo, bool argumentThree) public {
         emit ThreeArgumentsCalled(argumentOne, argumentTwo, argumentThree);

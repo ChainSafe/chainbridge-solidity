@@ -39,7 +39,6 @@ contract('GenericHandler - [constructor]', async () => {
             Ethers.utils.hexZeroPad((CentrifugeAssetInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32),
             Ethers.utils.hexZeroPad((CentrifugeAssetInstance3.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
         ];
-        burnableContractAddresses = [];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
         
         const executeDepositFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(centrifugeAssetStoreFuncSig))).substr(0, 10);
@@ -56,6 +55,39 @@ contract('GenericHandler - [constructor]', async () => {
                 initialContractAddresses,
                 initialDepositFunctionSignatures,
                 initialExecuteFunctionSignatures));
+    });
+
+    it('should revert because mismatch length between initialResourceIDs and initialContractAddresses', async () => {
+        await TruffleAssert.reverts(
+            GenericHandlerContract.new(
+                BridgeInstance.address,
+                [],
+                initialContractAddresses,
+                initialDepositFunctionSignatures,
+                initialExecuteFunctionSignatures),
+                "mismatch length between initialResourceIDs and initialContractAddresses");
+    });
+
+    it('should revert because mismatch length between provided contract addresses and function signatures', async () => {
+        await TruffleAssert.reverts(
+            GenericHandlerContract.new(
+                BridgeInstance.address,
+                initialResourceIDs,
+                initialContractAddresses,
+                [],
+                initialExecuteFunctionSignatures),
+                "mismatch length between provided contract addresses and function signatures");
+    });
+
+    it('should revert because mismatch length between provided deposit and execute function signatures', async () => {
+        await TruffleAssert.reverts(
+            GenericHandlerContract.new(
+                BridgeInstance.address,
+                initialResourceIDs,
+                initialContractAddresses,
+                initialDepositFunctionSignatures,
+                []),
+                "mismatch length between provided deposit and execute function signatures");
     });
 
     it('contract mappings were set with expected values', async () => {

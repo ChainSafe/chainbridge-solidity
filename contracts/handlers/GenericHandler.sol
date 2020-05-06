@@ -127,13 +127,6 @@ contract GenericHandler is IGenericHandler {
         _setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
 
-    // Initiate a generic deposit. The deposit function associated with the resource ID
-    // will be called using data as the parameters, if a function signature exists.
-    //
-    // resourceID                             bytes32     bytes  0 - 32
-    // len(data)                              uint256     bytes  32 - 64
-    // data                                   bytes       bytes  96 - END
-
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID deposit is expected to be bridged to.
@@ -177,8 +170,10 @@ contract GenericHandler is IGenericHandler {
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        if (_contractAddressToDepositFunctionSignature[contractAddress] != bytes4(0)) {
-            (bool success,) = contractAddress.call(metadata);
+        bytes4 sig = _contractAddressToDepositFunctionSignature[contractAddress];
+        if (sig != bytes4(0)) {
+            bytes memory callData = abi.encodePacked(sig, metadata);
+            (bool success,) = contractAddress.call(callData);
             require(success, "delegatecall to contractAddress failed");
         }
 
@@ -189,13 +184,6 @@ contract GenericHandler is IGenericHandler {
             metadata
         );
     }
-
-    // Execute a generic proposal. The The deposit function associated with the resource ID
-    // will be called using data as the parameters, if a function signature exists.
-    //
-    // resourceID                             bytes32     bytes  0 - 32
-    // len(data)                              uint256     bytes  32 - 64
-    // data                                   bytes       bytes  96 - END
 
     /**
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.

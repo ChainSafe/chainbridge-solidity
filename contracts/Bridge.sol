@@ -34,13 +34,13 @@ contract Bridge is Pausable, AccessControl {
     }
 
     // destinationChainID => number of deposits
-    mapping(uint8 => uint256) public _depositCounts;
+    mapping(uint8 => uint64) public _depositCounts;
     // destinationChainID => depositNonce => bytes
-    mapping(uint8 => mapping(uint256 => bytes)) public _depositRecords;
+    mapping(uint8 => mapping(uint64 => bytes)) public _depositRecords;
     // destinationChainID => depositNonce => Proposal
-    mapping(uint8 => mapping(uint256 => Proposal)) public _proposals;
+    mapping(uint8 => mapping(uint64 => Proposal)) public _proposals;
     // destinationChainID => depositNonce => relayerAddress => bool
-    mapping(uint8 => mapping(uint256 => mapping(address => bool))) public _hasVotedOnProposal;
+    mapping(uint8 => mapping(uint64 => mapping(address => bool))) public _hasVotedOnProposal;
 
     event RelayerThresholdChanged(uint indexed newThreshold);
     event RelayerAdded(address indexed relayer);
@@ -48,29 +48,29 @@ contract Bridge is Pausable, AccessControl {
     event Deposit(
         uint8   indexed destinationChainID,
         address indexed handlerAddress,
-        uint256 indexed depositNonce
+        uint64 indexed depositNonce
     );
     event ProposalCreated(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
-        uint256 indexed depositNonce,
+        uint64 indexed depositNonce,
         bytes32         dataHash
     );
     event ProposalVote(
         uint8   indexed       originChainID,
         uint8   indexed       destinationChainID,
-        uint256 indexed       depositNonce,
+        uint64 indexed       depositNonce,
         ProposalStatus status
     );
     event ProposalFinalized(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
-        uint256 indexed depositNonce
+        uint64 indexed depositNonce
     );
     event ProposalExecuted(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
-        uint256 indexed depositNonce
+        uint64 indexed depositNonce
     );
 
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
@@ -227,7 +227,7 @@ contract Bridge is Pausable, AccessControl {
         - _noVotes Number of votes against proposal.
         - _status Current status of proposal.
      */
-    function getProposal(uint8 originChainID, uint256 depositNonce) public view returns (Proposal memory) {
+    function getProposal(uint8 originChainID, uint64 depositNonce) public view returns (Proposal memory) {
         return _proposals[originChainID][depositNonce];
     }
 
@@ -269,7 +269,7 @@ contract Bridge is Pausable, AccessControl {
     function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
-        uint256 depositNonce = ++_depositCounts[destinationChainID];
+        uint64 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
 
         IDepositExecute depositHandler = IDepositExecute(handler);
@@ -291,7 +291,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
         {_relayerThreshold}.
      */
-    function voteProposal(uint8 chainID, uint256 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
+    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
@@ -333,7 +333,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Hash of {data} must equal proposal's {dataHash}.
         @notice Emits {ProposalExecuted} event.
      */
-    function executeProposal(uint8 chainID, uint256 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
+    function executeProposal(uint8 chainID, uint64 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");

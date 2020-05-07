@@ -60,16 +60,23 @@ const transferCmd = new Command("transfer")
         const data = '0x' +
             resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number(args.value)), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
-            ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify((args.recipient.length - 2)/2), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+            args.recipient.substr(2);                    // recipientAddress      (?? bytes)
 
-        // Make the deposit             
+        console.log(`[ERC20 Transfer] Constructed deposit:`)
+        console.log(`[ERC20 Transfer]   Resource Id: ${resourceID}`)
+        console.log(`[ERC20 Transfer]   Amount: ${args.value}`)
+        console.log(`[ERC20 Transfer]   len(recipient): ${args.recipient.length}`)
+        console.log(`[ERC20 Transfer]   Recipient: ${args.recipient}`)
+        console.log(`[ERC20 Transfer]   Raw: ${data}`)
 
+        // Make the deposit
         await bridgeInstance.deposit(
             args.dest, // destination chain id
             args.erc20HandlerAddress,
             data,
         );
+
         console.log("[ERC20 Transfer] Created deposit to initiate transfer!");
 
         // Check the balance after the deposit

@@ -19,7 +19,7 @@ contract GenericHandler is IGenericHandler {
     }
 
     // depositNonce => Deposit Record
-    mapping (uint8 => mapping(uint256 => DepositRecord)) public _depositRecords;
+    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
     // resourceID => contract address
     mapping (bytes32 => address) public _resourceIDToContractAddress;
@@ -94,7 +94,7 @@ contract GenericHandler is IGenericHandler {
         - _depositer Address that initially called {deposit} in the Bridge contract.
         - _metaData Data to be passed to method executed in corresponding {resourceID} contract.
     */
-    function getDepositRecord(uint256 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -142,7 +142,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(uint8 destinationChainID, uint256 depositNonce, address depositer, bytes memory data) public _onlyBridge {
+    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes memory data) public _onlyBridge {
         bytes32      resourceID;
         bytes32      lenMetadata;
         bytes memory metadata;

@@ -3,7 +3,7 @@ pragma solidity 0.6.4;
 contract NoArgument {
     event NoArgumentCalled();
 
-    function noArgument() public {
+    function noArgument() external {
         emit NoArgumentCalled();
     }
 }
@@ -11,7 +11,7 @@ contract NoArgument {
 contract OneArgument {
     event OneArgumentCalled(uint256 indexed argumentOne);
 
-    function oneArgument(uint256 argumentOne) public {
+    function oneArgument(uint256 argumentOne) external {
         emit OneArgumentCalled(argumentOne);
     }
 }
@@ -19,7 +19,7 @@ contract OneArgument {
 contract TwoArguments {
     event TwoArgumentsCalled(address[] argumentOne, bytes4 argumentTwo);
 
-    function twoArguments(address[] memory argumentOne, bytes4 argumentTwo) public {
+    function twoArguments(address[] calldata argumentOne, bytes4 argumentTwo) external {
         emit TwoArgumentsCalled(argumentOne, argumentTwo);
     }
 }
@@ -27,7 +27,7 @@ contract TwoArguments {
 contract ThreeArguments {
     event ThreeArgumentsCalled(string argumentOne, int8 argumentTwo, bool argumentThree);
 
-    function threeArguments(string memory argumentOne, int8 argumentTwo, bool argumentThree) public {
+    function threeArguments(string calldata argumentOne, int8 argumentTwo, bool argumentThree) external {
         emit ThreeArgumentsCalled(argumentOne, argumentTwo, argumentThree);
     }
 }

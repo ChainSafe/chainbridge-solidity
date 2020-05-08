@@ -187,8 +187,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
             let lenDestinationRecipientAddress := calldataload(0x84)
 
             // set up metaData
-            // let lenMeta := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
-            let lenMeta := calldataload(add(0x24, add(0x80, lenDestinationRecipientAddress)))
+            // 0xA4 is a combination of 0x24 (position of {data} in calldata) and
+            // 0x80 is the relative position of the {metadata} length in {data}
+            let lenMeta := calldataload(add(0xA4, lenDestinationRecipientAddress))
 
             mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress))) // shift free memory pointer
 

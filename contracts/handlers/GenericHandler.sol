@@ -94,7 +94,7 @@ contract GenericHandler is IGenericHandler {
         - _depositer Address that initially called {deposit} in the Bridge contract.
         - _metaData Data to be passed to method executed in corresponding {resourceID} contract.
     */
-    function getDepositRecord(uint64 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -116,7 +116,7 @@ contract GenericHandler is IGenericHandler {
         address contractAddress,
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
-    ) public override {
+    ) external override {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
@@ -142,16 +142,16 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes memory data) public _onlyBridge {
+    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external _onlyBridge {
         bytes32      resourceID;
         bytes32      lenMetadata;
         bytes memory metadata;
 
         assembly {
             // Load resource ID from data + 32
-            resourceID := mload(add(data, 0x20))
+            resourceID := calldataload(0xA4)
             // Load length of metadata from data + 64
-            lenMetadata  := mload(add(data, 0x40))
+            lenMetadata  := calldataload(0xC4)
             // Load free memory pointer
             metadata := mload(0x40)
 
@@ -196,18 +196,18 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToExecuteFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function executeDeposit(bytes memory data) public  _onlyBridge {
+    function executeDeposit(bytes calldata data) external _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         assembly {
 
-            resourceID                     := mload(add(data, 0x20))
+            resourceID := calldataload(0x44)
 
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            let lenMeta := mload(add(0x40, data))
+            let lenMeta := calldataload(0x64)
             mstore(0x40, add(0x60, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x64 after accounting for function signature, and 2 previous params

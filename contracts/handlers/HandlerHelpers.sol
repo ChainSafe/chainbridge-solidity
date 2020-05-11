@@ -36,7 +36,7 @@ contract HandlerHelpers is IERCHandler {
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function setResource(bytes32 resourceID, address contractAddress) public override _onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress) external override _onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -52,7 +52,7 @@ contract HandlerHelpers is IERCHandler {
         to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
-    function setBurnable(address contractAddress) public override _onlyBridge{
+    function setBurnable(address contractAddress) external override _onlyBridge{
         _setBurnable(contractAddress);
     }
 
@@ -74,7 +74,7 @@ contract HandlerHelpers is IERCHandler {
         @param recipient Address to release tokens to.
         @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint256 amountOrTokenID) public virtual override {}
+    function withdraw(address tokenAddress, address recipient, uint256 amountOrTokenID) external virtual override {}
 
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;

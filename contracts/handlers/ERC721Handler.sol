@@ -78,7 +78,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         - _tokenID ID of ERC721.
         - _metaData Optional ERC721 metadata.
     */
-    function getDepositRecord(uint64 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -100,7 +100,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes memory data) public override _onlyBridge {
+    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external override _onlyBridge {
         bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
@@ -110,12 +110,12 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         assembly {
 
             // Load resourceID from data + 32
-            resourceID := mload(add(data, 0x20))
+            resourceID := calldataload(0xA4)
             // Load tokenID from data + 64
-            tokenID := mload(add(data, 0x40))
+            tokenID := calldataload(0xC4)
 
             // Load length of recipient address from data + 96
-            lenDestinationRecipientAddress := mload(add(data, 0x60))
+            lenDestinationRecipientAddress := calldataload(0xE4)
             // Load free mem pointer for recipient
             destinationRecipientAddress := mload(0x40)
             // Store recipient address
@@ -171,24 +171,25 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
         metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
      */
-    function executeDeposit(bytes memory data) public override _onlyBridge {
+    function executeDeposit(bytes calldata data) external override _onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;
         bytes  memory   destinationRecipientAddress;
         bytes  memory   metaData;
 
         assembly {
-            tokenID                        := mload(add(data, 0x20))
-            resourceID                     := mload(add(data, 0x40))
+            tokenID    := calldataload(0x44)
+            resourceID := calldataload(0x64)
 
 
             // set up destinationRecipientAddress
-            destinationRecipientAddress     := mload(0x40)              // load free memory pointer
-            let lenDestinationRecipientAddress  := mload(add(data, 0x60))
+            destinationRecipientAddress        := mload(0x40)              // load free memory pointer
+            let lenDestinationRecipientAddress := calldataload(0x84)
 
             // set up metaData
-            let lenMeta    := mload(add(data, add(0x80, lenDestinationRecipientAddress)))
-
+            // 0xA4 is a combination of 0x24 (position of {data} in calldata) and
+            // 0x80 is the relative position of the {metadata} length in {data}
+            let lenMeta := calldataload(add(0xA4, lenDestinationRecipientAddress))
 
             mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress))) // shift free memory pointer
 
@@ -214,7 +215,6 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
                 metaDataLoc,                       // copy from calldata after metaData length declaration
                 sub(calldatasize(), metaDataLoc)   // copy size (calldatasize - metaDataLoc)
             )
-
         }
 
         bytes20 recipientAddress;
@@ -231,7 +231,6 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
-
     }
 
     /**
@@ -240,7 +239,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param recipient Address to release token to.
         @param tokenID The ERC721 token ID to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint tokenID) public override _onlyBridge {
+    function withdraw(address tokenAddress, address recipient, uint tokenID) external override _onlyBridge {
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 }

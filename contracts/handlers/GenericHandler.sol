@@ -13,8 +13,8 @@ contract GenericHandler is IGenericHandler {
 
     struct DepositRecord {
         uint8   _destinationChainID;
-        bytes32 _resourceID;
         address _depositer;
+        bytes32 _resourceID;
         bytes   _metaData;
     }
 
@@ -179,8 +179,8 @@ contract GenericHandler is IGenericHandler {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             destinationChainID,
-            resourceID,
             depositer,
+            resourceID,
             metadata
         );
     }

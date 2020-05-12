@@ -14,9 +14,9 @@ import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     struct DepositRecord {
         address _tokenAddress;
+        uint8    _lenDestinationRecipientAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
-        uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
         uint    _amount;
@@ -127,9 +127,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
+            uint8(lenRecipientAddress),
             destinationChainID,
             resourceID,
-            lenRecipientAddress,
             recipientAddress,
             depositer,
             amount

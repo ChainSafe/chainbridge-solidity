@@ -10,6 +10,8 @@ const Helpers = require('../helpers');
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const GenericHandlerContract = artifacts.require('GenericHandler');
+const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
 // This test does NOT include all getter methods, just 
 // getters that should work with only the constructor called
@@ -108,6 +110,18 @@ contract('Bridge - [admin]', async accounts => {
             ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
         assert.equal(await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(resourceID), ERC20MintableInstance.address);
         assert.equal(await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance.address), resourceID.toLowerCase());
+    });
+
+    // Set Generic Resource
+
+    it('Should set a Generic Resource ID and contract address', async () => {
+        const CentrifugeAssetInstance = await CentrifugeAssetContract.new();
+        const resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
+        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, [], [], [], []);
+
+        TruffleAssert.passes(await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, '0x00000000', '0x00000000'));
+        assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), CentrifugeAssetInstance.address);
+        assert.equal(await GenericHandlerInstance._contractAddressToResourceID.call(CentrifugeAssetInstance.address), resourceID.toLowerCase());
     });
 
     // Set burnable

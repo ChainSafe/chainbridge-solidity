@@ -5,6 +5,8 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers = require('../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -82,11 +84,24 @@ contract('Bridge - [admin]', async accounts => {
         assert.isTrue(await BridgeInstance.hasRole(ADMIN_ROLE, expectedBridgeAdmin2));
     });
 
+    // Set Handler Address
+
+    it('Should set a Resource ID for handler address', async () => {
+        const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [], [], []);
+
+        assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), Ethers.constants.AddressZero);
+
+        TruffleAssert.passes(await BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID));
+        assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), ERC20HandlerInstance.address);
+    });
+
     // Set resource ID
 
     it('Should set a ERC20 Resource ID and contract address', async () => {
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [], [], []);
 
         TruffleAssert.passes(await BridgeInstance.adminSetResource(
@@ -99,7 +114,7 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should set ERC20MintableInstance.address as burnable', async () => {
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [resourceID], [ERC20MintableInstance.address], []);
 
         TruffleAssert.passes(await BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance.address));
@@ -127,7 +142,7 @@ contract('Bridge - [admin]', async accounts => {
         let handlerBalance;
 
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [resourceID], [ERC20MintableInstance.address], []);
 
         await ERC20MintableInstance.mint(tokenOwner, numTokens);

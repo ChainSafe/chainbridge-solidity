@@ -149,7 +149,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
             uint8(lenDestinationRecipientAddress),
-            destinationChainID,
+            uint8(destinationChainID),
             resourceID,
             destinationRecipientAddress,
             depositer,

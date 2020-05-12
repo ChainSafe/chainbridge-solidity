@@ -4,22 +4,18 @@
  */
 
 const TruffleAssert = require('truffle-assertions');
-const Ethers = require('ethers');
+
+const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
-contract('Bridge - [deposit - Generic]', async (accounts) => {
-    const relayerThreshold = 2;
+contract('Bridge - [deposit - Generic]', async () => {
     const originChainID = 1;
     const destinationChainID = 2;
-    const recipientAddress = accounts[1];
     const expectedDepositNonce = 1;
-    const blankFunctionSig = '0x00000000';
-    const centrifugeAssetFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes('store(bytes32)'))).substr(0, 10);
-
-    let RelayerInstance;
+    
     let BridgeInstance;
     let GenericHandlerInstance;
     let depositData;
@@ -33,11 +29,12 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
             BridgeInstance = BridgeContract.new(originChainID, [], 0, 0).then(instance => BridgeInstance = instance)
         ]);
-
-        initialResourceIDs = [Ethers.utils.hexZeroPad((CentrifugeAssetInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)];
+        
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originChainID)
+        initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
-        initialDepositFunctionSignatures = [blankFunctionSig];
-        initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
+        initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
+        initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store')];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address,
@@ -45,17 +42,16 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
             initialContractAddresses,
             initialDepositFunctionSignatures,
             initialExecuteFunctionSignatures);
+            
+        await BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, resourceID);
 
-        depositData = '0x' +
-            initialResourceIDs[0].substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(4), 32).substr(2) // len(metaData)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(0xdeadbeef), 4).substr(2) // metaData
+        depositData = Helpers.createGenericDepositData(resourceID, '0xdeadbeef');
     });
 
     it('Generic deposit can be made', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
             destinationChainID,
-            GenericHandlerInstance.address,
+            resourceID,
             depositData
         ));
     });
@@ -63,7 +59,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     it('_depositCounts is incremented correctly after deposit', async () => {
         await BridgeInstance.deposit(
             destinationChainID,
-            GenericHandlerInstance.address,
+            resourceID,
             depositData
         );
 
@@ -74,7 +70,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     it('Generic deposit is stored correctly', async () => {
         await BridgeInstance.deposit(
             destinationChainID,
-            GenericHandlerInstance.address,
+            resourceID,
             depositData
         );
         
@@ -85,13 +81,13 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     it('Deposit event is fired with expected value after Generic deposit', async () => {
         const depositTx = await BridgeInstance.deposit(
             destinationChainID,
-            GenericHandlerInstance.address,
+            resourceID,
             depositData
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationChainID.toNumber() === destinationChainID &&
-                event.handlerAddress === GenericHandlerInstance.address &&
+                event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });
     });

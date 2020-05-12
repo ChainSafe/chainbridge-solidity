@@ -80,6 +80,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialContractAddresses,
             initialDepositFunctionSignatures,
             initialExecuteFunctionSignatures);
+        
+        await Promise.all([
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[0]),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[1]),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[2]),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[3]),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[4])
+        ]);
                 
         depositData = Helpers.createGenericDepositData(initialResourceIDs[0], '0xdeadbeef');
     });
@@ -87,7 +95,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     it('deposit can be made successfully', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[0],
             depositData,
             { from: depositerAddress }
         ));
@@ -103,7 +111,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
         TruffleAssert.passes(await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[0],
             depositData,
             { from: depositerAddress }
         ));
@@ -122,7 +130,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
         const depositTx = await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[1],
             Helpers.createGenericDepositData(initialResourceIDs[1], null),
             { from: depositerAddress }
         );
@@ -145,7 +153,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         
         const depositTx = await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[2],
             Helpers.createGenericDepositData(initialResourceIDs[2], Helpers.toHex(argumentOne, 32)),
             { from: depositerAddress }
         );
@@ -170,7 +178,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         
         const depositTx = await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[3],
             Helpers.createGenericDepositData(initialResourceIDs[3], encodedMetaData),
             { from: depositerAddress }
         );
@@ -199,7 +207,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         
         const depositTx = await BridgeInstance.deposit(
             chainID,
-            GenericHandlerInstance.address,
+            initialResourceIDs[4],
             Helpers.createGenericDepositData(initialResourceIDs[4], encodedMetaData),
             { from: depositerAddress }
         );

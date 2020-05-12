@@ -28,6 +28,18 @@
         recipientAddress.substr(2);                                                        // recipientAddress               (?? bytes)
 };
 
+const createERC721DepositProposalData = (
+    resourceID, tokenAmountOrID, lenRecipientAddress,
+    recipientAddress, lenMetaData, metaData) => {
+    return '0x' +
+        resourceID.substr(2) +
+        toHex(tokenAmountOrID, 32).substr(2) +     // Token amount or ID to deposit (32 bytes)
+        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
+        recipientAddress.substr(2) +               // recipientAddress               (?? bytes)
+        toHex(lenMetaData, 32).substr(2) +
+        toHex(metaData, lenMetaData).substr(2)
+};
+
 const createGenericDepositData = (resourceID, hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
@@ -66,9 +78,16 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
             if (actualValue.toNumber !== undefined) {
                 actualValue = actualValue.toNumber();
             }
-        }
 
-        assert.equal(expectedValue, actualValue, `expectedValue does not match actualValue`);
+            // Truffle seems to return uint/ints as strings
+            // Also handles when Truffle returns hex number when expecting uint/int
+            if (typeof expectedValue === 'number' && typeof actualValue === 'string' ||
+                Ethers.utils.isHexString(actualValue) && typeof expectedValue === 'number') {
+                actualValue = parseInt(actualValue);
+            }
+        }
+        
+        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);    
     }
 };
 
@@ -79,6 +98,7 @@ module.exports = {
     getFunctionSignature,
     createERCDepositData,
     createGenericDepositData,
+    createERC721DepositProposalData,
     createResourceID,
     assertObjectsMatch
 };

@@ -43,7 +43,10 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
             ERC20MintableInstance.mint(depositerAddress, tokenAmount)
         ]);
 
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress });
+        await Promise.all([
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID)
+        ]);
     });
 
     it('[sanity] depositer owns tokenAmount od ERC20', async () => {
@@ -71,7 +74,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         
         await BridgeInstance.deposit(
             chainID,
-            ERC20HandlerInstance.address,
+            resourceID,
             Helpers.createERCDepositData(
                 resourceID,
                 tokenAmount,
@@ -99,7 +102,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
         await BridgeInstance.deposit(
             chainID,
-            ERC20HandlerInstance.address,
+            resourceID,
             Helpers.createERCDepositData(
                 resourceID,
                 tokenAmount,

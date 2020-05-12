@@ -27,14 +27,17 @@ contract Bridge is Pausable, AccessControl {
     enum ProposalStatus {Inactive, Active, Passed, Transferred}
 
     struct Proposal {
-        bytes32         _dataHash;
-        address[]       _yesVotes;
-        address[]       _noVotes;
-        ProposalStatus  _status;
+        bytes32        _resourceID;
+        bytes32        _dataHash;
+        address[]      _yesVotes;
+        address[]      _noVotes;
+        ProposalStatus _status;
     }
 
     // destinationChainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
+    // resourceID => handler address
+    mapping(bytes32 => address) public _resourceIDToHandlerAddress;
     // destinationChainID => depositNonce => bytes
     mapping(uint8 => mapping(uint64 => bytes)) public _depositRecords;
     // destinationChainID => depositNonce => Proposal
@@ -47,25 +50,28 @@ contract Bridge is Pausable, AccessControl {
     event RelayerRemoved(address indexed relayer);
     event Deposit(
         uint8   indexed destinationChainID,
-        address indexed handlerAddress,
-        uint64 indexed depositNonce
+        bytes32 indexed resourceID,
+        uint64  indexed depositNonce
     );
     event ProposalCreated(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
-        uint64 indexed depositNonce,
+        uint64  indexed depositNonce,
+        bytes32         resourceID,
         bytes32         dataHash
     );
     event ProposalVote(
-        uint8   indexed       originChainID,
-        uint8   indexed       destinationChainID,
-        uint64 indexed       depositNonce,
+        uint8   indexed originChainID,
+        uint8   indexed destinationChainID,
+        uint64  indexed depositNonce,
+        bytes32         resourceID,
         ProposalStatus status
     );
     event ProposalFinalized(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
-        uint64 indexed depositNonce
+        uint64  indexed depositNonce,
+        bytes32         resourceID
     );
     event ProposalExecuted(
         uint8   indexed originChainID,
@@ -177,19 +183,32 @@ contract Bridge is Pausable, AccessControl {
     }
 
     /**
-        @notice Sets a new resource for handler contracts that use the IERCHandler interface.
+        @notice Maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
+        @notice Only callable by an address that currently has the admin role.
+        @param handlerAddress Address of handler resource will be mapped to.
+        @param resourceID ResourceID to be used when making deposits.
+     */
+    function adminSetHandlerAddress(address handlerAddress, bytes32 resourceID) external onlyAdmin {
+        _setHandlerAddress(handlerAddress, resourceID);
+    }
+
+    /**
+        @notice Sets a new resource for handler contracts that use the IERCHandler interface,
+        and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
         @notice Only callable by an address that currently has the admin role.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
     function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAdmin {
+        _setHandlerAddress(handlerAddress, resourceID);
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
     }
 
     /**
-        @notice Sets a new resource for handler contracts that use the IGenericHandler interface.
+        @notice Sets a new resource for handler contracts that use the IGenericHandler interface,
+        and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
         @notice Only callable by an address that currently has the admin role.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
@@ -202,6 +221,7 @@ contract Bridge is Pausable, AccessControl {
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
     ) external onlyAdmin {
+        _setHandlerAddress(handlerAddress, resourceID);
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
@@ -262,12 +282,15 @@ contract Bridge is Pausable, AccessControl {
         @notice Initiates a transfer using a specified handler contract.
         @notice Only callable when Bridge is not paused.
         @param destinationChainID ID of chain deposit will be bridged to.
-        @param handler Address of handler to be used for deposit.
+        @param resourceID ResourceID used to find address of handler to be used for deposit.
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit (uint8 destinationChainID, address handler, bytes calldata data) external payable whenNotPaused {
+    function deposit (uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
+
+        address handler = _resourceIDToHandlerAddress[resourceID];
+        require(handler != address(0), "resourceID not mapped to handler address");
 
         uint64 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[destinationChainID][depositNonce] = data;
@@ -275,7 +298,7 @@ contract Bridge is Pausable, AccessControl {
         IDepositExecute depositHandler = IDepositExecute(handler);
         depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
 
-        emit Deposit(destinationChainID, handler, depositNonce);
+        emit Deposit(destinationChainID, resourceID, depositNonce);
     }
 
     /**
@@ -291,15 +314,17 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
         {_relayerThreshold}.
      */
-    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) external onlyRelayers whenNotPaused {
+    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) external onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
+        require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
         require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
         require(!_hasVotedOnProposal[chainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;
             _proposals[chainID][depositNonce] = Proposal({
+                _resourceID: resourceID,
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
                 _noVotes: new address[](0),
@@ -307,19 +332,19 @@ contract Bridge is Pausable, AccessControl {
                 });
 
             proposal._yesVotes[0] = msg.sender;
-            emit ProposalCreated(chainID, _chainID, depositNonce, dataHash);
+            emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
             proposal._yesVotes.push(msg.sender);
         }
 
         _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
-        emit ProposalVote(chainID, _chainID, depositNonce, proposal._status);
+        emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
 
         // If _depositThreshold is set to 1, then auto finalize
         // or if _relayerThreshold has been exceeded
         if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
             proposal._status = ProposalStatus.Passed;
-            emit ProposalFinalized(chainID, _chainID, depositNonce);
+            emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
         }
     }
 
@@ -333,15 +358,16 @@ contract Bridge is Pausable, AccessControl {
         @notice Hash of {data} must equal proposal's {dataHash}.
         @notice Emits {ProposalExecuted} event.
      */
-    function executeProposal(uint8 chainID, uint64 depositNonce, address handler, bytes calldata data) external onlyRelayers whenNotPaused {
+    function executeProposal(uint8 chainID, uint64 depositNonce, bytes calldata data) external onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
+        address handler = _resourceIDToHandlerAddress[proposal._resourceID];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
         require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
         require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
             "provided data does not match proposal's data hash");
 
-        IDepositExecute depositHandler = IDepositExecute(handler);
+        IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
         depositHandler.executeDeposit(data);
 
         proposal._status = ProposalStatus.Transferred;
@@ -358,5 +384,10 @@ contract Bridge is Pausable, AccessControl {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }
+    }
+
+    function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
+        require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
+        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
     }
 }

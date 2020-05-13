@@ -15,6 +15,19 @@ const mintCmd = new Command("mint")
         console.log(`[ERC20 Mint] Successfully minted ${args.value} tokens to ${args.wallet.address}`);
     })
 
+const addMinterCmd = new Command("add-minter")
+    .description("Add a new minter to the contract")
+    .option('--erc20Address <address>', 'erc20 contract address', constants.ERC20_ADDRESS)
+    .option('--minter <address>', 'Minter address', constants.relayerAddresses[1])
+    .action(async function(args) {
+            await setupParentArgs(args, args.parent.parent)
+            const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
+            let MINTER_ROLE = await erc20Instance.MINTER_ROLE()
+            await erc20Instance.grantRole(MINTER_ROLE, args.minter);
+            console.log(`[ERC20 Add Minter] Added ${args.minter} as a minter of ${args.erc20Address}`)
+    })
+
+
 const transferCmd = new Command("transfer")
     .description("Initiates a bridge transfer")
     .option('--value <amount>', "Amount to transfer", 1)
@@ -30,8 +43,6 @@ const transferCmd = new Command("transfer")
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
         const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
         const erc20HandlerInstance = new ethers.Contract(args.erc20HandlerAddress, constants.ContractABIs.Erc20Handler.abi, args.wallet);
-
-        console.log("[ERC20 Transfer] whitelisted ERC20 token contracts!");
 
         // Log pre balance
         const depositerPreBal = await erc20Instance.balanceOf(args.wallet.address);
@@ -49,16 +60,23 @@ const transferCmd = new Command("transfer")
         const data = '0x' +
             resourceID.substr(2) +              // OriginHandlerAddress  (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number(args.value)), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 32).substr(2) +    // len(recipientAddress) (32 bytes)
-            ethers.utils.hexZeroPad(args.recipient, 32).substr(2);                    // recipientAddress      (?? bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify((args.recipient.length - 2)/2), 32).substr(2) +    // len(recipientAddress) (32 bytes)
+            args.recipient.substr(2);                    // recipientAddress      (?? bytes)
 
-        // Make the deposit             
+        console.log(`[ERC20 Transfer] Constructed deposit:`)
+        console.log(`[ERC20 Transfer]   Resource Id: ${resourceID}`)
+        console.log(`[ERC20 Transfer]   Amount: ${args.value}`)
+        console.log(`[ERC20 Transfer]   len(recipient): ${args.recipient.length}`)
+        console.log(`[ERC20 Transfer]   Recipient: ${args.recipient}`)
+        console.log(`[ERC20 Transfer]   Raw: ${data}`)
 
+        // Make the deposit
         await bridgeInstance.deposit(
             args.dest, // destination chain id
             args.erc20HandlerAddress,
             data,
         );
+
         console.log("[ERC20 Transfer] Created deposit to initiate transfer!");
 
         // Check the balance after the deposit
@@ -83,6 +101,7 @@ const balanceCmd = new Command("balance")
 const erc20Cmd = new Command("erc20")
 
 erc20Cmd.addCommand(mintCmd)
+erc20Cmd.addCommand(addMinterCmd)
 erc20Cmd.addCommand(transferCmd)
 erc20Cmd.addCommand(balanceCmd)
 

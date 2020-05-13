@@ -15,6 +15,18 @@ const mintCmd = new Command("mint")
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
     })
 
+const addMinterCmd = new Command("add-minter")
+    .description("Add a new minter to the contract")
+    .option('--erc721Address <address>', 'erc721 contract address', constants.ERC721_ADDRESS)
+    .option('--minter <address>', 'Minter address', constants.relayerAddresses[1])
+    .action(async function(args) {
+            await setupParentArgs(args, args.parent.parent)
+            const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+            let MINTER_ROLE = await erc721Instance.MINTER_ROLE()
+            await erc721Instance.grantRole(MINTER_ROLE, args.minter);
+            console.log(`[ERC721 Add Minter] Added ${args.minter} as a minter of ${args.erc721Address}`)
+    })
+
 const transferCmd = new Command("transfer")
     .description("Initiates a bridge transfer")
     .option('--id <id>', "ERC721 token id", 1)
@@ -58,6 +70,7 @@ const transferCmd = new Command("transfer")
 const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
+erc721Cmd.addCommand(addMinterCmd)
 erc721Cmd.addCommand(transferCmd)
 
 module.exports = erc721Cmd

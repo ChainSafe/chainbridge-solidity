@@ -16,7 +16,7 @@ contract CentrifugeAsset {
     @notice {asset} must not have already been stored.
     @notice Emits {AssetStored} event.
    */
-  function store(bytes32 asset) public {
+  function store(bytes32 asset) external {
       require(!_assetsStored[asset], "asset is already stored");
 
       _assetsStored[asset] = true;

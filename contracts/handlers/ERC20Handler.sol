@@ -12,8 +12,6 @@ import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
-    bool public _useContractWhitelist;
-
     struct DepositRecord {
         address _tokenAddress;
         uint8   _destinationChainID;
@@ -71,7 +69,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         - _depositer Address that initially called {deposit} in the Bridge contract.
         - _amount Amount of tokens that were deposited.
     */
-    function getDepositRecord(uint64 depositNonce, uint8 destId) public view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -95,8 +93,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         uint8 destinationChainID,
         uint64 depositNonce,
         address depositer,
-        bytes memory data
-    ) public override _onlyBridge {
+        bytes calldata data
+    ) external override _onlyBridge {
         bytes32        resourceID;
         bytes   memory recipientAddress;
         uint256        amount;
@@ -104,11 +102,11 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         assembly {
 
-            resourceID := mload(add(data, 0x20))
-            amount := mload(add(data, 0x40))
+            resourceID := calldataload(0xA4)
+            amount := calldataload(0xC4)
 
             recipientAddress := mload(0x40)
-            lenRecipientAddress := mload(add(0x60, data))
+            lenRecipientAddress := calldataload(0xE4)
             mstore(0x40, add(0x20, add(recipientAddress, lenRecipientAddress)))
 
             calldatacopy(
@@ -149,18 +147,17 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         destinationRecipientAddress length     uint256     bytes  64 - 96
         destinationRecipientAddress            bytes       bytes  96 - END
      */
-    function executeDeposit(bytes memory data) public override _onlyBridge {
+    function executeDeposit(bytes calldata data) external override _onlyBridge {
         uint256       amount;
         bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
 
-
         assembly {
-            resourceID := mload(add(data, 0x20))
-            amount := mload(add(data, 0x40))
+            resourceID := calldataload(0x44)
+            amount := calldataload(0x64)
 
             destinationRecipientAddress := mload(0x40)
-            let lenDestinationRecipientAddress := mload(add(0x60, data))
+            let lenDestinationRecipientAddress := calldataload(0x84)
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
@@ -193,7 +190,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @param recipient Address to release tokens to.
         @param amount The amount of ERC20 tokens to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint amount) public override _onlyBridge {
+    function withdraw(address tokenAddress, address recipient, uint amount) external override _onlyBridge {
         releaseERC20(tokenAddress, recipient, amount);
     }
 }

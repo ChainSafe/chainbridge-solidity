@@ -111,7 +111,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Returns true if {relayer} has the relayer role.
         @param relayer Address to check.
      */
-    function isRelayer(address relayer) public view returns (bool) {
+    function isRelayer(address relayer) external view returns (bool) {
         return hasRole(RELAYER_ROLE, relayer);
     }
 
@@ -120,7 +120,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Only callable by an address that currently has the admin role.
         @param newAdmin Address that admin role will be granted to.
      */
-    function renounceAdmin(address newAdmin) public onlyAdmin {
+    function renounceAdmin(address newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -129,7 +129,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Pauses deposits, proposal creation and voting, and deposit executions.
         @notice Only callable by an address that currently has the admin role.
      */
-    function adminPauseTransfers() public onlyAdmin {
+    function adminPauseTransfers() external onlyAdmin {
         _pause();
     }
 
@@ -137,7 +137,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Unpauses deposits, proposal creation and voting, and deposit executions.
         @notice Only callable by an address that currently has the admin role.
      */
-    function adminUnpauseTransfers() public onlyAdmin {
+    function adminUnpauseTransfers() external onlyAdmin {
         _unpause();
     }
 
@@ -147,7 +147,7 @@ contract Bridge is Pausable, AccessControl {
         @param newThreshold Value {_relayerThreshold} will be changed to.
         @notice Emits {RelayerThresholdChanged} event.
      */
-    function adminChangeRelayerThreshold(uint newThreshold) public onlyAdmin {
+    function adminChangeRelayerThreshold(uint newThreshold) external onlyAdmin {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
     }
@@ -158,7 +158,7 @@ contract Bridge is Pausable, AccessControl {
         @param relayerAddress Address of relayer to be added.
         @notice Emits {RelayerAdded} event.
      */
-    function adminAddRelayer(address relayerAddress) public onlyAdmin {
+    function adminAddRelayer(address relayerAddress) external onlyAdmin {
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
         _totalRelayers++;
@@ -170,7 +170,7 @@ contract Bridge is Pausable, AccessControl {
         @param relayerAddress Address of relayer to be removed.
         @notice Emits {RelayerRemoved} event.
      */
-    function adminRemoveRelayer(address relayerAddress) public onlyAdmin {
+    function adminRemoveRelayer(address relayerAddress) external onlyAdmin {
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);
         _totalRelayers--;
@@ -183,7 +183,7 @@ contract Bridge is Pausable, AccessControl {
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) public onlyAdmin {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
     }
@@ -201,7 +201,7 @@ contract Bridge is Pausable, AccessControl {
         address contractAddress,
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
-    ) public onlyAdmin {
+    ) external onlyAdmin {
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
@@ -212,7 +212,7 @@ contract Bridge is Pausable, AccessControl {
         @param handlerAddress Address of handler resource will be set for.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetBurnable(address handlerAddress, address tokenAddress) public onlyAdmin {
+    function adminSetBurnable(address handlerAddress, address tokenAddress) external onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setBurnable(tokenAddress);
     }
@@ -227,7 +227,7 @@ contract Bridge is Pausable, AccessControl {
         - _noVotes Number of votes against proposal.
         - _status Current status of proposal.
      */
-    function getProposal(uint8 originChainID, uint64 depositNonce) public view returns (Proposal memory) {
+    function getProposal(uint8 originChainID, uint64 depositNonce) external view returns (Proposal memory) {
         return _proposals[originChainID][depositNonce];
     }
 
@@ -236,7 +236,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Only callable by admin.
         @param newFee Value {_fee} will be updated to.
      */
-    function adminChangeFee(uint newFee) public onlyAdmin {
+    function adminChangeFee(uint newFee) external onlyAdmin {
         require(_fee != newFee, "Current fee is equal to proposed new fee");
         _fee = newFee;
     }
@@ -253,7 +253,7 @@ contract Bridge is Pausable, AccessControl {
         address tokenAddress,
         address recipient,
         uint256 amountOrTokenID
-    ) public onlyAdmin {
+    ) external onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.withdraw(tokenAddress, recipient, amountOrTokenID);
     }
@@ -266,7 +266,7 @@ contract Bridge is Pausable, AccessControl {
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit (uint8 destinationChainID, address handler, bytes memory data) public payable whenNotPaused {
+    function deposit (uint8 destinationChainID, address handler, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
         uint64 depositNonce = ++_depositCounts[destinationChainID];
@@ -291,7 +291,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
         {_relayerThreshold}.
      */
-    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyRelayers whenNotPaused {
+    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) external onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
@@ -333,7 +333,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Hash of {data} must equal proposal's {dataHash}.
         @notice Emits {ProposalExecuted} event.
      */
-    function executeProposal(uint8 chainID, uint64 depositNonce, address handler, bytes memory data) public onlyRelayers whenNotPaused {
+    function executeProposal(uint8 chainID, uint64 depositNonce, address handler, bytes calldata data) external onlyRelayers whenNotPaused {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
@@ -354,7 +354,7 @@ contract Bridge is Pausable, AccessControl {
         @param addrs Array of addresses to transfer {amounts} to.
         @param amounts Array of amonuts to transfer to {addrs}.
      */
-    function transferFunds(address payable[] memory addrs, uint[] memory amounts) public onlyAdmin {
+    function transferFunds(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
         for (uint i = 0;i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }

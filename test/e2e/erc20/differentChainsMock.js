@@ -1,13 +1,13 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers = require('../../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Two EVM Chains', async accounts => {
-    const AbiCoder = new Ethers.utils.AbiCoder();
-
     const originRelayerThreshold = 2;
     const originChainID = 1;
     const originRelayer1Address = accounts[3];
@@ -23,8 +23,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
-
-    let OriginRelayerInstance;
+    
     let OriginBridgeInstance;
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
@@ -55,12 +54,12 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
 
-        originResourceID = Ethers.utils.hexZeroPad((OriginERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        originResourceID = Helpers.createResourceID(OriginERC20MintableInstance.address, originChainID);
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC20MintableInstance.address];
         originBurnableContractAddresses = [OriginERC20MintableInstance.address];
 
-        destinationResourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
+        destinationResourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, originChainID);
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC20MintableInstance.address];
         destinationBurnableContractAddresses = [DestinationERC20MintableInstance.address];
@@ -73,40 +72,24 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ]);
 
         await OriginERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
-        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
-        await OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address);
 
-        await DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address);
+        await Promise.all([
+            OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
+            OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
+            DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
+            OriginBridgeInstance.adminSetHandlerAddress(OriginERC20HandlerInstance.address, originResourceID),
+            DestinationBridgeInstance.adminSetHandlerAddress(DestinationERC20HandlerInstance.address, destinationResourceID)
+        ]);
 
-        originDepositData = '0x' +
-            originResourceID.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
-
-        originDepositProposalData = '0x' +
-            destinationResourceID.substr(2) +                                               // resourceID            (64 bytes) for now
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes) 
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexlify(recipientAddress).substr(2);                               // recipientAddress      (?? bytes)
-            
+        originDepositData = Helpers.createERCDepositData(originResourceID, depositAmount, 32, recipientAddress);
+        originDepositProposalData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 20, recipientAddress);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
-
-        destinationDepositData = '0x' +
-            destinationResourceID.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +       // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +                  // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(depositerAddress, 32).substr(2);                           // recipientAddress      (?? bytes)
-
-        destinationDepositProposalData = '0x' +
-            originResourceID.substr(2) +                                                      // resourceID            (64 bytes) for now
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +      // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(20), 32).substr(2) +                 // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexlify(depositerAddress).substr(2);                                 // recipientAddress      (?? bytes)
-            
+        
+        destinationDepositData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 32, depositerAddress);
+        destinationDepositProposalData = Helpers.createERCDepositData(originResourceID, depositAmount, 20, depositerAddress);
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC20HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
-
+    
     it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {
         const depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
         assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount);
@@ -123,14 +106,13 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20 owned by recipientAddress and back again", async () => {
-        let handlerBalance;
         let depositerBalance;
         let recipientBalance;
 
         // depositerAddress makes initial deposit of depositAmount
         TruffleAssert.passes(await OriginBridgeInstance.deposit(
             destinationChainID,
-            OriginERC20HandlerInstance.address,
+            originResourceID,
             originDepositData,
             { from: depositerAddress }
         ));
@@ -139,6 +121,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
             originChainID,
             expectedDepositNonce,
+            destinationResourceID,
             originDepositProposalDataHash,
             { from: destinationRelayer1Address }
         ));
@@ -150,6 +133,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
             originChainID,
             expectedDepositNonce,
+            destinationResourceID,
             originDepositProposalDataHash,
             { from: destinationRelayer2Address }
         ));
@@ -159,7 +143,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await DestinationBridgeInstance.executeProposal(
             originChainID,
             expectedDepositNonce,
-            DestinationERC20HandlerInstance.address,
             originDepositProposalData,
             { from: destinationRelayer2Address }
         ));
@@ -184,7 +167,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // recipientAddress makes a deposit of the received depositAmount
         TruffleAssert.passes(await DestinationBridgeInstance.deposit(
             originChainID,
-            DestinationERC20HandlerInstance.address,
+            destinationResourceID,
             destinationDepositData,
             { from: recipientAddress }
         ));
@@ -197,6 +180,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
+            originResourceID,
             destinationDepositProposalDataHash,
             { from: originRelayer1Address }
         ));
@@ -207,6 +191,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
+            originResourceID,
             destinationDepositProposalDataHash,
             { from: originRelayer2Address }
         ));
@@ -215,7 +200,6 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         TruffleAssert.passes(await OriginBridgeInstance.executeProposal(
             destinationChainID,
             expectedDepositNonce,
-            OriginERC20HandlerInstance.address,
             destinationDepositProposalData,
             { from: originRelayer2Address }
         ));

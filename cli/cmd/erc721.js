@@ -34,6 +34,7 @@ const transferCmd = new Command("transfer")
     .option(`--recipient <address>`, 'Destination recipient address', constants.relayerAddresses[4])
     .option('--erc721Address <address>', 'Custom erc721 contract', constants.ERC721_ADDRESS)
     .option('--erc721HandlerAddress <address>', 'Custom erc721 handler', constants.ERC721_HANDLER_ADDRESS)
+    .option('--resourceID <resourceID>', 'Custom resourceID', constants.ERC721_RESOURCEID)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
 
     .action(async function (args) {
@@ -62,7 +63,7 @@ const transferCmd = new Command("transfer")
         // Perform deposit
         await bridgeInstance.deposit(
             args.dest, // destination chain id
-            args.erc721HandlerAddress,
+            args.resourceID,
             depositData);
         console.log("[ERC721 Transfer] Created deposit to initiate transfer!")
     })

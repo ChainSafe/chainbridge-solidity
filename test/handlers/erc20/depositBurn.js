@@ -5,6 +5,8 @@
 
 const Ethers = require('ethers');
 
+const Helpers = require('../../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
@@ -37,8 +39,8 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
 
-        resourceID1 = Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
-        resourceID2 = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        resourceID1 = Helpers.createResourceID(ERC20MintableInstance1.address, chainID);
+        resourceID2 = Helpers.createResourceID(ERC20MintableInstance2.address, chainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address];
         burnableContractAddresses = [ERC20MintableInstance1.address];
@@ -48,13 +50,13 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
             ERC20MintableInstance1.mint(depositerAddress, initialTokenAmount)
         ]);
 
-        await ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
+        await Promise.all([
+            ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID1),
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID2),
+        ]);
 
-        depositData = '0x' +
-            resourceID1.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
+        depositData = Helpers.createERCDepositData(resourceID1, depositAmount, 32, recipientAddress);
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {
@@ -72,7 +74,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     it('depositAmount of ERC20MintableInstance1 tokens should have been burned', async () => {
         await BridgeInstance.deposit(
             chainID,
-            ERC20HandlerInstance.address,
+            resourceID1,
             depositData,
             { from: depositerAddress }
         );
@@ -90,7 +92,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     it('_burnedTokens for ERC20MintableInstance1.address should have been incremented by depositAmount', async () => {
         await BridgeInstance.deposit(
             chainID,
-            ERC20HandlerInstance.address,
+            resourceID1,
             depositData,
             { from: depositerAddress }
         );

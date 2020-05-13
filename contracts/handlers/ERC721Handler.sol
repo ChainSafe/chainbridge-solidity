@@ -164,8 +164,8 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param data Consists of {tokenID}, {resourceID}, {lenDestinationRecipientAddress},
         {destinationRecipientAddress}, {lenMeta}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        tokenID                                     uint256    bytes     0 - 32
-        resourceID                                  bytes32    bytes    32 - 64
+        resourceID                                  bytes32    bytes    0 - 32
+        tokenID                                     uint256    bytes    32 - 64
         destinationRecipientAddress     length      uint256    bytes    64 - 96
         destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
         metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
@@ -178,8 +178,8 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         bytes  memory   metaData;
 
         assembly {
-            tokenID    := calldataload(0x44)
-            resourceID := calldataload(0x64)
+            resourceID := calldataload(0x44)
+            tokenID    := calldataload(0x64)
 
 
             // set up destinationRecipientAddress

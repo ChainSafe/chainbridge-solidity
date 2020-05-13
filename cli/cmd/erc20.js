@@ -35,6 +35,7 @@ const transferCmd = new Command("transfer")
     .option('--recipient <address>', 'Destination recipient address', constants.relayerAddresses[4])
     .option('--erc20Address <address>', 'Custom erc20 address', constants.ERC20_ADDRESS)
     .option('--erc20HandlerAddress <address>', 'Custom erc20Handler contract', constants.ERC20_HANDLER_ADDRESS)
+    .option('--resourceID <resourceID>', 'Custom resourceID', constants.ERC20_RESOURCEID)
     .option('--bridgeAddress <address>', 'Custom bridge address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
         setupParentArgs(args, args.parent.parent)
@@ -73,7 +74,7 @@ const transferCmd = new Command("transfer")
         // Make the deposit
         await bridgeInstance.deposit(
             args.dest, // destination chain id
-            args.erc20HandlerAddress,
+            args.resourceID,
             data,
         );
 

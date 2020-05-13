@@ -4,7 +4,8 @@
  */
  
  const TruffleAssert = require('truffle-assertions');
- const Ethers = require('ethers');
+
+ const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
@@ -37,8 +38,8 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
 
-        resourceID1 = Ethers.utils.hexZeroPad((ERC721MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
-        resourceID2 = Ethers.utils.hexZeroPad((ERC721MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, chainID);
+        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, chainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC721MintableInstance1.address, ERC721MintableInstance2.address];
         burnableContractAddresses = [ERC721MintableInstance1.address]
@@ -47,14 +48,14 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
         ]);
+            
+        await Promise.all([
+            ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
+            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, resourceID1),
+            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, resourceID2),
+        ]);
 
-        await ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
-
-        depositData = '0x' +
-            resourceID1.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(tokenID), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) +               // len(recipientAddress) (32 bytes)
-            Ethers.utils.hexZeroPad(recipientAddress, 32).substr(2);                        // recipientAddress      (?? bytes)
+        depositData = Helpers.createERCDepositData(resourceID1, tokenID, 32, recipientAddress);
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {
@@ -72,7 +73,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
     it('depositAmount of ERC721MintableInstance1 tokens should have been burned', async () => {
         await BridgeInstance.deposit(
             chainID,
-            ERC721HandlerInstance.address,
+            resourceID1,
             depositData,
             { from: depositerAddress }
         );
@@ -85,5 +86,6 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
         await TruffleAssert.reverts(
             ERC721MintableInstance1.ownerOf(tokenID),
-            'ERC721: owner query for nonexistent token');    });
+            'ERC721: owner query for nonexistent token');
+    });
 });

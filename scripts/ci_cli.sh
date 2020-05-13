@@ -11,12 +11,14 @@ set -eux
 cb-sol-cli deploy
 
 cb-sol-cli erc20 mint
+cb-sol-cli erc20 add-minter
 cb-sol-cli bridge register-resource
 cb-sol-cli bridge set-burn
 cb-sol-cli erc20 transfer
 cb-sol-cli erc20 balance
 
 cb-sol-cli erc721 mint
+cb-sol-cli erc721 add-minter
 cb-sol-cli bridge register-resource --handler $ERC721_HANDLER --resourceID $ERC721_RESOURCE_ID --targetContract $ERC721_CONTRACT
 cb-sol-cli bridge set-burn --handler $ERC721_HANDLER --tokenContract $ERC721_CONTRACT
 cb-sol-cli erc721 transfer

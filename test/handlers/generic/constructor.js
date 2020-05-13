@@ -6,6 +6,8 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers = require('../../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
@@ -35,9 +37,9 @@ contract('GenericHandler - [constructor]', async () => {
         ]);
 
         initialResourceIDs = [
-            Ethers.utils.hexZeroPad((CentrifugeAssetInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32),
-            Ethers.utils.hexZeroPad((CentrifugeAssetInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32),
-            Ethers.utils.hexZeroPad((CentrifugeAssetInstance3.address + Ethers.utils.hexlify(chainID).substr(2)), 32)
+            Helpers.createResourceID(CentrifugeAssetInstance1.address, chainID),
+            Helpers.createResourceID(CentrifugeAssetInstance2.address, chainID),
+            Helpers.createResourceID(CentrifugeAssetInstance3.address, chainID)
         ];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
         

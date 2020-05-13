@@ -6,13 +6,13 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers = require('../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) => {
-    const AbiCoder = new Ethers.utils.AbiCoder();
-
     const originChainID = 1;
     const destinationChainID = 2;
     const relayer1Address = accounts[0];
@@ -48,27 +48,24 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
                 0).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);
-
-        resourceID = Ethers.utils.hexZeroPad((DestinationERC20MintableInstance.address + Ethers.utils.hexlify(originChainID).substr(2)), 32)
-
+        
+        resourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, originChainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [DestinationERC20MintableInstance.address];
         burnableContractAddresses = [DestinationERC20MintableInstance.address];
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        depositData = '0x' +
-            resourceID.substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(depositAmount), 32).substr(2) +
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(32), 32).substr(2) + // length of next arg in bytes
-            Ethers.utils.hexZeroPad(Ethers.utils.hexlify(destinationChainRecipientAddress), 32).substr(2);
+        depositData = Helpers.createERCDepositData(resourceID, depositAmount, 32, destinationChainRecipientAddress);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
-        DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address)
+        await Promise.all([
+            DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
+            BridgeInstance.adminSetHandlerAddress(DestinationERC20HandlerInstance.address, resourceID)
+        ]);
 
-        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, depositDataHash, {from: relayer})
-
-        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, DestinationERC20HandlerInstance.address, depositData, {from: relayer})
+        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer})
+        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, {from: relayer})
     });
 
     it ('[sanity] bridge configured with threshold and relayers', async () => {

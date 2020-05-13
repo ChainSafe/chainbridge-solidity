@@ -6,6 +6,8 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
+const Helpers =require('../../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
@@ -30,8 +32,8 @@ contract('ERC721Handler - [Burn ERC721]', async () => {
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
 
-        resourceID1 = Ethers.utils.hexZeroPad((ERC721MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
-        resourceID2 = Ethers.utils.hexZeroPad((ERC721MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
+        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, chainID);
+        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, chainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC721MintableInstance1.address, ERC721MintableInstance2.address];
         burnableContractAddresses = [ERC721MintableInstance1.address]

@@ -21,9 +21,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     struct DepositRecord {
         address _tokenAddress;
+        uint8    _lenDestinationRecipientAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
-        uint    _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
         uint    _tokenID;
@@ -148,9 +148,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
+            uint8(lenDestinationRecipientAddress),
             uint8(destinationChainID),
             resourceID,
-            lenDestinationRecipientAddress,
             destinationRecipientAddress,
             depositer,
             tokenID,

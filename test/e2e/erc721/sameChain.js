@@ -78,9 +78,9 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
         const record = await ERC721HandlerInstance.getDepositRecord(expectedDepositNonce, chainID)
         assert.strictEqual(record[0], ERC721MintableInstance.address)
-        assert.strictEqual(record[1], chainID.toString())
-        assert.strictEqual(record[2], resourceID.toLowerCase())
-        assert.strictEqual(Number(record[3]), 20)
+        assert.strictEqual(record[2], chainID.toString())
+        assert.strictEqual(record[3], resourceID.toLowerCase())
+        assert.strictEqual(Number(record[1]), 20)
         assert.strictEqual(record[4], recipientAddress.toLowerCase())
         assert.strictEqual(record[5], depositerAddress)
         assert.strictEqual(Number(record[6]), tokenID)

@@ -12,19 +12,19 @@ const ERC20SafeContract = artifacts.require("ERC20Safe");
 const ERC721SafeContract = artifacts.require("ERC721Safe");
 
 describe('Gas Benchmark - [contract deployments]', async () => {
-    const chainID = 0;
-    const relayerThreshold = 0;
+    const chainID = 1;
+    const relayerThreshold = 1;
     const initialResourceIDs = [];
     const initialContractAddresses = [];
     const burnableContractAddresses = [];
     const initialDepositFunctionSignatures = [];
     const initialExecuteFunctionSignatures = [];
-    const centrifugeAssetMinCount = 0;
+    const centrifugeAssetMinCount = 1;
     const gasBenchmarks = [];
 
     let BridgeInstance;
 
-    it('Should deploy all contracts', async () => {
+    it('Should deploy all contracts and print benchmarks', async () => {
         let contractInstances = [await BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance)];
         contractInstances = contractInstances.concat(
             await Promise.all([
@@ -44,7 +44,7 @@ describe('Gas Benchmark - [contract deployments]', async () => {
                 gasUsed: txReceipt.gasUsed
             });
         }
-    });
 
-    it('Should print gas benchmarks', async () => { console.table(gasBenchmarks); });
+        console.table(gasBenchmarks);
+    });
 });

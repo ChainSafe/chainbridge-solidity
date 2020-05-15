@@ -11,8 +11,6 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [constructor]', async () => {
-    const AbiCoder = new Ethers.utils.AbiCoder();
-    
     const relayerThreshold = 2;
     const chainID = 1;
 

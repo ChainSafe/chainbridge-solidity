@@ -16,7 +16,7 @@ const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 
 const Helpers = require('../helpers');
 
-contract('Gas Benchmark - [Contract Deployments]', async (accounts) => {
+contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const chainID = 1;
     const relayerThreshold = 1;
     const depositerAddress = accounts[1];

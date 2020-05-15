@@ -12,7 +12,7 @@ const BridgeContract = artifacts.require("Bridge");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
-contract('GenericHandler - [deposit]', async (accounts) => {
+contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     const relayerThreshold = 2;
     const chainID = 1;
     const expectedDepositNonce = 1;

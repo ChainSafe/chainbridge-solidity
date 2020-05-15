@@ -17,7 +17,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     const relayer2Address = accounts[4];
 
     const tokenID = 1;
-    const depositMetadata = "0xc0ff3";
+    const depositMetadata = "0xc0ff33";
     const expectedDepositNonce = 1;
     
     let BridgeInstance;

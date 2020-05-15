@@ -10,7 +10,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
-contract('Gas Benchmark - [contract deployments]', async (accounts) => {
+contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
     const chainID = 1;
     const relayerThreshold = 2;
     const relayer1Address = accounts[0];
@@ -63,7 +63,7 @@ contract('Gas Benchmark - [contract deployments]', async (accounts) => {
         const voteTx = await vote(erc20ResourceID, depositNonce, depositDataHash, relayer1Address);
 
         gasBenchmarks.push({
-            voteType: 'Vote Proposal - relayerThreshold = 2, Not Finalized',
+            type: 'Vote Proposal - relayerThreshold = 2, Not Finalized',
             gasUsed: voteTx.receipt.gasUsed
         });
     });
@@ -79,7 +79,7 @@ contract('Gas Benchmark - [contract deployments]', async (accounts) => {
         const voteTx = await vote(erc20ResourceID, depositNonce, depositDataHash, relayer2Address);
 
         gasBenchmarks.push({
-            voteType: 'Vote Proposal - relayerThreshold = 2, Finalized',
+            type: 'Vote Proposal - relayerThreshold = 2, Finalized',
             gasUsed: voteTx.receipt.gasUsed
         });
     });
@@ -94,11 +94,10 @@ contract('Gas Benchmark - [contract deployments]', async (accounts) => {
             lenRecipientAddress,
             recipientAddress);
         const depositDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositData.substr(2));
-
         const voteTx = await vote(erc20ResourceID, newDepositNonce, depositDataHash, relayer2Address);
 
         gasBenchmarks.push({
-            voteType: 'Vote Proposal - relayerThreshold = 1, Finalized',
+            type: 'Vote Proposal - relayerThreshold = 1, Finalized',
             gasUsed: voteTx.receipt.gasUsed
         });
     });

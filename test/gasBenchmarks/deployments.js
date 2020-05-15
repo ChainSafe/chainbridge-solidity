@@ -11,7 +11,7 @@ const HandlerHelpersContract = artifacts.require("HandlerHelpers");
 const ERC20SafeContract = artifacts.require("ERC20Safe");
 const ERC721SafeContract = artifacts.require("ERC721Safe");
 
-describe('Gas Benchmark - [contract deployments]', async () => {
+contract('Gas Benchmark - [contract deployments]', async () => {
     const chainID = 1;
     const relayerThreshold = 1;
     const initialResourceIDs = [];
@@ -40,7 +40,7 @@ describe('Gas Benchmark - [contract deployments]', async () => {
         for (const contractInstance of contractInstances) {
             const txReceipt = await web3.eth.getTransactionReceipt(contractInstance.transactionHash);
             gasBenchmarks.push({
-                contractName: contractInstance.constructor._json.contractName,
+                type: contractInstance.constructor._json.contractName,
                 gasUsed: txReceipt.gasUsed
             });
         }

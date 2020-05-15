@@ -2,6 +2,10 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+const Ethers = require('ethers');
+
+const Helpers = require('../helpers');
+
 const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
@@ -14,16 +18,16 @@ const OneArgumentContract = artifacts.require("OneArgument");
 const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 
-const Helpers = require('../helpers');
-
-contract('Gas Benchmark - [Contract Deployments]', async (accounts) => {
+contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     const chainID = 1;
     const relayerThreshold = 1;
+    const relayerAddress = accounts[0];
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const lenRecipientAddress = 32;
     const gasBenchmarks = [];
 
+    const initialRelayers = [relayerAddress];
     const erc20TokenAmount = 100;
     const erc721TokenID = 1;
 
@@ -46,9 +50,13 @@ contract('Gas Benchmark - [Contract Deployments]', async (accounts) => {
     let twoArgumentsResourceID;
     let threeArgumentsResourceID;
 
+    const deposit = (resourceID, depositData) => BridgeInstance.deposit(chainID, resourceID, depositData, { from: depositerAddress });
+    const vote = (resourceID, depositNonce, depositDataHash) => BridgeInstance.voteProposal(chainID, depositNonce, resourceID, depositDataHash, { from: relayerAddress });
+    const execute = (depositNonce, depositData) => BridgeInstance.executeProposal(chainID, depositNonce, depositData);
+
     before(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0).then(instance => BridgeInstance = instance),
+            BridgeContract.new(chainID, initialRelayers, relayerThreshold, 0).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
@@ -73,7 +81,7 @@ contract('Gas Benchmark - [Contract Deployments]', async (accounts) => {
         const erc721InitialResourceIDs = [erc721ResourceID];
         const erc721InitialContractAddresses = [ERC721MintableInstance.address];
         const erc721BurnableContractAddresses = [];
-        
+
         const genericInitialResourceIDs = [
             centrifugeAssetResourceID,
             noArgumentResourceID,
@@ -120,116 +128,137 @@ contract('Gas Benchmark - [Contract Deployments]', async (accounts) => {
         ]);
     });
 
-    it('Should make ERC20 deposit', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
+    it('Should execute ERC20 deposit proposal', async () => {
+        const depositNonce = 1;
+        const depositData = Helpers.createERCDepositData(
             erc20ResourceID,
-            Helpers.createERCDepositData(
-                erc20ResourceID,
-                erc20TokenAmount,
-                lenRecipientAddress,
-                recipientAddress),
-            { from: depositerAddress });
+            erc20TokenAmount,
+            lenRecipientAddress,
+            recipientAddress);
+        const depositDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositData.substr(2));
+
+        await deposit(erc20ResourceID, depositData);
+        await vote(erc20ResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
             type: 'ERC20',
-            gasUsed: depositTx.receipt.gasUsed
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
-    it('Should make ERC721 deposit', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
+    it('Should execute ERC721 deposit proposal', async () => {
+        const depositNonce = 2;
+        const lenMetaData = 0;
+        const metaData = 0;
+        const depositData = Helpers.createERC721DepositProposalData(
             erc721ResourceID,
-            Helpers.createERCDepositData(
-                erc721ResourceID,
-                erc721TokenID,
-                lenRecipientAddress,
-                recipientAddress),
-            { from: depositerAddress });
+            erc721TokenID,
+            lenRecipientAddress,
+            recipientAddress,
+            lenMetaData,
+            metaData);
+        const depositDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + depositData.substr(2));
+
+        await deposit(erc721ResourceID, depositData);
+        await vote(erc721ResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
             type: 'ERC721',
-            gasUsed: depositTx.receipt.gasUsed
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
-    it('Should make Generic deposit - Centrifuge asset', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
-            centrifugeAssetResourceID,
-            Helpers.createGenericDepositData(centrifugeAssetResourceID, '0xc0ff33'),
-            { from: depositerAddress }
-        );
+    it('Should execute Generic deposit proposal - Centrifuge asset', async () => {
+        const depositNonce = 3;
+        const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
+        const depositData = Helpers.createGenericDepositData(centrifugeAssetResourceID, hashOfCentrifugeAsset);
+        const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        await deposit(centrifugeAssetResourceID, depositData);
+        await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
             type: 'Generic - Centrifuge Asset',
-            gasUsed: depositTx.receipt.gasUsed
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
-    it('Should make Generic deposit - No Argument', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
-            noArgumentResourceID,
-            Helpers.createGenericDepositData(noArgumentResourceID, null),
-            { from: depositerAddress }
-        );
+    it('Should execute Generic deposit proposal - No Argument', async () => {
+        const depositNonce = 4;
+        const depositData = Helpers.createGenericDepositData(noArgumentResourceID, null);
+        const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        await deposit(centrifugeAssetResourceID, depositData);
+        await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
             type: 'Generic - No Argument',
-            gasUsed: depositTx.receipt.gasUsed
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
     it('Should make Generic deposit - One Argument', async () => {
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
-            oneArgumentResourceID,
-            Helpers.createGenericDepositData(oneArgumentResourceID, Helpers.toHex(42, 32)),
-            { from: depositerAddress }
-        );
+        const depositNonce = 5;
+        const depositData = Helpers.createGenericDepositData(oneArgumentResourceID, Helpers.toHex(42, 32));
+        const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        await deposit(centrifugeAssetResourceID, depositData);
+        await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
             type: 'Generic - One Argument',
-            gasUsed: depositTx.receipt.gasUsed
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
     it('Should make Generic deposit - Two Arguments', async () => {
+        const depositNonce = 6;
         const argumentOne = [NoArgumentInstance.address, OneArgumentInstance.address, TwoArgumentsInstance.address];
         const argumentTwo = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
         const encodedMetaData = Helpers.abiEncode(['address[]','bytes4'], [argumentOne, argumentTwo]);
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
-            twoArgumentsResourceID,
-            Helpers.createGenericDepositData(twoArgumentsResourceID, encodedMetaData),
-            { from: depositerAddress }
-        );
+        const depositData = Helpers.createGenericDepositData(twoArgumentsResourceID, encodedMetaData);
+        const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        await deposit(centrifugeAssetResourceID, depositData);
+        await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
-            type: 'Generic - Two Arguments',
-            gasUsed: depositTx.receipt.gasUsed
+            type: 'Generic - Two Argument',
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
 
     it('Should make Generic deposit - Three Arguments', async () => {
+        const depositNonce = 7;
         const argumentOne = 'soylentGreenIsPeople';
         const argumentTwo = -42;
         const argumentThree = true;
         const encodedMetaData = Helpers.abiEncode(['string','int8','bool'], [argumentOne, argumentTwo, argumentThree]);
-        const depositTx = await BridgeInstance.deposit(
-            chainID,
-            threeArgumentsResourceID,
-            Helpers.createGenericDepositData(threeArgumentsResourceID, encodedMetaData),
-            { from: depositerAddress }
-        );
+        const depositData = Helpers.createGenericDepositData(threeArgumentsResourceID, encodedMetaData);
+        const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        await deposit(centrifugeAssetResourceID, depositData);
+        await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
+
+        const executeTx = await execute(depositNonce, depositData);
 
         gasBenchmarks.push({
-            type: 'Generic - Three Arguments',
-            gasUsed: depositTx.receipt.gasUsed
+            type: 'Generic - Three Argument',
+            gasUsed: executeTx.receipt.gasUsed
         });
     });
-
+    
     it('Should print out benchmarks', () => console.table(gasBenchmarks));
 });

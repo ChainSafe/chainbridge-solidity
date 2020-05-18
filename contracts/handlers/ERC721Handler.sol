@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
 import "./HandlerHelpers.sol";
-import "../ERC721Safe.sol";
+import "../safes/ERC721Safe.sol";
 import "../ERC721MinterBurnerPauser.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";

@@ -61,17 +61,29 @@ contract('Bridge - [admin]', async accounts => {
     });
 
     it('newRelayer should be added as a relayer', async () => {
-        const newRelayer = accounts[1];
+        const newRelayer = accounts[4];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
         assert.isTrue(await BridgeInstance.isRelayer(newRelayer));
     });
 
     it('newRelayer should be removed as a relayer after being added', async () => {
-        const newRelayer = accounts[1];
+        const newRelayer = accounts[4];
         TruffleAssert.passes(await BridgeInstance.adminAddRelayer(newRelayer));
         assert.isTrue(await BridgeInstance.isRelayer(newRelayer))
         TruffleAssert.passes(await BridgeInstance.adminRemoveRelayer(newRelayer));
         assert.isFalse(await BridgeInstance.isRelayer(newRelayer));
+    });
+
+    it('existingRelayer should not be able to be added as a relayer', async () => {
+        const existingRelayer = accounts[1];
+        TruffleAssert.reverts(await BridgeInstance.adminAddRelayer(newRelayer));
+        assert.isTrue(await BridgeInstance.isRelayer(existingRelayer));
+    });
+
+    it('nonRelayerAddr should not be able to be added as a relayer', async () => {
+        const nonRelayerAddr = accounts[4];
+        TruffleAssert.reverts(await BridgeInstance.adminRemoveRelayer(newRelayer));
+        assert.isFalse(await BridgeInstance.isRelayer(existingRelayer));
     });
 
     // Testing ownership methods

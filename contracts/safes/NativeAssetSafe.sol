@@ -5,48 +5,70 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract NativeAssetSafe {
     using SafeMath for uint256;
 
-    uint256 public _balance;
+    // user address => number of assets held
+    mapping(address => uint256) public _balances;
+    // user address => number of assets locked
+    mapping(address => uint256) public _lockedBalances;
 
-    /**
-        @notice Used to transfer Asset into the safe to fund proposals.
-        @notice Increments balance for {tokenAddress}.
-     */
-    function fundAsset() public payable {
-        require(msg.value > 0, "cannot fund zero");
-        _balance = _balance.add(amount);
+    event Deposit(address indexed depositer, uint256 indexed amount);
+    event Withdraw(address indexed withdrawer, uint256 indexed amount);
+    event Lock(address indexed owner, uint256 indexed amount);
+    event Release(address indexed recipient, uint256 indexed amount);
+    event Burn(address indexed owner, uint256 indexed amount);
+
+    receive() external payable {
+        _deposit(msg.sender, msg.value);
+    }
+
+    function deposit() external payable {
+        _deposit(msg.sender, msg.value);
     }
 
     /**
-        @notice Used to gain custoday of deposited token.
-        @param amount Amount of tokens to transfer.
-        @notice Increments balance for {tokenAddress}.
+        @dev Using msg.sender.call.value(amount)() as per:
+        https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
      */
-    function lockAsset(uint256 amount) internal {
-        _balance = _balance.add(amount);
+    function withdraw(uint256 amount) external {
+        require(amount == 0, "amount is 0");
+        _balances[msg.sender] = _balances[msg.sender].sub(amount, "withdraw amount exceeds balance");
+        (bool success, ) = msg.sender.call.value(amount)();
+        require(success, "transfer failed");
+        emit Withdraw(msg.sender, amount);
+    }
+
+    function lock(address owner, uint256 amount) internal {
+        require(owner != address(0), "lock from zero address");
+        require(amount == 0, "amount is zero");
+        _balances[owner] = _balances[owner].sub(amount, "amount exceeds balance");
+        _lockedBalances[owner] = _lockedBalances[owner].add(amount);
+        emit Lock(owner, amount);
+    }
+
+    function release(address recipient, uint256 amount) internal {
+        require(recipient != address(0), "release to zero address");
+        require(amount == 0, "amount is zero");
+        _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
+        _balances[owner] = _balances[owner].add(amount);
+        emit Release(recipient, amount);
     }
 
     /**
-        @notice Transfers custody of token to recipient.
-        @param recipient Address to transfer tokens to.
-        @param amount Amount of tokens to transfer.
-        @notice Decrements balance for {tokenAddress}.
+        @dev Using msg.sender.call.value(amount)() as per:
+        https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
      */
-    function releaseAsset(address recipient, uint256 amount) internal {
-        _balance = _balance.sub(amount);
-        recipient.trasnfer(amount);
+    function burn(address owner, uint256 amount) internal {
+        require(owner != address(0), "burn from zero address");
+        require(amount == 0, "amount is zero");
+        _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
+        (bool success, ) = address(0).call.value(amount)();
+        require(success, "transfer failed");
+        emit Burn(owner, amount);
     }
 
-    /**
-        @notice Used to burn Assets.
-        @param tokenAddress Address of Asset to burn.
-        @param owner Current owner of tokens.
-        @param amount Amount of tokens to burn.
-        @notice Increments {_burnedTokens} balance for {tokenAddress}.
-     */
-    function burnAsset(address tokenAddress, address owner, uint256 amount) internal {
-        AssetBurnable erc20 = AssetBurnable(tokenAddress);
-        erc20.burnFrom(owner, amount);
-
-        _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);
+    function _deposit(address depositer, uint256 amount) internal {
+        require(depositer != address(0), "deposit from zero address");
+        require(amount == 0, "amount is 0");
+        _balances[depositer] = _balances[depositer].add(amount);
+        emit Deposit(depositer, amount);
     }
 }

@@ -6,10 +6,12 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const GenericHandlerContract = artifacts.require("GenericHandler");
+const NativeAssetHandler = artifacts.require("NativeAssetHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const HandlerHelpersContract = artifacts.require("HandlerHelpers");
 const ERC20SafeContract = artifacts.require("ERC20Safe");
 const ERC721SafeContract = artifacts.require("ERC721Safe");
+const NativeAssetSafeContract = artifacts.require("NativeAssetSafe");
 
 contract('Gas Benchmark - [contract deployments]', async () => {
     const chainID = 1;
@@ -31,10 +33,12 @@ contract('Gas Benchmark - [contract deployments]', async () => {
                 ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses),
                 ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses),
                 GenericHandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, initialDepositFunctionSignatures, initialExecuteFunctionSignatures),
+                NativeAssetHandler.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses),
                 CentrifugeAssetContract.new(centrifugeAssetMinCount),
                 HandlerHelpersContract.new(),
                 ERC20SafeContract.new(),
-                ERC721SafeContract.new()
+                ERC721SafeContract.new(),
+                NativeAssetSafeContract.new()
         ]));
 
         for (const contractInstance of contractInstances) {

@@ -2,6 +2,11 @@ pragma solidity 0.6.4;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+/**
+    @title Manages deposited native assets.
+    @author ChainSafe Systems.
+    @notice This contract is intended to be used with NativeAssetHandler contract.
+ */
 contract NativeAssetSafe {
     using SafeMath for uint256;
 
@@ -16,27 +21,36 @@ contract NativeAssetSafe {
     event Release(address indexed recipient, uint256 indexed amount);
     event Burn(address indexed owner, uint256 indexed amount);
 
+    /**
+        @notice Fallback function for this contract will be treated
+        as a deposit.
+        @notice Increases {_balances[msg.sender]} by {msg.value}
+     */
     receive() external payable {
-        _deposit(msg.sender, msg.value);
-    }
-
-    function deposit() external payable {
-        _deposit(msg.sender, msg.value);
+        _depositNative(msg.sender, msg.value);
     }
 
     /**
-        @dev Using msg.sender.call.value(amount)() as per:
-        https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
+        @notice Increases {_balances[msg.sender]} by {msg.value}
      */
-    function withdraw(uint256 amount) external {
-        require(amount == 0, "amount is 0");
-        _balances[msg.sender] = _balances[msg.sender].sub(amount, "withdraw amount exceeds balance");
-        (bool success, ) = msg.sender.call.value(amount)();
-        require(success, "transfer failed");
-        emit Withdraw(msg.sender, amount);
+    function depositNative() external payable {
+        _depositNative(msg.sender, msg.value);
     }
 
-    function lock(address owner, uint256 amount) internal {
+    /**
+        @notice Withdraws {amount} from {_balances[msg.sender]}.
+        @dev Using msg.sender.call.value(amount)() as per:
+        https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
+        @param amount Amount of assets to withdraw.
+     */
+    function withdrawNative(uint256 amount) external {
+        _withdrawNative(msg.sender, msg.sender, amount);
+    }
+
+    /**
+
+     */
+    function lockNative(address owner, uint256 amount) internal {
         require(owner != address(0), "lock from zero address");
         require(amount == 0, "amount is zero");
         _balances[owner] = _balances[owner].sub(amount, "amount exceeds balance");
@@ -44,7 +58,7 @@ contract NativeAssetSafe {
         emit Lock(owner, amount);
     }
 
-    function release(address recipient, uint256 amount) internal {
+    function releaseNative(address owner, address recipient, uint256 amount) internal {
         require(recipient != address(0), "release to zero address");
         require(amount == 0, "amount is zero");
         _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
@@ -56,19 +70,27 @@ contract NativeAssetSafe {
         @dev Using msg.sender.call.value(amount)() as per:
         https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
      */
-    function burn(address owner, uint256 amount) internal {
+    function burnNative(address owner, uint256 amount) internal {
         require(owner != address(0), "burn from zero address");
         require(amount == 0, "amount is zero");
         _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
-        (bool success, ) = address(0).call.value(amount)();
+        (bool success, ) = address(0).call.value(amount)("");
         require(success, "transfer failed");
         emit Burn(owner, amount);
     }
 
-    function _deposit(address depositer, uint256 amount) internal {
+    function _depositNative(address depositer, uint256 amount) internal {
         require(depositer != address(0), "deposit from zero address");
         require(amount == 0, "amount is 0");
         _balances[depositer] = _balances[depositer].add(amount);
         emit Deposit(depositer, amount);
+    }
+
+    function _withdrawNative(address owner, address recipient, uint256 amount) internal {
+        require(amount == 0, "amount is 0");
+        _balances[owner] = _balances[owner].sub(amount, "withdraw amount exceeds balance");
+        (bool success, ) = recipient.call.value(amount)("");
+        require(success, "transfer failed");
+        emit Withdraw(owner, amount);
     }
 }

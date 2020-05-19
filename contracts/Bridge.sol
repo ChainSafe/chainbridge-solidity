@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
+import "./interfaces/INativeAssetHandler.sol";
 
 /**
     @title Facilitates deposits, creation and votiing of deposit proposals, and deposit executions.
@@ -268,7 +269,7 @@ contract Bridge is Pausable, AccessControl {
         @param recipient Address to withdraw tokens to.
         @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to withdraw.
      */
-    function adminWithdraw(
+    function adminWithdrawERC(
         address handlerAddress,
         address tokenAddress,
         address recipient,
@@ -276,6 +277,23 @@ contract Bridge is Pausable, AccessControl {
     ) external onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.withdraw(tokenAddress, recipient, amountOrTokenID);
+    }
+
+    /**
+        @notice Used to manually withdraw funds from Native Asset safes.
+        @param handlerAddress Address of handler to withdraw from.
+        @param owner Address of asset owner.
+        @param recipient Address to withdraw assets to.
+        @param amount Amount of assets to withdraw.
+     */
+    function adminWithdrawNative(
+        address handlerAddress,
+        address owner,
+        address recipient,
+        uint256 amount
+    ) external onlyAdmin {
+        INativeAssetHandler handler = INativeAssetHandler(handlerAddress);
+        handler.withdraw(owner, recipient, amount);
     }
 
     /**

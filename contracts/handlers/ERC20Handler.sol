@@ -2,6 +2,7 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IBridge.sol";
 import "./HandlerHelpers.sol";
 import "../safes/ERC20Safe.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
@@ -148,9 +149,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         destinationRecipientAddress            bytes       bytes  96 - END
      */
     function executeDeposit(bytes calldata data) external override _onlyBridge {
-        uint256       amount;
-        bytes32       resourceID;
-        bytes  memory destinationRecipientAddress;
+        uint256      amount;
+        bytes32      resourceID;
+        bytes memory destinationRecipientAddress;
 
         assembly {
             resourceID := calldataload(0x44)
@@ -170,17 +171,25 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+        bytes1 parsedChainID;
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+            parsedChainID := shl(248, resourceID)
         }
+
+        uint8 chainID = uint8(parsedChainID);
 
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            mintERC20(tokenAddress, address(recipientAddress), amount);
+        if (chainID == IBridge(_bridgeAddress)._chainID()) {
+            if (_burnList[tokenAddress]) {
+                mintERC20(tokenAddress, address(recipientAddress), amount);
+            } else {
+                releaseERC20(tokenAddress, address(recipientAddress), amount);
+            }
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
+            mintERC20(tokenAddress, address(recipientAddress), amount);
         }
     }
 

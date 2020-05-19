@@ -1,12 +1,16 @@
 pragma solidity 0.6.4;
+pragma experimental ABIEncoderV2;
 
+import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IBridge.sol";
 import "../safes/NativeAssetSafe.sol";
+import "./HandlerHelpers.sol";
 
-contract NativeAssetHandler is NativeAssetSafe {
+contract NativeAssetHandler is IDepositExecute, NativeAssetSafe, HandlerHelpers {
     struct DepositRecord {
-        uint8   _lenDestinationRecipientAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
+        uint8   _lenDestinationRecipientAddress;
         bytes   _destinationRecipientAddress;
         address _depositer;
         uint256 _amount;
@@ -108,20 +112,99 @@ contract NativeAssetHandler is NativeAssetSafe {
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            burnERC20(tokenAddress, depositer, amount);
-        } else {
-            lockERC20(tokenAddress, depositer, address(this), amount);
-        }
+        // if (chainID == IBridge(_bridgeAddress)._chainID()) {
+        //     if (_burnList[tokenAddress]) {
+        //         burnNative(depositer, amount);
+        //     } else {
+        //         lockNative(depositer, amount);
+        //     }
+        // } else {
+        //     if (_burnList[tokenAddress]) {
+        //         burnERC20(tokenAddress, depositer, amount);
+        //     } else {
+        //         lockERC20(tokenAddress, depositer, address(this), amount);
+        //     }
+        // }
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
-            tokenAddress,
-            uint8(lenRecipientAddress),
             destinationChainID,
             resourceID,
+            uint8(lenRecipientAddress),
             recipientAddress,
             depositer,
             amount
         );
+    }
+
+     /**
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
+        by a relayer on the deposit's destination chain.
+        @param data Consists of {resourceID}, {amount}, {lenDestinationRecipientAddress},
+        and {destinationRecipientAddress} all padded to 32 bytes.
+        @notice Data passed into the function should be constructed as follows:
+        resourceID                             bytes32     bytes  0 - 32
+        amount                                 uint256     bytes  32 - 64
+        destinationRecipientAddress length     uint256     bytes  64 - 96
+        destinationRecipientAddress            bytes       bytes  96 - END
+     */
+    function executeDeposit(bytes calldata data) external override _onlyBridge {
+        uint256       amount;
+        bytes32       resourceID;
+        bytes  memory destinationRecipientAddress;
+
+        assembly {
+            resourceID := calldataload(0x44)
+            amount := calldataload(0x64)
+
+            destinationRecipientAddress := mload(0x40)
+            let lenDestinationRecipientAddress := calldataload(0x84)
+            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
+
+            // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
+            calldatacopy(
+                destinationRecipientAddress, // copy to destinationRecipientAddress
+                0x84, // copy from calldata @ 0x84
+                sub(calldatasize(), 0x84) // copy size to the end of calldata
+            )
+        }
+
+        bytes20 recipientAddress;
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
+
+        assembly {
+            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+        }
+
+        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
+
+        // if (_burnList[tokenAddress]) {
+        //     mintERC20(tokenAddress, address(recipientAddress), amount);
+        // } else {
+        //     release(address(recipientAddress), address(recipientAddress), amount);
+        // }
+
+        if (chainID == IBridge(_bridgeAddress)._chainID()) {
+            if (_burnList[tokenAddress]) {
+                // don't know what to do
+            } else {
+                releaseNative(address(recipientAddress), address(recipientAddress), amount);
+            }
+        } else {
+            if (_burnList[tokenAddress]) {
+                mintERC20(tokenAddress, address(recipientAddress), amount);
+            } else {
+                releaseERC20(tokenAddress, recipient, amount);
+            }
+        }
+    }
+
+    /**
+        @notice Used to manually release native assets from NativeAssetSafe.
+        @param owner Address of asset owner.
+        @param recipient Address to release tokens to.
+        @param amount The amount of assets to release.
+     */
+    function withdraw(address owner, address recipient, uint amount) external override _onlyBridge {
+        _withdrawNative(owner, recipient, amount);
     }
 }

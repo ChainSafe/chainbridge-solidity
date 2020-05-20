@@ -166,6 +166,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {RelayerAdded} event.
      */
     function adminAddRelayer(address relayerAddress) external onlyAdmin {
+        require(!hasRole(RELAYER_ROLE, relayerAddress), "addr already has relayer role!");
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
         _totalRelayers++;
@@ -178,6 +179,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Emits {RelayerRemoved} event.
      */
     function adminRemoveRelayer(address relayerAddress) external onlyAdmin {
+        require(hasRole(RELAYER_ROLE, relayerAddress), "addr doesn't have relayer role!");
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);
         _totalRelayers--;
@@ -352,6 +354,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
+            require(dataHash == proposal._dataHash, "datahash mismatch");
             proposal._yesVotes.push(msg.sender);
         }
 

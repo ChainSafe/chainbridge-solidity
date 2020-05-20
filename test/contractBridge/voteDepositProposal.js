@@ -64,8 +64,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             BridgeInstance.adminSetHandlerAddress(DestinationERC20HandlerInstance.address, resourceID)
         ]);
 
-        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer})
-        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, {from: relayer})
+        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer});
+        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, {from: relayer});
     });
 
     it ('[sanity] bridge configured with threshold and relayers', async () => {
@@ -123,6 +123,16 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await TruffleAssert.passes(vote(relayer1Address));
 
         await TruffleAssert.reverts(vote(relayer1Address), 'relayer has already voted on proposal');
+    });
+
+    it("Should revert because dataHash doesn't match", async () => {
+        await TruffleAssert.passes(vote(relayer1Address));
+
+        await TruffleAssert.reverts(
+            BridgeInstance.voteProposal(
+                originChainID, expectedDepositNonce,
+                resourceID, Ethers.utils.keccak256(depositDataHash),
+                {from: relayer2Address}), 'datahash mismatch');
     });
 
     it("Relayer's vote should be recorded correctly - yes vote", async () => {

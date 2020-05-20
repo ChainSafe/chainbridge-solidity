@@ -171,23 +171,19 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        bytes1 parsedChainID;
+        bytes1 bytesChainID;
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-            parsedChainID := shl(248, resourceID)
+            bytesChainID := shl(248, resourceID)
         }
 
-        uint8 chainID = uint8(parsedChainID);
+        uint8 chainID = uint8(bytesChainID);
 
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (chainID == IBridge(_bridgeAddress)._chainID()) {
-            if (_burnList[tokenAddress]) {
-                mintERC20(tokenAddress, address(recipientAddress), amount);
-            } else {
-                releaseERC20(tokenAddress, address(recipientAddress), amount);
-            }
+        if (chainID == IBridge(_bridgeAddress)._chainID() && !_burnList[tokenAddress]) {
+            releaseERC20(tokenAddress, address(recipientAddress), amount);
         } else {
             mintERC20(tokenAddress, address(recipientAddress), amount);
         }

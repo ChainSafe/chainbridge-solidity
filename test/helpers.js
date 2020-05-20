@@ -40,6 +40,18 @@ const createERC721DepositProposalData = (
         toHex(metaData, lenMetaData).substr(2)
 };
 
+const createNativeDepositProposalData = (
+    resourceID, amount, lenDepositerAddress,
+    depositerAddress, lenRecipientAddress, recipientAddress) => {
+    return '0x' +
+        resourceID.substr(2) +
+        toHex(amount, 32).substr(2) +
+        toHex(lenDepositerAddress, 32).substr(2) +
+        depositerAddress.substr(2) +
+        toHex(lenRecipientAddress, 32).substr(2) +
+        recipientAddress.substr(2)
+};
+
 const createGenericDepositData = (resourceID, hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
@@ -99,6 +111,7 @@ module.exports = {
     createERCDepositData,
     createGenericDepositData,
     createERC721DepositProposalData,
+    createNativeDepositProposalData,
     createResourceID,
     assertObjectsMatch
 };

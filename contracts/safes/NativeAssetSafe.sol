@@ -11,7 +11,7 @@ contract NativeAssetSafe {
     using SafeMath for uint256;
 
     // user address => number of assets held
-    mapping(address => uint256) public _balances;
+    mapping(address => uint256) public _availableBalances;
     // user address => number of assets locked
     mapping(address => uint256) public _lockedBalances;
 
@@ -24,21 +24,21 @@ contract NativeAssetSafe {
     /**
         @notice Fallback function for this contract will be treated
         as a deposit.
-        @notice Increases {_balances[msg.sender]} by {msg.value}
+        @notice Increases {_availableBalances[msg.sender]} by {msg.value}
      */
     receive() external payable {
         _depositNative(msg.sender, msg.value);
     }
 
     /**
-        @notice Increases {_balances[msg.sender]} by {msg.value}
+        @notice Increases {_availableBalances[msg.sender]} by {msg.value}
      */
     function depositNative() external payable {
         _depositNative(msg.sender, msg.value);
     }
 
     /**
-        @notice Withdraws {amount} from {_balances[msg.sender]}.
+        @notice Withdraws {amount} from {_availableBalances[msg.sender]}.
         @dev Using msg.sender.call.value(amount)() as per:
         https://diligence.consensys.net/blog/2019/09/stop-using-soliditys-transfer-now/
         @param amount Amount of assets to withdraw.
@@ -52,17 +52,17 @@ contract NativeAssetSafe {
      */
     function lockNative(address owner, uint256 amount) internal {
         require(owner != address(0), "lock from zero address");
-        require(amount == 0, "amount is zero");
-        _balances[owner] = _balances[owner].sub(amount, "amount exceeds balance");
+        require(amount != 0, "amount is zero");
+        _availableBalances[owner] = _availableBalances[owner].sub(amount, "amount exceeds balance");
         _lockedBalances[owner] = _lockedBalances[owner].add(amount);
         emit Lock(owner, amount);
     }
 
     function releaseNative(address owner, address recipient, uint256 amount) internal {
         require(recipient != address(0), "release to zero address");
-        require(amount == 0, "amount is zero");
+        require(amount != 0, "amount is zero");
         _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
-        _balances[owner] = _balances[owner].add(amount);
+        _availableBalances[owner] = _availableBalances[owner].add(amount);
         emit Release(recipient, amount);
     }
 
@@ -72,7 +72,7 @@ contract NativeAssetSafe {
      */
     function burnNative(address owner, uint256 amount) internal {
         require(owner != address(0), "burn from zero address");
-        require(amount == 0, "amount is zero");
+        require(amount != 0, "amount is zero");
         _lockedBalances[owner] = _lockedBalances[owner].sub(amount, "amount exceeds locked balance");
         (bool success, ) = address(0).call.value(amount)("");
         require(success, "transfer failed");
@@ -81,14 +81,14 @@ contract NativeAssetSafe {
 
     function _depositNative(address depositer, uint256 amount) internal {
         require(depositer != address(0), "deposit from zero address");
-        require(amount == 0, "amount is 0");
-        _balances[depositer] = _balances[depositer].add(amount);
+        require(amount != 0, "amount is 0");
+        _availableBalances[depositer] = _availableBalances[depositer].add(amount);
         emit Deposit(depositer, amount);
     }
 
     function _withdrawNative(address owner, address recipient, uint256 amount) internal {
-        require(amount == 0, "amount is 0");
-        _balances[owner] = _balances[owner].sub(amount, "withdraw amount exceeds balance");
+        require(amount != 0, "amount is 0");
+        _availableBalances[owner] = _availableBalances[owner].sub(amount, "withdraw amount exceeds balance");
         (bool success, ) = recipient.call.value(amount)("");
         require(success, "transfer failed");
         emit Withdraw(owner, amount);

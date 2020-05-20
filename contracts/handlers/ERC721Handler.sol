@@ -2,12 +2,12 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IBridge.sol";
 import "./HandlerHelpers.sol";
 import "../safes/ERC721Safe.sol";
 import "../ERC721MinterBurnerPauser.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
-
 
 /**
     @title Handles ERC721 deposits and deposit executions.
@@ -218,18 +218,22 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         }
 
         bytes20 recipientAddress;
+        bytes1 bytesChainID;
 
         assembly {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+            bytesChainID := shl(248, resourceID)
         }
+
+        uint8 chainID = uint8(bytesChainID);
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[address(tokenAddress)], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
-        } else {
+        if (chainID == IBridge(_bridgeAddress)._chainID() && !_burnList[tokenAddress]) {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
+        } else {
+            mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         }
     }
 

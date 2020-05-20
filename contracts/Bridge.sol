@@ -336,6 +336,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
+            require(dataHash == proposal._dataHash, "datahash mismatch");
             proposal._yesVotes.push(msg.sender);
         }
 

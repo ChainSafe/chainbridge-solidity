@@ -28,7 +28,7 @@ contract ERC20Safe {
      */
     function fundERC20(address tokenAddress, address owner, uint256 amount) public {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transferFrom(owner, address(this), amount);
+        require(erc20.transferFrom(owner, address(this), amount), "ERC20 transferFrom failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -43,7 +43,7 @@ contract ERC20Safe {
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transferFrom(owner, recipient, amount);
+        require(erc20.transferFrom(owner, recipient, amount), "ERC20 transferFrom failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -57,7 +57,7 @@ contract ERC20Safe {
      */
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transfer(recipient, amount);
+        require(erc20.transfer(recipient, amount), "ERC20 transfer failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(amount);
     }

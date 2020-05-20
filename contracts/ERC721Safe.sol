@@ -27,7 +27,7 @@ contract ERC721Safe {
      */
     function fundERC721(address tokenAddress, address owner, uint tokenID) public {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, address(this), tokenID);
+        require(erc721.transferFrom(owner, address(this), tokenID), "ERC721 transferFrom failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
@@ -42,7 +42,7 @@ contract ERC721Safe {
      */
     function lockERC721(address tokenAddress, address owner, address recipient, uint tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, recipient, tokenID);
+        require(erc721.transferFrom(owner, recipient, tokenID), "ERC721 transferFrom failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
@@ -57,7 +57,7 @@ contract ERC721Safe {
      */
     function releaseERC721(address tokenAddress, address owner, address recipient, uint256 tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, recipient, tokenID);
+        require(erc721.transferFrom(owner, recipient, tokenID), "ERC721 transferFrom failed!");
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(1);
     }

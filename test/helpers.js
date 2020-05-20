@@ -41,12 +41,11 @@ const createERC721DepositProposalData = (
 };
 
 const createNativeDepositProposalData = (
-    resourceID, amount, lenDepositerAddress,
-    depositerAddress, lenRecipientAddress, recipientAddress) => {
+    resourceID, amount, depositerAddress,
+    lenRecipientAddress, recipientAddress) => {
     return '0x' +
         resourceID.substr(2) +
         toHex(amount, 32).substr(2) +
-        toHex(lenDepositerAddress, 32).substr(2) +
         depositerAddress.substr(2) +
         toHex(lenRecipientAddress, 32).substr(2) +
         recipientAddress.substr(2)

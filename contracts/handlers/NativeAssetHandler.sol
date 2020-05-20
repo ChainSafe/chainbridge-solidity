@@ -153,51 +153,38 @@ contract NativeAssetHandler is IDepositExecute, NativeAssetSafe, ERC20Safe, Hand
         @notice Data passed into the function should be constructed as follows:
         resourceID                             bytes32     bytes  0 - 32
         amount                                 uint256     bytes  32 - 64
-        originDepositerAddress      length     uint256     bytes  64 - 96
-        originDepositerAddress                 bytes       bytes  96 - 129
-        destinationRecipientAddress length     uint256     bytes  64 - 96
-        destinationRecipientAddress            bytes       bytes  96 - END
+        originDepositerAddress                 bytes       bytes  64 - 96
+        destinationRecipientAddress length     uint256     bytes  96 - 128
+        destinationRecipientAddress            bytes       bytes  128 - END
      */
     function executeDeposit(bytes calldata data) external override _onlyBridge {
         uint256      amount;
         bytes32      resourceID;
-        bytes memory originDepositerAddress;
+        bytes20      originDepositerAddress;
         bytes memory destinationRecipientAddress;
 
         assembly {
             resourceID := calldataload(0x44)
             amount := calldataload(0x64)
-
-            originDepositerAddress := mload(0x40)
-            let lenOriginDepositerAddress := calldataload(0x84)
-            mstore(0x40, add(0x20, add(originDepositerAddress, lenOriginDepositerAddress)))
-
-            // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
-            calldatacopy(
-                originDepositerAddress, // copy to destinationRecipientAddress
-                0x84, // copy from calldata @ 0x84
-                sub(calldatasize(), 0x84) // copy size to the end of calldata
-            )
+            originDepositerAddress := calldataload(0x84)
 
             destinationRecipientAddress := mload(0x40)
-            let lenDestinationRecipientAddress := calldataload(0xC4)
+            let lenDestinationRecipientAddress := calldataload(0x98)
             mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
 
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
                 destinationRecipientAddress, // copy to destinationRecipientAddress
-                0xC4, // copy from calldata @ 0xC4
-                sub(calldatasize(), 0xC4) // copy size to the end of calldata
+                0x98, // copy from calldata @ 0x98
+                sub(calldatasize(), 0x98)
             )
         }
 
-        bytes20 depositerAddress;
         bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        bytes1 bytesChainID;
+        bytes1  bytesChainID;
 
         assembly {
-            depositerAddress := mload(add(originDepositerAddress, 0x20))
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
             bytesChainID := shl(248, resourceID)
         }
@@ -207,13 +194,9 @@ contract NativeAssetHandler is IDepositExecute, NativeAssetSafe, ERC20Safe, Hand
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (chainID == IBridge(_bridgeAddress)._chainID()) {
-            releaseNative(address(depositerAddress), address(recipientAddress), amount);
+            releaseNative(address(originDepositerAddress), address(recipientAddress), amount);
         } else {
-            if (_burnList[tokenAddress]) {
-                mintERC20(tokenAddress, address(recipientAddress), amount);
-            } else {
-                releaseERC20(tokenAddress, address(recipientAddress), amount);
-            }
+            mintERC20(tokenAddress, address(recipientAddress), amount);
         }
     }
 

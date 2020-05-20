@@ -11,7 +11,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const NativeAssetHandlerContract = artifacts.require("NativeAssetHandler");
 
-contract('NativeAssetHandler - [Deposit ETH]', async (accounts) => {
+contract('E2E NativeAsset - [Same Chain]', async (accounts) => {
     const BN = web3.utils.BN;
 
     const relayerThreshold = 2;
@@ -55,14 +55,18 @@ contract('NativeAssetHandler - [Deposit ETH]', async (accounts) => {
         ]);
 
         depositData = Helpers.createERCDepositData(resourceID, hexDepositAmount, 32, recipientAddress)
-        depositProposalData = Helpers.createNativeDepositProposalData(
-            resourceID, hexDepositAmount, 20, depositerAddress, 20, recipientAddress);
+        depositProposalData = Helpers.createNativeDepositProposalData(resourceID, hexDepositAmount, depositerAddress, 20, recipientAddress);
         depositProposalDataHash = Ethers.utils.keccak256(NativeAssetHandlerInstance.address + depositProposalData.substr(2));
     });
 
     it('[sanity] depositer has an available balance of depositAmount in NativeAssetHandlerInstance', async () => {
-        const depositerBalance = await NativeAssetHandlerInstance._availableBalances.call(depositerAddress);
-        assert.equal(depositerBalance.toString(), depositAmount.toString());
+        const balance = await NativeAssetHandlerInstance._availableBalances.call(depositerAddress);
+        assert.equal(balance.toString(), depositAmount.toString());
+    });
+
+    it('[sanity] recipientAddress should have 0 available balance in NativeAssetHandlerInstance', async () => {
+        const balance = await NativeAssetHandlerInstance._availableBalances.call(recipientAddress);
+        assert.equal(balance.toString(), '0');
     });
 
     it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
@@ -106,12 +110,18 @@ contract('NativeAssetHandler - [Deposit ETH]', async (accounts) => {
             { from: relayer2Address }
         ));
 
-        // Assert ERC20 balance was transferred from depositerAddress
-        const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount);
+        let balance;
 
-        // // // Assert ERC20 balance was transferred to recipientAddress
-        // const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
-        // assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+        // Assert depositAmount was release to recipientAddress
+        balance = await NativeAssetHandlerInstance._availableBalances.call(recipientAddress);
+        assert.equal(balance.toString(), depositAmount.toString());
+
+        // Assert depositerAddress no longer has availableBalance
+        balance = await NativeAssetHandlerInstance._availableBalances.call(depositerAddress);
+        assert.equal(balance.toString(), '0');
+
+        // Assert depositerAddress no longer has lockedBalance
+        balance = await NativeAssetHandlerInstance._lockedBalances.call(depositerAddress);
+        assert.equal(balance.toString(), '0');
     });
 });

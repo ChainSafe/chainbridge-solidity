@@ -153,6 +153,8 @@ contract NativeAssetHandler is IDepositExecute, NativeAssetSafe, ERC20Safe, Hand
         @notice Data passed into the function should be constructed as follows:
         resourceID                             bytes32     bytes  0 - 32
         amount                                 uint256     bytes  32 - 64
+        originDepositerAddress      length     uint256     bytes  64 - 96
+        originDepositerAddress                 bytes       bytes  96 - 129
         destinationRecipientAddress length     uint256     bytes  64 - 96
         destinationRecipientAddress            bytes       bytes  96 - END
      */
@@ -184,7 +186,7 @@ contract NativeAssetHandler is IDepositExecute, NativeAssetSafe, ERC20Safe, Hand
             // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
             calldatacopy(
                 destinationRecipientAddress, // copy to destinationRecipientAddress
-                0xC4, // copy from calldata @ 0x84
+                0xC4, // copy from calldata @ 0xC4
                 sub(calldatasize(), 0xC4) // copy size to the end of calldata
             )
         }

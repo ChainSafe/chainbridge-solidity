@@ -4,6 +4,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol"; 
 
 /**
     @title Manages deposited ERC20s.
@@ -28,13 +29,13 @@ contract ERC20Safe {
      */
     function fundERC20(address tokenAddress, address owner, uint256 amount) public {
         IERC20 erc20 = IERC20(tokenAddress);
-        require(erc20.transferFrom(owner, address(this), amount), "ERC20 transferFrom failed!");
+        safeTransferFrom(erc20, owner, address(this), amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
 
     /**
-        @notice Used to gain custoday of deposited token.
+        @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.
         @param recipient Address to transfer tokens to.
@@ -43,7 +44,7 @@ contract ERC20Safe {
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        require(erc20.transferFrom(owner, recipient, amount), "ERC20 transferFrom failed!");
+        safeTransferFrom(erc20, owner, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -57,7 +58,7 @@ contract ERC20Safe {
      */
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        require(erc20.transfer(recipient, amount), "ERC20 transfer failed!");
+        safeTransfer(erc20, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(amount);
     }

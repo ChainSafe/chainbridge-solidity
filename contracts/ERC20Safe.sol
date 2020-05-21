@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol"; 
 
 /**
     @title Manages deposited ERC20s.
@@ -29,7 +28,7 @@ contract ERC20Safe {
      */
     function fundERC20(address tokenAddress, address owner, uint256 amount) public {
         IERC20 erc20 = IERC20(tokenAddress);
-        safeTransferFrom(erc20, owner, address(this), amount);
+        _safeTransferFrom(erc20, owner, address(this), amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -44,7 +43,7 @@ contract ERC20Safe {
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        safeTransferFrom(erc20, owner, recipient, amount);
+        _safeTransferFrom(erc20, owner, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -58,7 +57,7 @@ contract ERC20Safe {
      */
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        safeTransfer(erc20, recipient, amount);
+        _safeTransfer(erc20, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(amount);
     }
@@ -92,23 +91,42 @@ contract ERC20Safe {
     }
 
     /**
-        @notice used to make calls to ERC20s safely
-        @param erc721 Token instance to transfer
+        @notice used to transfer ERC20s safely
+        @param token Token instance to transfer
+        @param to Address to transfer token to
+        @param value Amount of token to transfer
+     */
+    function _safeTransfer(IERC20 token, address to, uint256 value) private {
+        _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+    }
+
+
+    /**
+        @notice used to transfer ERC20s safely
+        @param token Token instance to transfer
         @param from Address to transfer token from
         @param to Address to transfer token to
-        @param tokenID ID of token to transfer
+        @param value Amount of token to transfer
      */
-    function _safeCall(IERC20 token, address from, address to, uint256 tokenID) private {
-        
-        require(address(token).isContract(), "ERC721: call to non-contract");
+    function _safeTransfer(IERC20 token, address from, address to, uint256 value) private {
+        _safeCall(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+    }
+
+    /**
+        @notice used to make calls to ERC20s safely
+        @param token Token instance call targets
+        @param data encoded call data
+     */
+    function _safeCall(IERC20 token, bytes memory data) private {
+
+        require(address(token).isContract(), "ERC20: call to non-contract");
         
         (bool success, bytes memory returndata) = address(token).call(data);
-        require(success, "ERC721: transfer from failed");
+        require(success, "ERC20: call failed");
 
         if (returndata.length > 0) {
 
-            require(abi.decode(returndata, (bool)), "ERC721: transfer from did not succeed");
+            require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
-
     }
 }

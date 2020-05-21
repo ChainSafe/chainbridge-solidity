@@ -92,7 +92,7 @@ contract ERC721Safe {
 
     /**
         @notice used to transferFrom ERC721s safely
-        @param erc721 Token instance to transfer
+        @param token Token instance to transfer
         @param from Address to transfer token from
         @param to Address to transfer token to
         @param tokenID ID of token to transfer

@@ -117,10 +117,7 @@ contract ERC20Safe {
         @param token Token instance call targets
         @param data encoded call data
      */
-    function _safeCall(IERC20 token, bytes memory data) private {
-
-        require(address(token).isContract(), "ERC20: call to non-contract");
-        
+    function _safeCall(IERC20 token, bytes memory data) private {        
         (bool success, bytes memory returndata) = address(token).call(data);
         require(success, "ERC20: call failed");
 
@@ -129,4 +126,5 @@ contract ERC20Safe {
             require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
     }
+
 }

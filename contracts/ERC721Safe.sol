@@ -97,10 +97,7 @@ contract ERC721Safe {
         @param to Address to transfer token to
         @param tokenID ID of token to transfer
      */
-    function _safeTransferFrom(IERC721 token, address from, address to, uint256 tokenID) private {
-        
-        require(address(token).isContract(), "ERC721: call to non-contract");
-        
+    function _safeTransferFrom(IERC721 token, address from, address to, uint256 tokenID) private {        
         (bool success, bytes memory returndata) = address(token).call(abi.encodeWithSelector(token.transferFrom.selector, from, to, tokenID));
         require(success, "ERC721: transfer from failed");
 

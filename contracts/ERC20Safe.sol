@@ -108,7 +108,7 @@ contract ERC20Safe {
         @param to Address to transfer token to
         @param value Amount of token to transfer
      */
-    function _safeTransfer(IERC20 token, address from, address to, uint256 value) private {
+    function _safeTransferFrom(IERC20 token, address from, address to, uint256 value) private {
         _safeCall(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 

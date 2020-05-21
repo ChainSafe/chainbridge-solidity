@@ -90,4 +90,25 @@ contract ERC20Safe {
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);
     }
+
+    /**
+        @notice used to make calls to ERC20s safely
+        @param erc721 Token instance to transfer
+        @param from Address to transfer token from
+        @param to Address to transfer token to
+        @param tokenID ID of token to transfer
+     */
+    function _safeCall(IERC20 token, address from, address to, uint256 tokenID) private {
+        
+        require(address(token).isContract(), "ERC721: call to non-contract");
+        
+        (bool success, bytes memory returndata) = address(token).call(data);
+        require(success, "ERC721: transfer from failed");
+
+        if (returndata.length > 0) {
+
+            require(abi.decode(returndata, (bool)), "ERC721: transfer from did not succeed");
+        }
+
+    }
 }

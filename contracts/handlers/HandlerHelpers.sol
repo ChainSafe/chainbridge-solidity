@@ -40,9 +40,7 @@ contract HandlerHelpers is IERCHandler {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        bytes32 emptyBytes;
-        require(keccak256(abi.encodePacked((currentResourceID))) == keccak256(abi.encodePacked((emptyBytes))),
-            "contract address already has corresponding resourceID");
+        require(currentResourceID == bytes32(0), "contract address already has corresponding resourceID");
 
         _setResource(resourceID, contractAddress);
     }

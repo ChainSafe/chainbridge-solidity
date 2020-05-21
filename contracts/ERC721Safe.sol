@@ -27,7 +27,7 @@ contract ERC721Safe {
      */
     function fundERC721(address tokenAddress, address owner, uint tokenID) public {
         IERC721 erc721 = IERC721(tokenAddress);
-        require(erc721.transferFrom(owner, address(this), tokenID), "ERC721 transferFrom failed!");
+        _safeTransferFrom(erc721, owner, address(this), tokenID);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }

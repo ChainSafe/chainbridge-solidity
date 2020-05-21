@@ -74,7 +74,9 @@ contract ERC721Safe {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.mint(recipient, tokenID, string(data));
 
-        _balances[tokenAddress] = _balances[tokenAddress].add(1);
+        if (address(this) == recipient) {
+            _balances[tokenAddress] = _balances[tokenAddress].add(1);
+        }
     }
 
     /**

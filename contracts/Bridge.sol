@@ -336,6 +336,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
+            require(dataHash == proposal._dataHash, "datahash mismatch");
             proposal._yesVotes.push(msg.sender);
         }
 
@@ -369,10 +370,11 @@ contract Bridge is Pausable, AccessControl {
         require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
             "provided data does not match proposal's data hash");
 
+        proposal._status = ProposalStatus.Transferred;
+        
         IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
         depositHandler.executeDeposit(data);
 
-        proposal._status = ProposalStatus.Transferred;
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }
 

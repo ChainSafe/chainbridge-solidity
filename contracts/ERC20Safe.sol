@@ -73,7 +73,9 @@ contract ERC20Safe {
         ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
         erc20.mint(recipient, amount);
 
-        _balances[tokenAddress] = _balances[tokenAddress].add(amount);
+        if (address(this) == recipient) {
+            _balances[tokenAddress] = _balances[tokenAddress].add(amount);
+        }
     }
 
     /**

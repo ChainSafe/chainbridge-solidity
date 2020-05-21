@@ -370,10 +370,11 @@ contract Bridge is Pausable, AccessControl {
         require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
             "provided data does not match proposal's data hash");
 
+        proposal._status = ProposalStatus.Transferred;
+        
         IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
         depositHandler.executeDeposit(data);
 
-        proposal._status = ProposalStatus.Transferred;
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }
 

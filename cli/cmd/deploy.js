@@ -9,6 +9,7 @@ const deployCmd = new Command("deploy")
     .option('--relayers <value>', 'List of initial relayers', splitCommaList, constants.relayerAddresses)
     .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
     .option('--fee <ether>', 'Fee to be taken when making a deposit (decimals allowed)', 0)
+    .option('--expiry <blocks>', 'Numer of blocks after which a proposal is considered cancelled', 100)
     .action(async (args, a) => {
         await setupParentArgs(args, args.parent)
         let startBal = await args.provider.getBalance(args.wallet.address)
@@ -34,6 +35,7 @@ Chain Id:   ${args.chainId}
 Threshold:  ${args.relayerThreshold}
 Relayers:   ${args.relayers}
 Fee:        ${args.fee} ETH
+Expiry:     ${args.expiry}
 Cost:       ${ethers.utils.formatEther(args.cost)}
 
 Contract Addresses
@@ -65,7 +67,8 @@ async function deployBridgeContract(args) {
         args.chainId,
         args.relayers,
         args.relayerThreshold,
-        ethers.utils.parseEther(args.fee.toString())
+        ethers.utils.parseEther(args.fee.toString()),
+        args.expiry
     );
     await contract.deployed();
     args.bridgeContract = contract.address

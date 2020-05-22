@@ -42,10 +42,8 @@ const createERC721DepositProposalData = (
 
 const advanceBlock = () => {
     var provider = new ethers.providers.JsonRpcProvider();
-    await provider.send("evm_mine", [])
+    return provider.send("evm_mine", [])
 }
-
-const
 
 const createGenericDepositData = (resourceID, hexMetaData) => {
     if (hexMetaData === null) {

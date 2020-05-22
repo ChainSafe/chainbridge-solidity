@@ -347,7 +347,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
-            if (sub(block.number, proposal._proposedBlock) > expiry) {
+            if (block.number.sub(proposal._proposedBlock) > _expiry) {
                 // if we number of blocks that has passed since this proposal
                 // was submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;
@@ -370,19 +370,19 @@ contract Bridge is Pausable, AccessControl {
 
     function cancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require(sub(block.number, proposal._proposedBlock) > expiry, "Proposal does not meet expiry threshold");
+        require(block.number.sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;
-        emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
+        emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
 
     }
 
     function adminCancelProposal(uint8 chainID, uint64 depositNonce) external onlyAdmin {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require(sub(block.number, proposal._proposedBlock) > expiry, "Proposal does not meet expiry threshold");
+        require(block.number.sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
-        emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
+        emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
     }
 
 

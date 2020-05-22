@@ -98,7 +98,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
     it("depositProposal is cancelled after 10 blocks", async () => {
         for (i=0; i<11; i++) {
-            await advanceBlock();
+            await Helpers.advanceBlock();
         }
         await TruffleAssert.passes(vote(relayer2Address));
         await TruffleAssert.reverts(vote(relayer3Address), 'proposal has already been passed, transferred, or cancelled.');

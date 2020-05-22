@@ -104,7 +104,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await TruffleAssert.passes(vote(relayer3Address));
 
-        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed or transferred');
+        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed, transferred, or cancelled.');
     });
 
     it("depositProposal shouldn't be voted on if it has a Transferred status", async () => {
@@ -116,7 +116,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await TruffleAssert.passes(executeProposal(relayer1Address));
 
-        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed or transferred');
+        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed, transferred, or cancelled.');
 
     });
 

@@ -40,6 +40,13 @@ const createERC721DepositProposalData = (
         toHex(metaData, lenMetaData).substr(2)
 };
 
+const advanceBlock = () => {
+    var provider = new ethers.providers.JsonRpcProvider();
+    await provider.send("evm_mine", [])
+}
+
+const
+
 const createGenericDepositData = (resourceID, hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
@@ -92,6 +99,7 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
 };
 
 module.exports = {
+    advanceBlock,
     blankFunctionSig,
     toHex,
     abiEncode,

@@ -352,20 +352,25 @@ contract Bridge is Pausable, AccessControl {
                 // was submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;
                 emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
+            } else {
+                require(dataHash == proposal._dataHash, "datahash mismatch");
+                proposal._yesVotes.push(msg.sender);
+
             }
-            require(dataHash == proposal._dataHash, "datahash mismatch");
-            proposal._yesVotes.push(msg.sender);
+
+        }
+        if (proposal._status != ProposalStatus.Cancelled) {
+            _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
+            emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
+
+            // If _depositThreshold is set to 1, then auto finalize
+            // or if _relayerThreshold has been exceeded
+            if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
+                proposal._status = ProposalStatus.Passed;
+                emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
+            }
         }
 
-        _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
-        emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
-
-        // If _depositThreshold is set to 1, then auto finalize
-        // or if _relayerThreshold has been exceeded
-        if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
-            proposal._status = ProposalStatus.Passed;
-            emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
-        }
     }
 
     function cancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {

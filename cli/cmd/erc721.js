@@ -46,7 +46,7 @@ const transferCmd = new Command("transfer")
         const erc721HandlerInstance = new ethers.Contract(args.erc721HandlerAddress, constants.ContractABIs.Erc721Handler.abi, args.wallet);
 
         // Approve tokens
-        await erc721Instance.approve(args.erc721HandlerAddress, args.id);
+        await erc721Instance.approve(args.erc721HandlerAddress, args.id, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         console.log(`[ERC721 Transfer] Approved ${args.erc721HandlerAddress} to move ${args.id} on behalf of ${args.wallet.address}!`);
 
         // Compute resourceID
@@ -64,7 +64,8 @@ const transferCmd = new Command("transfer")
         await bridgeInstance.deposit(
             args.dest, // destination chain id
             args.resourceID,
-            depositData);
+            depositData,
+            { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         console.log("[ERC721 Transfer] Created deposit to initiate transfer!")
     })
 

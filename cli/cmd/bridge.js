@@ -18,7 +18,7 @@ const registerResourceCmd = new Command("register-resource")
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
-        await bridgeInstance.adminSetResource(args.handler, args.resourceID, args.targetContract);
+        await bridgeInstance.adminSetResource(args.handler, args.resourceID, args.targetContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         console.log(`[BRIDGE] Successfully registered contract ${args.targetContract} with id ${args.resourceID} on handler ${args.handler}`);
 
     })
@@ -42,7 +42,7 @@ const registerGenericResourceCmd = new Command("register-generic-resource")
             args.execute = getFunctionBytes(args.execute)
         }
 
-        await bridgeInstance.adminSetGenericResource(args.handler, args.resourceID, args.targetContract, args.deposit, args.execute)
+        await bridgeInstance.adminSetGenericResource(args.handler, args.resourceID, args.targetContract, args.deposit, args.execute, { gasPrice: args.gasPrice, gasLimit: args.gasLimit})
         console.log(`[BRIDGE] Successfully registered generic resource ID ${args.resourceID} on handler ${args.handler}`)
     })
 
@@ -57,7 +57,7 @@ const setBurnCmd = new Command("set-burn")
         // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
-        await bridgeInstance.adminSetBurnable(args.handler, args.tokenContract);
+        await bridgeInstance.adminSetBurnable(args.handler, args.tokenContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         console.log(`[BRIDGE] Successfully set contract ${args.tokenContract} as burnable on handler ${args.handler}`);
 
     })

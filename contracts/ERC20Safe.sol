@@ -28,13 +28,13 @@ contract ERC20Safe {
      */
     function fundERC20(address tokenAddress, address owner, uint256 amount) public {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transferFrom(owner, address(this), amount);
+        _safeTransferFrom(erc20, owner, address(this), amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
 
     /**
-        @notice Used to gain custoday of deposited token.
+        @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.
         @param recipient Address to transfer tokens to.
@@ -43,7 +43,7 @@ contract ERC20Safe {
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transferFrom(owner, recipient, amount);
+        _safeTransferFrom(erc20, owner, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(amount);
     }
@@ -57,7 +57,7 @@ contract ERC20Safe {
      */
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
-        erc20.transfer(recipient, amount);
+        _safeTransfer(erc20, recipient, amount);
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(amount);
     }
@@ -91,4 +91,42 @@ contract ERC20Safe {
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);
     }
+
+    /**
+        @notice used to transfer ERC20s safely
+        @param token Token instance to transfer
+        @param to Address to transfer token to
+        @param value Amount of token to transfer
+     */
+    function _safeTransfer(IERC20 token, address to, uint256 value) private {
+        _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+    }
+
+
+    /**
+        @notice used to transfer ERC20s safely
+        @param token Token instance to transfer
+        @param from Address to transfer token from
+        @param to Address to transfer token to
+        @param value Amount of token to transfer
+     */
+    function _safeTransferFrom(IERC20 token, address from, address to, uint256 value) private {
+        _safeCall(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+    }
+
+    /**
+        @notice used to make calls to ERC20s safely
+        @param token Token instance call targets
+        @param data encoded call data
+     */
+    function _safeCall(IERC20 token, bytes memory data) private {        
+        (bool success, bytes memory returndata) = address(token).call(data);
+        require(success, "ERC20: call failed");
+
+        if (returndata.length > 0) {
+
+            require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
+        }
+    }
+
 }

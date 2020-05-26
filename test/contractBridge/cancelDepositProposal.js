@@ -98,10 +98,27 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
     it("depositProposal is cancelled after 10 blocks", async () => {
         
+
+        await TruffleAssert.passes(vote(relayer1Address));
+
         for (i=0; i<20; i++) {
             await Helpers.advanceBlock();
         }
-        await TruffleAssert.reverts(vote(relayer2Address));
+
+        await TruffleAssert.passes(vote(relayer2Address));
+        
+        const expectedDepositProposal = {
+            _dataHash: depositDataHash,
+            _yesVotes: [relayer1Address],
+            _noVotes: [],
+            _status: '4' // Cancelled
+        };
+
+        const depositProposal = await BridgeInstance.getProposal(
+            originChainID, expectedDepositNonce);
+
+        assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
+
     });
 
 });

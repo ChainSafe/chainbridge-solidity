@@ -347,7 +347,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
-            if (block.number.sub(proposal._proposedBlock) > _expiry) {
+            if ((block.number).sub(proposal._proposedBlock) > _expiry) {
                 // if we number of blocks that has passed since this proposal
                 // was submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;

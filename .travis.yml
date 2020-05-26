@@ -31,7 +31,7 @@ jobs:
       script:
         - make install-deps && make install-cli
         - make bindings
-        - SILENT=true make start-ganache
+        - make start-ganache
         - ./scripts/ci_cli.sh
 
     

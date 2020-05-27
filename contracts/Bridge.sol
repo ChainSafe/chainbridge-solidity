@@ -95,6 +95,12 @@ contract Bridge is Pausable, AccessControl {
         _;
     }
 
+    modifier onlyAdminOrRelayer() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
+                "sender does not have admin role");
+        _;
+    }
+
     modifier onlyRelayers() {
         require(hasRole(RELAYER_ROLE, msg.sender), "sender does not have relayer role");
         _;
@@ -373,7 +379,7 @@ contract Bridge is Pausable, AccessControl {
 
     }
 
-    function cancelProposal(uint8 chainID, uint64 depositNonce) internal {
+    function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
         require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
@@ -381,15 +387,7 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
 
     }
-
-    function adminCancelProposal(uint8 chainID, uint64 depositNonce) external onlyAdmin {
-        cancelProposal(chainID, depositNonce);
-    }
-
-    function relayerCancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {
-        cancelProposal(chainID, depositNonce);
-    }
-
+    
     /**
         @notice Executes a deposit proposal that is considered passed using a specified handler contract.
         @notice Only callable by relayers when Bridge is not paused.

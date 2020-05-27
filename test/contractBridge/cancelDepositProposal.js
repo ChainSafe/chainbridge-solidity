@@ -156,7 +156,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        await TruffleAssert.passes(BridgeInstance.adminCancelProposal(originChainID, expectedDepositNonce))
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
         const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
         await TruffleAssert.reverts(vote(relayer2Address), "proposal has already been passed, transferred, or cancelled.")

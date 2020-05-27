@@ -43,10 +43,10 @@ contract('GenericHandler - [constructor]', async () => {
         ];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
         
-        const executeDepositFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(centrifugeAssetStoreFuncSig))).substr(0, 10);
+        const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(centrifugeAssetStoreFuncSig))).substr(0, 10);
 
         initialDepositFunctionSignatures = [blankFunctionSig, blankFunctionSig, blankFunctionSig];
-        initialExecuteFunctionSignatures = [executeDepositFuncSig, executeDepositFuncSig, executeDepositFuncSig];
+        initialExecuteFunctionSignatures = [executeProposalFuncSig, executeProposalFuncSig, executeProposalFuncSig];
     });
 
     it('[sanity] contract should be deployed successfully', async () => {

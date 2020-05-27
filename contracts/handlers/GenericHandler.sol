@@ -30,7 +30,7 @@ contract GenericHandler is IGenericHandler {
     // contract address => deposit function signature
     mapping (address => bytes4) public _contractAddressToDepositFunctionSignature;
 
-    // contract address => execute deposit function signature
+    // contract address => execute proposal function signature
     mapping (address => bytes4) public _contractAddressToExecuteFunctionSignature;
 
     // token contract address => is whitelisted
@@ -50,7 +50,7 @@ contract GenericHandler is IGenericHandler {
         @param initialDepositFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
         and are the function that will be called when executing {deposit}
         @param initialExecuteFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
-        and are the function that will be called when executing {executeDeposit}
+        and are the function that will be called when executing {executeProposal}
 
         @dev {initialResourceIDs}, {initialContractAddresses}, {initialDepositFunctionSignatures},
         and {initialExecuteFunctionSignatures} must all have the same length. Also,
@@ -196,7 +196,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToExecuteFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function executeDeposit(bytes calldata data) external _onlyBridge {
+    function executeProposal(bytes calldata data) external _onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         assembly {

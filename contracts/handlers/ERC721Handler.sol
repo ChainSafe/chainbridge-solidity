@@ -40,7 +40,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param initialContractAddresses These are the addresses the {initialResourceIDs} will point to, and are the contracts that will be
         called to perform various deposit calls.
         @param burnableContractAddresses These addresses will be set as burnable and when {deposit} is called, the deposited token will be burned.
-        When {executeDeposit} is called, new tokens will be minted.
+        When {executeProposal} is called, new tokens will be minted.
 
         @dev {initialResourceIDs} and {initialContractAddresses} must have the same length (one resourceID for every address).
         Also, these arrays must be ordered in the way that {initialResourceIDs}[0] is the intended resourceID for {initialContractAddresses}[0].
@@ -171,7 +171,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
         metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
      */
-    function executeDeposit(bytes calldata data) external override _onlyBridge {
+    function executeProposal(bytes calldata data) external override _onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;
         bytes  memory   destinationRecipientAddress;

@@ -132,14 +132,14 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         ));
 
         // relayer1 will execute the deposit proposal
-        const executeDepositTx = await BridgeInstance.executeProposal(
+        const executeProposalTx = await BridgeInstance.executeProposal(
             chainID,
             expectedDepositNonce,
             depositData,
             { from: relayer2Address }
         );
 
-        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeDepositTx.tx);
+        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeProposalTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
             return event.asset === hashOfCentrifugeAsset;
         });

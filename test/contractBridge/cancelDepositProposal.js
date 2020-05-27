@@ -114,9 +114,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        const depositProposal = await BridgeInstance.getProposal(
-            originChainID, expectedDepositNonce);
-
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
 
     });

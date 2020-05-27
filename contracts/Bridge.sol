@@ -375,7 +375,7 @@ contract Bridge is Pausable, AccessControl {
 
     function cancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require(block.number.sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
@@ -384,7 +384,7 @@ contract Bridge is Pausable, AccessControl {
 
     function adminCancelProposal(uint8 chainID, uint64 depositNonce) external onlyAdmin {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require(block.number.sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
@@ -431,7 +431,7 @@ contract Bridge is Pausable, AccessControl {
     }
 
     function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
-        require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
+            require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
     }
 }

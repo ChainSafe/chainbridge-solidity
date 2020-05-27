@@ -96,12 +96,12 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     });
 
 
-    it("depositProposal is cancelled after 10 blocks", async () => {
+    it("voting on depositProposal after threshold results in cancelled proposal", async () => {
         
 
         await TruffleAssert.passes(vote(relayer1Address));
 
-        for (i=0; i<20; i++) {
+        for (i=0; i<10; i++) {
             await Helpers.advanceBlock();
         }
 
@@ -116,7 +116,52 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
+        await TruffleAssert.reverts(vote(relayer3Address), "proposal has already been passed, transferred, or cancelled.")
 
     });
+
+
+    it("relayer can cancel proposal after threshold blocks have passed", async () => {
+        await TruffleAssert.passes(vote(relayer2Address));
+
+        for (i=0; i<10; i++) {
+            await Helpers.advanceBlock();
+        }
+
+        const expectedDepositProposal = {
+            _dataHash: depositDataHash,
+            _yesVotes: [relayer2Address],
+            _noVotes: [],
+            _status: '4' // Cancelled
+        };
+
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
+        assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
+        await TruffleAssert.reverts(vote(relayer4Address), "proposal has already been passed, transferred, or cancelled.")
+
+    });
+
+    it("admin can cancel proposal after threshold blocks have passed", async () => {
+        await TruffleAssert.passes(vote(relayer3Address));
+
+        for (i=0; i<10; i++) {
+            await Helpers.advanceBlock();
+        }
+
+        const expectedDepositProposal = {
+            _dataHash: depositDataHash,
+            _yesVotes: [relayer3Address],
+            _noVotes: [],
+            _status: '4' // Cancelled
+        };
+
+        await TruffleAssert.passes(BridgeInstance.adminCancelProposal(originChainID, expectedDepositNonce))
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
+        assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
+        await TruffleAssert.reverts(vote(relayer2Address), "proposal has already been passed, transferred, or cancelled.")
+
+    });
+
 
 });

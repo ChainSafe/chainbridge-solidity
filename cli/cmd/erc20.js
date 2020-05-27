@@ -52,7 +52,7 @@ const transferCmd = new Command("transfer")
         console.log(`[ERC20 Transfer] Initial Handler token balance: ${handlerPreBal.toNumber()} Address: ${args.erc20HandlerAddress}`);
 
         // Approve tokens
-        await erc20Instance.approve(args.erc20HandlerAddress, args.value);
+        await erc20Instance.approve(args.erc20HandlerAddress, args.value, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         console.log(`[ERC20 Transfer] Approved ${args.erc20HandlerAddress} to spend ${args.value} tokens from ${args.wallet.address}!`);
 
         // Compute resourceID
@@ -76,6 +76,7 @@ const transferCmd = new Command("transfer")
             args.dest, // destination chain id
             args.resourceID,
             data,
+            { gasPrice: args.gasPrice, gasLimit: args.gasLimit}
         );
 
         console.log("[ERC20 Transfer] Created deposit to initiate transfer!");

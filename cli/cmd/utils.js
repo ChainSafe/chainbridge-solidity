@@ -4,6 +4,8 @@ const fs = require('fs');
 const setupParentArgs = async (args, parent) => {
     args.url= parent.url
     args.provider = new ethers.providers.JsonRpcProvider(args.url);
+    args.gasLimit = ethers.utils.hexlify(Number(parent.gasLimit))
+    args.gasPrice = ethers.utils.hexlify(Number(parent.gasPrice))
     if (!parent.jsonWallet) {
         args.wallet = new ethers.Wallet(parent.privateKey, args.provider);
     } else {

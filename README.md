@@ -36,6 +36,8 @@ This is a small CLI application to deploy the contracts and interact with the ch
   --private-key <value>           Private key to use (default: "0x000000000000000000000000000000000000000000000000000000616c696365")
   --json-wallet <path>            (Optional) Encrypted JSON wallet
   --json-wallet-password <value>  (Optional) Password for encrypted JSON wallet
+  --gas-limit <value>             Gas limit for transactions (default: "8000000")
+  --gas-price <value>             Gas limit for transactions (default: "20000000")
   -h, --help                      display help for command
 ```
 ### `deploy`

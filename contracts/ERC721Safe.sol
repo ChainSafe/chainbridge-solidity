@@ -27,7 +27,7 @@ contract ERC721Safe {
      */
     function fundERC721(address tokenAddress, address owner, uint tokenID) public {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, address(this), tokenID);
+        _safeTransferFrom(erc721, owner, address(this), tokenID);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
@@ -42,7 +42,7 @@ contract ERC721Safe {
      */
     function lockERC721(address tokenAddress, address owner, address recipient, uint tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, recipient, tokenID);
+        _safeTransferFrom(erc721, owner, recipient, tokenID);
 
         _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
@@ -57,7 +57,7 @@ contract ERC721Safe {
      */
     function releaseERC721(address tokenAddress, address owner, address recipient, uint256 tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
-        erc721.transferFrom(owner, recipient, tokenID);
+        _safeTransferFrom(erc721, owner, recipient, tokenID);
 
         _balances[tokenAddress] = _balances[tokenAddress].sub(1);
     }
@@ -90,5 +90,23 @@ contract ERC721Safe {
         erc721.burn(tokenID);
 
         _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(1);
+    }
+
+    /**
+        @notice used to transferFrom ERC721s safely
+        @param token Token instance to transfer
+        @param from Address to transfer token from
+        @param to Address to transfer token to
+        @param tokenID ID of token to transfer
+     */
+    function _safeTransferFrom(IERC721 token, address from, address to, uint256 tokenID) private {        
+        (bool success, bytes memory returndata) = address(token).call(abi.encodeWithSelector(token.transferFrom.selector, from, to, tokenID));
+        require(success, "ERC721: transfer from failed");
+
+        if (returndata.length > 0) {
+
+            require(abi.decode(returndata, (bool)), "ERC721: transfer from did not succeed");
+        }
+
     }
 }

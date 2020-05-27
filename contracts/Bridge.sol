@@ -354,8 +354,8 @@ contract Bridge is Pausable, AccessControl {
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
             if ((block.number).sub(proposal._proposedBlock) > _expiry) {
-                // if we number of blocks that has passed since this proposal
-                // was submitted exceeds the expiry threshold set, cancel the proposal
+                // if the number of blocks that has passed since this proposal was
+                // submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;
                 emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
             } else {
@@ -387,7 +387,7 @@ contract Bridge is Pausable, AccessControl {
         emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
 
     }
-    
+
     /**
         @notice Executes a deposit proposal that is considered passed using a specified handler contract.
         @notice Only callable by relayers when Bridge is not paused.
@@ -428,7 +428,7 @@ contract Bridge is Pausable, AccessControl {
     }
 
     function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
-            require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
+        require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
     }
 }

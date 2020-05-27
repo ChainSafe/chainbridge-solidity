@@ -373,7 +373,7 @@ contract Bridge is Pausable, AccessControl {
 
     }
 
-    function cancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {
+    function cancelProposal(uint8 chainID, uint64 depositNonce) internal {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
         require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
@@ -383,13 +383,12 @@ contract Bridge is Pausable, AccessControl {
     }
 
     function adminCancelProposal(uint8 chainID, uint64 depositNonce) external onlyAdmin {
-        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
-
-        proposal._status = ProposalStatus.Cancelled;
-        emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
+        cancelProposal(chainID, depositNonce);
     }
 
+    function relayerCancelProposal(uint8 chainID, uint64 depositNonce) external onlyRelayers {
+        cancelProposal(chainID, depositNonce);
+    }
 
     /**
         @notice Executes a deposit proposal that is considered passed using a specified handler contract.

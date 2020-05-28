@@ -94,7 +94,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         uint64 depositNonce,
         address depositer,
         bytes calldata data
-    ) external override _onlyBridge {
+    ) external override onlyBridge {
         bytes32        resourceID;
         bytes   memory recipientAddress;
         uint256        amount;
@@ -147,7 +147,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         destinationRecipientAddress length     uint256     bytes  64 - 96
         destinationRecipientAddress            bytes       bytes  96 - END
      */
-    function executeProposal(bytes calldata data) external override _onlyBridge {
+    function executeProposal(bytes calldata data) external override onlyBridge {
         uint256       amount;
         bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
@@ -190,7 +190,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @param recipient Address to release tokens to.
         @param amount The amount of ERC20 tokens to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint amount) external override _onlyBridge {
+    function withdraw(address tokenAddress, address recipient, uint amount) external override onlyBridge {
         releaseERC20(tokenAddress, recipient, amount);
     }
 }

@@ -96,14 +96,18 @@ contract Bridge is Pausable, AccessControl {
     }
 
     modifier onlyAdminOrRelayer() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
-                "sender does not have admin role");
+        _onlyAdminOrRelayer();
         _;
     }
 
     modifier onlyRelayers() {
         _onlyRelayers();
         _;
+    }
+
+    function _onlyAdminOrRelayer() private {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
+                "sender does not have admin role");
     }
 
     function _onlyAdmin() private {

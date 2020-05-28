@@ -373,7 +373,7 @@ contract Bridge is Pausable, AccessControl {
         proposal._status = ProposalStatus.Transferred;
         
         IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
-        depositHandler.executeDeposit(data);
+        depositHandler.executeProposal(data);
 
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }

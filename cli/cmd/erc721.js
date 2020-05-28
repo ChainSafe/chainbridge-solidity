@@ -29,6 +29,20 @@ const addMinterCmd = new Command("add-minter")
         console.log(`[ERC721 Add Minter] Added ${args.minter} as a minter of ${args.erc721Address}`)
     })
 
+const approveCmd = new Command("approve")
+    .description("Approve tokens for transfer")
+    .option('--id <id>', "Token ID to transfer", 1)
+    .option('--recipient <address>', 'Destination recipient address', constants.ERC721_HANDLER_ADDRESS)
+    .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
+    .action(async function (args) {
+        await setupParentArgs(args, args.parent.parent)
+
+        const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+        const tx = await erc721Instance.approve(args.recipient, args.id, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
+        await waitForTx(args.provider, tx.hash)
+        console.log(`[ERC721 Approve] Approved ${args.recipient} to spend token ${args.id} from ${args.wallet.address}!`);
+    })
+
 const depositCmd = new Command("deposit")
     .description("Initiates a bridge transfer")
     .option('--id <id>', "ERC721 token id", 1)
@@ -69,6 +83,7 @@ const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
 erc721Cmd.addCommand(addMinterCmd)
+erc721Cmd.addCommand(approveCmd)
 erc721Cmd.addCommand(depositCmd)
 
 module.exports = erc721Cmd

@@ -33,7 +33,7 @@ const addMinterCmd = new Command("add-minter")
 const approveCmd = new Command("approve")
     .description("Approve tokens for transfer")
     .option('--amount <value>', "Amount to transfer", 1)
-    .option('--recipient <address>', 'Destination recipient address', constants.relayerAddresses[4])
+    .option('--recipient <address>', 'Destination recipient address', constants.ERC20_HANDLER_ADDRESS)
     .option('--erc20Address <address>', 'ERC20 contract address', constants.ERC20_ADDRESS)
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)

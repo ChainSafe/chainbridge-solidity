@@ -20,7 +20,7 @@ const registerResourceCmd = new Command("register-resource")
 
         const tx = await bridgeInstance.adminSetResource(args.handler, args.resourceId, args.targetContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[Register Resource] Successfully registered contract ${args.targetContract} with id ${args.resourceId} on handler ${args.handler}`);
+        console.log(`[Register Resource] Registered contract ${args.targetContract} with id ${args.resourceId} on handler ${args.handler}`);
     })
 
 const registerGenericResourceCmd = new Command("register-generic-resource")
@@ -44,7 +44,7 @@ const registerGenericResourceCmd = new Command("register-generic-resource")
 
         const tx = await bridgeInstance.adminSetGenericResource(args.handler, args.resourceId, args.targetContract, args.deposit, args.execute, { gasPrice: args.gasPrice, gasLimit: args.gasLimit})
         await waitForTx(args.provider, tx.hash)
-        console.log(`[BRIDGE] Successfully registered generic resource ID ${args.resourceID} on handler ${args.handler}`)
+        console.log(`[BRIDGE] Registered generic resource ID ${args.resourceID} on handler ${args.handler}`)
     })
 
 const setBurnCmd = new Command("set-burn")
@@ -60,7 +60,7 @@ const setBurnCmd = new Command("set-burn")
 
         const tx = await bridgeInstance.adminSetBurnable(args.handler, args.tokenContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[BRIDGE] Successfully set contract ${args.tokenContract} as burnable on handler ${args.handler}`);
+        console.log(`[BRIDGE] Set contract ${args.tokenContract} as burnable on handler ${args.handler}`);
 
     })
 
@@ -82,7 +82,7 @@ const queryProposalCmd = new Command("query-proposal")
 
 
 const cancelProposalCmd = new Command("cancel-proposal")
-    .description("Cancel a proposal that has pass the expiry threshold")
+    .description("Cancel a proposal that has passed the expiry threshold")
     .option('--bridge <address>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
     .option('--chainId <id>', 'Chain ID of proposal to cancel', 0)
     .option('--depositNonce <value>', 'Deposit nonce of proposal to cancel', 0)
@@ -92,7 +92,7 @@ const cancelProposalCmd = new Command("cancel-proposal")
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
         const tx = await bridgeInstance.adminCancelProposal(args.chainId, args.depositNonce);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[Bridge Cancel Proposal] Successfully set proposal with chainID ${args.chainId} and depositNonce ${args.depositNonce} status to 'Cancelled`);
+        console.log(`[Bridge Cancel Proposal] Set proposal with chain ID ${args.chainId} and deposit nonce ${args.depositNonce} status to 'Cancelled`);
 
     })
 

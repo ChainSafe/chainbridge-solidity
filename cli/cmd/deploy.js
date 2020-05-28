@@ -9,6 +9,7 @@ const deployCmd = new Command("deploy")
     .option('--relayers <value>', 'List of initial relayers', splitCommaList, constants.relayerAddresses)
     .option('--relayerThreshold <value>', 'Number of votes required for a proposal to pass', 2)
     .option('--fee <ether>', 'Fee to be taken when making a deposit (decimals allowed)', 0)
+    .option('--expiry <blocks>', 'Numer of blocks after which a proposal is considered cancelled', 100)
     .option('--all', 'Deploy all contracts')
     .option('--bridge', 'Deploy bridge contract')
     .option('--erc20Handler', 'Deploy erc20Handler contract')
@@ -73,8 +74,8 @@ const deployCmd = new Command("deploy")
 const displayLog = (args) => {
     console.log(`
 ================================================================
-Url:         ${args.url}
-Deployer:    ${args.wallet.address}
+Url:        ${args.url}
+Deployer:   ${args.wallet.address}
 Gas Limit:   ${ethers.utils.bigNumberify(args.gasLimit)}
 Gas Price:   ${ethers.utils.bigNumberify(args.gasPrice)}
 Deploy Cost: ${ethers.utils.formatEther(args.cost)}
@@ -85,6 +86,7 @@ Chain Id:    ${args.chainId}
 Threshold:   ${args.relayerThreshold}
 Relayers:    ${args.relayers}
 Bridge Fee:  ${args.fee}
+Expiry:      ${args.expiry}
 
 Contract Addresses
 ================================================================
@@ -116,7 +118,9 @@ async function deployBridgeContract(args) {
         args.relayers,
         args.relayerThreshold,
         ethers.utils.parseEther(args.fee.toString()),
+        args.expiry,
         { gasPrice: args.gasPrice, gasLimit: args.gasLimit}
+
     );
     await contract.deployed();
     args.bridgeContract = contract.address

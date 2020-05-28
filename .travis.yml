@@ -16,6 +16,7 @@ jobs:
       env: CI=true
       script:
         - make install-deps
+        - SILENT=true make start-ganache
         - make test
 #    - name: "Run Truffle tests (Geth)"
 #      install:

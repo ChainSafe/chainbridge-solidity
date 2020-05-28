@@ -22,9 +22,10 @@ contract Bridge is Pausable, AccessControl {
     uint256 public _totalRelayers;
     uint256 public _totalProposals;
     uint256 public _fee;
+    uint256 public _expiry;
 
     enum Vote {No, Yes}
-    enum ProposalStatus {Inactive, Active, Passed, Transferred}
+    enum ProposalStatus {Inactive, Active, Passed, Transferred, Cancelled}
 
     struct Proposal {
         bytes32        _resourceID;
@@ -32,6 +33,7 @@ contract Bridge is Pausable, AccessControl {
         address[]      _yesVotes;
         address[]      _noVotes;
         ProposalStatus _status;
+        uint256        _proposedBlock;
     }
 
     // destinationChainID => number of deposits
@@ -54,6 +56,13 @@ contract Bridge is Pausable, AccessControl {
         uint64  indexed depositNonce
     );
     event ProposalCreated(
+        uint8   indexed originChainID,
+        uint8   indexed destinationChainID,
+        uint64  indexed depositNonce,
+        bytes32         resourceID,
+        bytes32         dataHash
+    );
+    event ProposalCancelled(
         uint8   indexed originChainID,
         uint8   indexed destinationChainID,
         uint64  indexed depositNonce,
@@ -86,6 +95,12 @@ contract Bridge is Pausable, AccessControl {
         _;
     }
 
+    modifier onlyAdminOrRelayer() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
+                "sender does not have admin role");
+        _;
+    }
+
     modifier onlyRelayers() {
         require(hasRole(RELAYER_ROLE, msg.sender), "sender does not have relayer role");
         _;
@@ -98,10 +113,11 @@ contract Bridge is Pausable, AccessControl {
         @param initialRelayers Addresses that should be initially granted the relayer role.
         @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
      */
-    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee) public {
+    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee, uint256 expiry) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
         _fee = fee;
+        _expiry = expiry;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
@@ -320,7 +336,7 @@ contract Bridge is Pausable, AccessControl {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
-        require(uint(proposal._status) <= 1, "proposal has already been passed or transferred");
+        require(uint(proposal._status) <= 1, "proposal has already been passed, transferred, or cancelled");
         require(!_hasVotedOnProposal[chainID][depositNonce][msg.sender], "relayer has already voted on proposal");
 
         if (uint(proposal._status) == 0) {
@@ -330,25 +346,46 @@ contract Bridge is Pausable, AccessControl {
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
                 _noVotes: new address[](0),
-                _status: ProposalStatus.Active
+                _status: ProposalStatus.Active,
+                _proposedBlock: block.number
                 });
 
             proposal._yesVotes[0] = msg.sender;
             emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
         } else {
-            require(dataHash == proposal._dataHash, "datahash mismatch");
-            proposal._yesVotes.push(msg.sender);
+            if ((block.number).sub(proposal._proposedBlock) > _expiry) {
+                // if the number of blocks that has passed since this proposal was
+                // submitted exceeds the expiry threshold set, cancel the proposal
+                proposal._status = ProposalStatus.Cancelled;
+                emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
+            } else {
+                require(dataHash == proposal._dataHash, "datahash mismatch");
+                proposal._yesVotes.push(msg.sender);
+
+            }
+
+        }
+        if (proposal._status != ProposalStatus.Cancelled) {
+            _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
+            emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
+
+            // If _depositThreshold is set to 1, then auto finalize
+            // or if _relayerThreshold has been exceeded
+            if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
+                proposal._status = ProposalStatus.Passed;
+                emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
+            }
         }
 
-        _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
-        emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
+    }
 
-        // If _depositThreshold is set to 1, then auto finalize
-        // or if _relayerThreshold has been exceeded
-        if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
-            proposal._status = ProposalStatus.Passed;
-            emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
-        }
+    function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
+        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
+        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        
+        proposal._status = ProposalStatus.Cancelled;
+        emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
+
     }
 
     /**

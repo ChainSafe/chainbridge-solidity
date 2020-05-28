@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, splitCommaList} = require("./utils")
+const {setupParentArgs, waitForTx} = require("./utils")
 
 const mintCmd = new Command("mint")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
@@ -10,8 +10,9 @@ const mintCmd = new Command("mint")
     .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
-        let erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
-        await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
+        const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+        const tx = await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
+        await waitForTx(args.provider, tx.hash)
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
     })
 
@@ -20,11 +21,12 @@ const addMinterCmd = new Command("add-minter")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
     .option('--minter <address>', 'Minter address', constants.relayerAddresses[1])
     .action(async function(args) {
-            await setupParentArgs(args, args.parent.parent)
-            const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
-            let MINTER_ROLE = await erc721Instance.MINTER_ROLE()
-            await erc721Instance.grantRole(MINTER_ROLE, args.minter);
-            console.log(`[ERC721 Add Minter] Added ${args.minter} as a minter of ${args.erc721Address}`)
+        await setupParentArgs(args, args.parent.parent)
+        const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+        const MINTER_ROLE = await erc721Instance.MINTER_ROLE()
+        const tx = await erc721Instance.grantRole(MINTER_ROLE, args.minter);
+        await waitForTx(args.provider, tx.hash)
+        console.log(`[ERC721 Add Minter] Added ${args.minter} as a minter of ${args.erc721Address}`)
     })
 
 const depositCmd = new Command("deposit")
@@ -38,10 +40,10 @@ const depositCmd = new Command("deposit")
         await setupParentArgs(args, args.parent.parent)
 
         // Instances
-        const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
+        const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
-        const depositData = '0x' +
-            resourceId.substr(2) +                                                  // resourceID            (32 bytes) for now
+        const data = '0x' +
+            args.resourceId.substr(2) +                                                  // resourceID            (32 bytes) for now
             ethers.utils.hexZeroPad(ethers.utils.hexlify(args.id), 32).substr(2) +  // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify((args.recipient.length - 2)/2), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             ethers.utils.hexlify(args.recipient).substr(2)                // recipientAddress      (?? bytes)
@@ -54,11 +56,12 @@ const depositCmd = new Command("deposit")
         console.log(`[ERC721 Deposit]   Raw: ${data}`)
 
         // Perform deposit
-        await bridgeInstance.deposit(
+        const tx = await bridgeInstance.deposit(
             args.dest, // destination chain id
             args.resourceId,
-            depositData,
+            data,
             { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
+        await waitForTx(args.provider, tx.hash)
         console.log("[ERC721 Deposit] Created deposit to initiate transfer!")
     })
 

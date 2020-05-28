@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, splitCommaList} = require("./utils")
+const {setupParentArgs, waitForTx} = require("./utils")
 
 const mintCmd = new Command("mint")
     .description("Mints erc20 tokens")
@@ -11,7 +11,9 @@ const mintCmd = new Command("mint")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
-        await erc20Instance.mint(args.wallet.address, args.amount);
+        console.log(`To: ${args.wallet.address} Amount: ${args.amount} Contract: ${constants.ERC20_ADDRESS}`)
+        const tx = await erc20Instance.mint(args.wallet.address, args.amount);
+        await waitForTx(args.provider, tx.hash)
         console.log(`[ERC20 Mint] Successfully minted ${args.amount} tokens to ${args.wallet.address}`);
     })
 
@@ -20,12 +22,12 @@ const addMinterCmd = new Command("add-minter")
     .option('--erc20Address <address>', 'ERC20 contract address', constants.ERC20_ADDRESS)
     .option('--minter <address>', 'Minter address', constants.relayerAddresses[1])
     .action(async function(args) {
-            await setupParentArgs(args, args.parent.parent)
-            const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
-            let MINTER_ROLE = await erc20Instance.MINTER_ROLE()
-            const tx = await erc20Instance.grantRole(MINTER_ROLE, args.minter);
-            console.log(`[ERC20 Add Minter] Added ${args.minter} as a minter of ${args.erc20Address}`)
-            console.log(`[ERC20 Transfer] Tx Hash: ${tx.hash}`)
+        await setupParentArgs(args, args.parent.parent)
+        const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
+        let MINTER_ROLE = await erc20Instance.MINTER_ROLE()
+        const tx = await erc20Instance.grantRole(MINTER_ROLE, args.minter);
+        await waitForTx(args.provider, tx.hash)
+        console.log(`[ERC20 Add Minter] Added ${args.minter} as a minter of ${args.erc20Address}`)
     })
 
 const approveCmd = new Command("approve")
@@ -34,12 +36,12 @@ const approveCmd = new Command("approve")
     .option('--recipient <address>', 'Destination recipient address', constants.relayerAddresses[4])
     .option('--erc20Address <address>', 'ERC20 contract address', constants.ERC20_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
         const tx = await erc20Instance.approve(args.recipient, args.amount, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
+        await waitForTx(args.provider, tx.hash)
         console.log(`[ERC20 Approve] Approved ${args.recipient} to spend ${args.amount} tokens from ${args.wallet.address}!`);
-        console.log(`[ERC20 Transfer] Tx Hash: ${tx.hash}`)
     })
 
 const depositCmd = new Command("deposit")
@@ -50,10 +52,10 @@ const depositCmd = new Command("deposit")
     .option('--resourceId <id>', 'ResourceID for transfer', constants.ERC20_RESOURCEID)
     .option('--bridge <address>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
     .action(async function (args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         // Instances
-        const bridgeInstance = new ethers.Contract(args.bridgeAddress, constants.ContractABIs.Bridge.abi, args.wallet);
+        const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
         const data = '0x' +
             args.resourceId.substr(2) +              // OriginHandlerAddress  (32 bytes)
@@ -76,8 +78,8 @@ const depositCmd = new Command("deposit")
             { gasPrice: args.gasPrice, gasLimit: args.gasLimit}
         );
 
+        await waitForTx(args.provider, tx.hash)
         console.log(`[ERC20 Deposit] Created deposit to initiate transfer!`);
-        console.log(`[ERC20 Deposit] Tx Hash: ${tx.hash}`)
     })
 
 const balanceCmd = new Command("balance")
@@ -85,7 +87,7 @@ const balanceCmd = new Command("balance")
     .option('--address <address>', 'Address to query', constants.deployerAddress)
     .option('--erc20Address <address>', 'ERC20 contract address', constants.ERC20_ADDRESS)
     .action(async function(args) {
-        setupParentArgs(args, args.parent.parent)
+        await setupParentArgs(args, args.parent.parent)
 
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
         const balance = await erc20Instance.balanceOf(args.address)

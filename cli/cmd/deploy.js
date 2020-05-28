@@ -30,26 +30,38 @@ const deployCmd = new Command("deploy")
             await deployERC721(args)
             await deployCentrifugeAssetStore(args);
         } else {
+            let deployed = false
             if (args.bridge) {
                 await deployBridgeContract(args);
+                deployed = true
             }
             if (args.erc20Handler) {
                 await deployERC20Handler(args);
+                deployed = true
             }
             if (args.erc721Handler) {
                 await deployERC721Handler(args)
+                deployed = true
             }
             if (args.genericHandler) {
                 await deployGenericHandler(args)
+                deployed = true
             }
             if (args.erc20) {
                 await deployERC20(args)
+                deployed = true
             }
             if (args.erc721) {
                 await deployERC721(args)
+                deployed = true
             }
             if (args.centAsset) {
                 await deployCentrifugeAssetStore(args);
+                deployed = true
+            }
+
+            if (!deployed) {
+                throw new Error("must specify --all or specific contracts to deploy")
             }
         }
 

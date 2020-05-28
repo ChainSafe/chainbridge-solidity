@@ -23,8 +23,12 @@ contract HandlerHelpers is IERCHandler {
     mapping (address => bool) public _burnList;
 
     modifier _onlyBridge() {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+        onlyBridge();
         _;
+    }
+
+    function onlyBridge() private {
+        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 
     /**

@@ -4,6 +4,7 @@
 - [`register-generic-resource`](#register-generic-resource)
 - [`set-burn`](#set-burn)
 - [`query-proposal`](#query-proposal)
+- [`cancel-proposal`](#cancel-proposal)
 
 
 ## `register-resource`
@@ -49,4 +50,11 @@ Query a proposal on-chain.
   --chainId <id>            Source chain ID of proposal
 ```
 
+## `cancel-proposal`
+Cancels an expired proposal.
 
+```
+  --bridge <address>      Bridge contract address
+  --chainId <id>          Chain ID of proposal to cancel
+  --depositNonce <value>  Deposit nonce of proposal to cancel
+```

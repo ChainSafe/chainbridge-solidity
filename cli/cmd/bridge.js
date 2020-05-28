@@ -82,17 +82,17 @@ const queryProposalCmd = new Command("query-proposal")
 
 
 const cancelProposalCmd = new Command("cancel-proposal")
-    .description("cancel a proposal past the expiry threshold")
+    .description("Cancel a proposal that has pass the expiry threshold")
     .option('--bridge <address>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
-    .option('--chainId <int>', 'Chain ID of proposal to cancel', 0)
-    .option('--depositNonce <int>', 'depositNonce of proposal to cancel', 0)
+    .option('--chainId <id>', 'Chain ID of proposal to cancel', 0)
+    .option('--depositNonce <value>', 'Deposit nonce of proposal to cancel', 0)
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
 
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
-        await bridgeInstance.adminCancelProposal(args.chainID, args.depositNonce);
-        console.log(`[BRIDGE] Successfully set proposal with chainID ${args.chainID} 
-                        and depositNonce ${args.depositNonce} status to 'Cancelled`);
+        const tx = await bridgeInstance.adminCancelProposal(args.chainId, args.depositNonce);
+        await waitForTx(args.provider, tx.hash)
+        console.log(`[Bridge Cancel Proposal] Successfully set proposal with chainID ${args.chainId} and depositNonce ${args.depositNonce} status to 'Cancelled`);
 
     })
 

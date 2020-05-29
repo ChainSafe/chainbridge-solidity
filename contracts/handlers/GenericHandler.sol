@@ -36,7 +36,7 @@ contract GenericHandler is IGenericHandler {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
-    modifier _onlyBridge() {
+    modifier onlyBridge() {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
     }
@@ -116,7 +116,7 @@ contract GenericHandler is IGenericHandler {
         address contractAddress,
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
-    ) external override {
+    ) external onlyBridge override {
         require(_resourceIDToContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _contractAddressToResourceID[contractAddress];
@@ -142,7 +142,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external _onlyBridge {
+    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
         bytes32      resourceID;
         bytes32      lenMetadata;
         bytes memory metadata;
@@ -196,7 +196,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToExecuteFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function executeProposal(bytes calldata data) external _onlyBridge {
+    function executeProposal(bytes calldata data) external onlyBridge {
         bytes32      resourceID;
         bytes memory metaData;
         assembly {

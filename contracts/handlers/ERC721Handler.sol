@@ -100,7 +100,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external override _onlyBridge {
+    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external override onlyBridge {
         bytes32      resourceID;
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
@@ -171,7 +171,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
         metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
      */
-    function executeProposal(bytes calldata data) external override _onlyBridge {
+    function executeProposal(bytes calldata data) external override onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;
         bytes  memory   destinationRecipientAddress;
@@ -239,7 +239,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param recipient Address to release token to.
         @param tokenID The ERC721 token ID to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint tokenID) external override _onlyBridge {
+    function withdraw(address tokenAddress, address recipient, uint tokenID) external override onlyBridge {
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 }

@@ -22,9 +22,13 @@ contract HandlerHelpers is IERCHandler {
     // token contract address => is burnable
     mapping (address => bool) public _burnList;
 
-    modifier _onlyBridge() {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+    modifier onlyBridge() {
+        _onlyBridge();
         _;
+    }
+
+    function _onlyBridge() private {
+        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 
     /**
@@ -36,7 +40,7 @@ contract HandlerHelpers is IERCHandler {
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function setResource(bytes32 resourceID, address contractAddress) external override _onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
         require(_resourceIDToTokenContractAddress[resourceID] == address(0), "resourceID already has a corresponding contract address");
 
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
@@ -50,7 +54,7 @@ contract HandlerHelpers is IERCHandler {
         to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
-    function setBurnable(address contractAddress) external override _onlyBridge{
+    function setBurnable(address contractAddress) external override onlyBridge{
         _setBurnable(contractAddress);
     }
 

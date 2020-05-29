@@ -5,6 +5,7 @@ const {Command} = require('commander');
 const {setupParentArgs, waitForTx} = require("./utils")
 
 const mintCmd = new Command("mint")
+    .description("Mint tokens")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
     .option('--id <id>', "Token id", 1)
     .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
@@ -14,6 +15,17 @@ const mintCmd = new Command("mint")
         const tx = await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
         await waitForTx(args.provider, tx.hash)
         console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
+    })
+
+const ownerCmd = new Command("owner")
+    .description("Query ownerOf")
+    .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
+    .option('--id <id>', "Token id", 1)
+    .action(async function (args) {
+            await setupParentArgs(args, args.parent.parent)
+            const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+            const owner = await erc721Instance.ownerOf(args.id)
+            console.log(`[ERC721] Owner of token ${args.id} is ${owner}`)
     })
 
 const addMinterCmd = new Command("add-minter")
@@ -82,6 +94,7 @@ const depositCmd = new Command("deposit")
 const erc721Cmd = new Command("erc721")
 
 erc721Cmd.addCommand(mintCmd)
+erc721Cmd.addCommand(ownerCmd)
 erc721Cmd.addCommand(addMinterCmd)
 erc721Cmd.addCommand(approveCmd)
 erc721Cmd.addCommand(depositCmd)

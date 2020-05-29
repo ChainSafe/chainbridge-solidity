@@ -23,8 +23,20 @@ const getFunctionBytes = (sig) => {
     return ethers.utils.keccak256(ethers.utils.hexlify(ethers.utils.toUtf8Bytes(sig))).substr(0, 10)
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const waitForTx = async (provider, hash) => {
+    console.log(`Waiting for tx. Hash: ${hash}`)
+    while (!await provider.getTransactionReceipt(hash)) {
+        sleep(5000)
+    }
+}
+
 module.exports = {
     setupParentArgs,
     splitCommaList,
-    getFunctionBytes
+    getFunctionBytes,
+    waitForTx
 }

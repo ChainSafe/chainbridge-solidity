@@ -5,22 +5,67 @@ const {setupParentArgs, splitCommaList} = require("./utils")
 
 const deployCmd = new Command("deploy")
     .description("Deploys contracts via RPC")
-    .option('--chain-id <value>', 'Chain ID for the instance', constants.DEFAULT_SOURCE_ID)
+    .option('--chainId <value>', 'Chain ID for the instance', constants.DEFAULT_SOURCE_ID)
     .option('--relayers <value>', 'List of initial relayers', splitCommaList, constants.relayerAddresses)
-    .option('--relayer-threshold <value>', 'Number of votes required for a proposal to pass', 2)
+    .option('--relayerThreshold <value>', 'Number of votes required for a proposal to pass', 2)
     .option('--fee <ether>', 'Fee to be taken when making a deposit (decimals allowed)', 0)
     .option('--expiry <blocks>', 'Numer of blocks after which a proposal is considered cancelled', 100)
-    .action(async (args, a) => {
+    .option('--all', 'Deploy all contracts')
+    .option('--bridge', 'Deploy bridge contract')
+    .option('--erc20Handler', 'Deploy erc20Handler contract')
+    .option('--erc721Handler', 'Deploy erc721Handler contract')
+    .option('--genericHandler', 'Deploy genericHandler contract')
+    .option('--erc20', 'Deploy erc20 contract')
+    .option('--erc721', 'Deploy erc721 contract')
+    .option('--centAsset', 'Deploy centrifuge asset contract')
+    .action(async (args) => {
         await setupParentArgs(args, args.parent)
         let startBal = await args.provider.getBalance(args.wallet.address)
         console.log("Deploying contracts...")
-        await deployBridgeContract(args);
-        await deployERC20(args)
-        await deployERC20Handler(args);
-        await deployERC721(args)
-        await deployERC721Handler(args)
-        await deployGenericHandler(args)
-        await deployCentrifugeAssetStore(args);
+        if(args.all) {
+            await deployBridgeContract(args);
+            await deployERC20Handler(args);
+            await deployERC721Handler(args)
+            await deployGenericHandler(args)
+            await deployERC20(args)
+            await deployERC721(args)
+            await deployCentrifugeAssetStore(args);
+        } else {
+            let deployed = false
+            if (args.bridge) {
+                await deployBridgeContract(args);
+                deployed = true
+            }
+            if (args.erc20Handler) {
+                await deployERC20Handler(args);
+                deployed = true
+            }
+            if (args.erc721Handler) {
+                await deployERC721Handler(args)
+                deployed = true
+            }
+            if (args.genericHandler) {
+                await deployGenericHandler(args)
+                deployed = true
+            }
+            if (args.erc20) {
+                await deployERC20(args)
+                deployed = true
+            }
+            if (args.erc721) {
+                await deployERC721(args)
+                deployed = true
+            }
+            if (args.centAsset) {
+                await deployCentrifugeAssetStore(args);
+                deployed = true
+            }
+
+            if (!deployed) {
+                throw new Error("must specify --all or specific contracts to deploy")
+            }
+        }
+
         args.cost = startBal.sub((await args.provider.getBalance(args.wallet.address)))
         displayLog(args)
     })
@@ -33,30 +78,31 @@ Url:        ${args.url}
 Deployer:   ${args.wallet.address}
 Gas Limit:   ${ethers.utils.bigNumberify(args.gasLimit)}
 Gas Price:   ${ethers.utils.bigNumberify(args.gasPrice)}
-Chain Id:   ${args.chainId}
-Threshold:  ${args.relayerThreshold}
-Relayers:   ${args.relayers}
-Fee:        ${args.fee} ETH
-Expiry:     ${args.expiry}
-Cost:       ${ethers.utils.formatEther(args.cost)}
-=======
+Deploy Cost: ${ethers.utils.formatEther(args.cost)}
 
+Options
+=======
+Chain Id:    ${args.chainId}
+Threshold:   ${args.relayerThreshold}
+Relayers:    ${args.relayers}
+Bridge Fee:  ${args.fee}
+Expiry:      ${args.expiry}
 
 Contract Addresses
 ================================================================
-Bridge:             ${args.bridgeContract}
+Bridge:             ${args.bridgeContract ? args.bridgeContract : "Not Deployed"}
 ----------------------------------------------------------------
-Erc20:              ${args.erc20Contract}
+Erc20 Handler:      ${args.erc20HandlerContract ? args.erc20HandlerContract : "Not Deployed"}
 ----------------------------------------------------------------
-Erc20 Handler:      ${args.erc20HandlerContract}
+Erc721 Handler:     ${args.erc721HandlerContract? args.erc721HandlerContract : "Not Deployed"}
 ----------------------------------------------------------------
-Erc721:             ${args.erc721Contract}
+Generic Handler:    ${args.genericHandlerContract ? args.genericHandlerContract : "Not Deployed"}
 ----------------------------------------------------------------
-Erc721 Handler:     ${args.erc721HandlerContract}
+Erc20:              ${args.erc20Contract ? args.erc20Contract : "Not Deployed"}
 ----------------------------------------------------------------
-Generic Handler:    ${args.genericHandlerContract}
+Erc721:             ${args.erc721Contract ? args.erc721Contract : "Not Deployed"}
 ----------------------------------------------------------------
-Centrifuge Asset:   ${args.centrifugeAssetStoreContract}
+Centrifuge Asset:   ${args.centrifugeAssetStoreContract ? args.centrifugeAssetStoreContract : "Not Deployed"}
 ================================================================
         `)
 }

@@ -25,6 +25,9 @@ if [[ $QUIET ]]; then
     --wsport 8545 \
     --networkid 5 \
     --wsorigins="*" \
+    --rpc \
+    --rpcport 8545 \
+    --rpccorsdomain="*" \
     --targetgaslimit 8000000 \
     --allow-insecure-unlock \
     --mine
@@ -37,6 +40,9 @@ else
     --wsport 8545 \
     --networkid 5 \
     --wsorigins="*" \
+    --rpc \
+    --rpcport 8545 \
+    --rpccorsdomain="*" \
     --targetgaslimit 8000000 \
     --allow-insecure-unlock \
     --mine

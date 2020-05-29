@@ -14,7 +14,7 @@ const mintCmd = new Command("mint")
         console.log(`To: ${args.wallet.address} Amount: ${args.amount} Contract: ${constants.ERC20_ADDRESS}`)
         const tx = await erc20Instance.mint(args.wallet.address, args.amount);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC20 Mint] Successfully minted ${args.amount} tokens to ${args.wallet.address}`);
+        console.log(`[ERC20 Mint] Minted ${args.amount} tokens to ${args.wallet.address}`);
     })
 
 const addMinterCmd = new Command("add-minter")

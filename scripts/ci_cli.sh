@@ -33,7 +33,7 @@ cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE erc721 deposit
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE bridge register-generic-resource --execute "store(bytes32)" --hash
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE cent getHash
 
-cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE bridge is-relayer
+cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE admin is-relayer
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE admin add-relayer --relayer $NEW_RELAYER
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE admin remove-relayer --relayer $NEW_RELAYER
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE admin set-threshold --threshold 3

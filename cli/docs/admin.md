@@ -1,5 +1,6 @@
 # Admin Command
 
+- [`is-relayer`](#is-relayer)
 - [`add-relayer`](#add-relayer)
 - [`remove-relayer`](#remove-relayer)
 - [`set-threshold`](#set-threshold)
@@ -7,6 +8,14 @@
 - [`unpause`](#unpause)
 - [`set-fee`](#set-fee)
 - [`withdraw`](#withdraw)
+
+## `is-relayer`
+Check if an address is registered as a relayer.
+
+```
+--relayer <value>   Address to check
+--bridge <address>  Bridge contract address
+```
 
 ## `add-relayer`
 Adds a new relayer.

@@ -6,6 +6,18 @@ const {setupParentArgs, waitForTx} = require("./utils")
 
 const log = (args, msg) => console.log(`[${args.parent._name} ${args._name}] ${msg}`)
 
+const isRelayerCmd = new Command("is-relayer")
+    .description("Check if address is relayer")
+    .option('--relayer <value>', 'Address to check', constants.relayerAddresses[0])
+    .option('--bridge <address>', 'Bridge contract address', constants.BRIDGE_ADDRESS)
+    .action(async function (args) {
+            await setupParentArgs(args, args.parent.parent)
+            const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
+
+            let res = await bridgeInstance.isRelayer(args.relayer)
+            console.log(`[${args._name}] Address ${args.relayer} ${res ? "is" : "is not"} a relayer.`)
+    })
+
 const addRelayerCmd = new Command("add-relayer")
     .description("Add a relayer")
     .option('--relayer <address>', 'Address of relayer', constants.relayerAddresses[0])
@@ -93,6 +105,7 @@ const withdrawCmd = new Command("withdraw")
 
 const adminCmd = new Command("admin")
 
+adminCmd.addCommand(isRelayerCmd)
 adminCmd.addCommand(addRelayerCmd)
 adminCmd.addCommand(removeRelayerCmd)
 adminCmd.addCommand(setThresholdCmd)

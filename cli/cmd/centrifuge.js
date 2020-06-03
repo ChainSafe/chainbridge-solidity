@@ -1,7 +1,7 @@
 const ethers = require('ethers');
 const {Command} = require('commander');
 
-const {setupParentArgs} = require("./utils")
+const {setupParentArgs, log} = require("./utils")
 
 const constants = require('../constants');
 
@@ -13,7 +13,7 @@ const getHashCmd = new Command('getHash')
         await setupParentArgs(args, args.parent.parent);
         const assetStore = new ethers.Contract(args.address, constants.ContractABIs.CentrifugeAssetStore.abi, args.wallet);
         const res = await assetStore._assetsStored(ethers.utils.hexZeroPad(args.hash, 32));
-        console.log(`The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
+        log(args, `The hash ${args.hash} was ${res ? "found!" : "NOT found!"}`);
     })
 
 const centCmd = new Command("cent")

@@ -2,9 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, waitForTx} = require("./utils")
-
-const log = (args, msg) => console.log(`[${args.parent._name} ${args._name}] ${msg}`)
+const {setupParentArgs, waitForTx, log} = require("./utils")
 
 const isRelayerCmd = new Command("is-relayer")
     .description("Check if address is relayer")

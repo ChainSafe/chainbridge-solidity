@@ -34,9 +34,12 @@ const waitForTx = async (provider, hash) => {
     }
 }
 
+const log = (args, msg) => console.log(`[${args.parent._name}/${args._name}] ${msg}`)
+
 module.exports = {
     setupParentArgs,
     splitCommaList,
     getFunctionBytes,
-    waitForTx
+    waitForTx,
+    log
 }

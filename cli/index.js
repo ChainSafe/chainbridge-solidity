@@ -7,6 +7,7 @@ const program = new Command();
 const {
     deploy,
     bridge,
+    admin,
     erc20,
     erc721,
     centrifuge,
@@ -23,6 +24,7 @@ program.option('--gasPrice <value>', "Gas limit for transactions", "20000000")
 
 program.addCommand(deploy)
 program.addCommand(bridge)
+program.addCommand(admin)
 program.addCommand(erc20)
 program.addCommand(erc721)
 program.addCommand(centrifuge)

@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, getFunctionBytes, waitForTx} = require("./utils")
+const {setupParentArgs, getFunctionBytes, waitForTx, log} = require("./utils")
 
 const EMPTY_SIG = "0x00000000"
 
@@ -15,12 +15,10 @@ const registerResourceCmd = new Command("register-resource")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
 
-        // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
-
+        log(args,`Registering contract ${args.targetContract} with resource ID ${args.resourceId} on handler ${args.handler}`);
         const tx = await bridgeInstance.adminSetResource(args.handler, args.resourceId, args.targetContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[Register Resource] Registered contract ${args.targetContract} with id ${args.resourceId} on handler ${args.handler}`);
     })
 
 const registerGenericResourceCmd = new Command("register-generic-resource")
@@ -42,9 +40,9 @@ const registerGenericResourceCmd = new Command("register-generic-resource")
             args.execute = getFunctionBytes(args.execute)
         }
 
+        log(args,`Registering generic resource ID ${args.resourceId} with contract ${args.targetContract} on handler ${args.handler}`)
         const tx = await bridgeInstance.adminSetGenericResource(args.handler, args.resourceId, args.targetContract, args.deposit, args.execute, { gasPrice: args.gasPrice, gasLimit: args.gasLimit})
         await waitForTx(args.provider, tx.hash)
-        console.log(`[BRIDGE] Registered generic resource ID ${args.resourceID} on handler ${args.handler}`)
     })
 
 const setBurnCmd = new Command("set-burn")
@@ -54,14 +52,11 @@ const setBurnCmd = new Command("set-burn")
     .option('--tokenContract <address>', `Token contract to be registered`, constants.ERC20_ADDRESS)
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
-
-        // Instances
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
+        log(args,`Setting contract ${args.tokenContract} as burnable on handler ${args.handler}`);
         const tx = await bridgeInstance.adminSetBurnable(args.handler, args.tokenContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[BRIDGE] Set contract ${args.tokenContract} as burnable on handler ${args.handler}`);
-
     })
 
 const queryProposalCmd = new Command("query-proposal")
@@ -76,8 +71,8 @@ const queryProposalCmd = new Command("query-proposal")
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
 
         const prop = await bridgeInstance.getProposal(args.chainId, args.depositNonce)
-        console.log(`[Bridge Query Proposal] Source: ${args.chainId} Nonce: ${args.depositNonce}`)
-        console.log(`[Bridge Query Proposal] Votes: ${prop._yesVotes} Status: ${prop._status}`)
+        log(args, `Source: ${args.chainId} Nonce: ${args.depositNonce}`)
+        log(args, `Votes: ${prop._yesVotes} Status: ${prop._status}`)
     })
 
 
@@ -88,12 +83,11 @@ const cancelProposalCmd = new Command("cancel-proposal")
     .option('--depositNonce <value>', 'Deposit nonce of proposal to cancel', 0)
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
-
         const bridgeInstance = new ethers.Contract(args.bridge, constants.ContractABIs.Bridge.abi, args.wallet);
+
+        log(args, `Setting proposal with chain ID ${args.chainId} and deposit nonce ${args.depositNonce} status to 'Cancelled`);
         const tx = await bridgeInstance.adminCancelProposal(args.chainId, args.depositNonce);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[Bridge Cancel Proposal] Set proposal with chain ID ${args.chainId} and deposit nonce ${args.depositNonce} status to 'Cancelled`);
-
     })
 
 const bridgeCmd = new Command("bridge")

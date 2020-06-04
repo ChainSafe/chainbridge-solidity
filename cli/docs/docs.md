@@ -29,6 +29,7 @@ There are multiple subcommands provided:
 
 - [`deploy`](./deploy.md): Deploys contracts via RPC
 - [`bridge`](./bridge.md): Interactions with the bridge contract such as registering resource IDs and handler addresses
+- [`admin`](./admin.md): Interactions with the bridge contract for administering relayer set, relayer threshold, fees and more.
 - [`erc20`](./erc20.md): Interactions with ERC20 contracts and handlers
 - [`erc721`](./erc721.md): Interactions with ERC721 contracts and handler
 

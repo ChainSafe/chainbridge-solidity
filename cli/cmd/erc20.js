@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, waitForTx} = require("./utils")
+const {setupParentArgs, waitForTx, log} = require("./utils")
 
 const mintCmd = new Command("mint")
     .description("Mints erc20 tokens")
@@ -11,10 +11,9 @@ const mintCmd = new Command("mint")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
-        console.log(`To: ${args.wallet.address} Amount: ${args.amount} Contract: ${constants.ERC20_ADDRESS}`)
+        log(args, `Minting ${args.amount} tokens to ${args.wallet.address} on contract ${args.erc20Address}`);
         const tx = await erc20Instance.mint(args.wallet.address, args.amount);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC20 Mint] Minted ${args.amount} tokens to ${args.wallet.address}`);
     })
 
 const addMinterCmd = new Command("add-minter")
@@ -24,10 +23,10 @@ const addMinterCmd = new Command("add-minter")
     .action(async function(args) {
         await setupParentArgs(args, args.parent.parent)
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
-        let MINTER_ROLE = await erc20Instance.MINTER_ROLE()
+        let MINTER_ROLE = await erc20Instance.MINTER_ROLE();
+        log(args, `Adding ${args.minter} as a minter on contract ${args.erc20Address}`);
         const tx = await erc20Instance.grantRole(MINTER_ROLE, args.minter);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC20 Add Minter] Added ${args.minter} as a minter of ${args.erc20Address}`)
     })
 
 const approveCmd = new Command("approve")
@@ -39,9 +38,9 @@ const approveCmd = new Command("approve")
         await setupParentArgs(args, args.parent.parent)
 
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
+        log(args, `Approving ${args.recipient} to spend ${args.amount} tokens from ${args.wallet.address}!`);
         const tx = await erc20Instance.approve(args.recipient, args.amount, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC20 Approve] Approved ${args.recipient} to spend ${args.amount} tokens from ${args.wallet.address}!`);
     })
 
 const depositCmd = new Command("deposit")
@@ -63,12 +62,13 @@ const depositCmd = new Command("deposit")
             ethers.utils.hexZeroPad(ethers.utils.hexlify((args.recipient.length - 2)/2), 32).substr(2) +    // len(recipientAddress) (32 bytes)
             args.recipient.substr(2);                    // recipientAddress      (?? bytes)
 
-        console.log(`[ERC20 Deposit] Constructed deposit:`)
-        console.log(`[ERC20 Deposit]   Resource Id: ${args.resourceId}`)
-        console.log(`[ERC20 Deposit]   Amount: ${args.amount}`)
-        console.log(`[ERC20 Deposit]   len(recipient): ${(args.recipient.length - 2)/ 2}`)
-        console.log(`[ERC20 Deposit]   Recipient: ${args.recipient}`)
-        console.log(`[ERC20 Deposit]   Raw: ${data}`)
+        log(args, `Constructed deposit:`)
+        log(args, `  Resource Id: ${args.resourceId}`)
+        log(args, `  Amount: ${args.amount}`)
+        log(args, `  len(recipient): ${(args.recipient.length - 2)/ 2}`)
+        log(args, `  Recipient: ${args.recipient}`)
+        log(args, `  Raw: ${data}`)
+        log(args, `Creating deposit to initiate transfer!`);
 
         // Make the deposit
         let tx = await bridgeInstance.deposit(
@@ -79,7 +79,6 @@ const depositCmd = new Command("deposit")
         );
 
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC20 Deposit] Created deposit to initiate transfer!`);
     })
 
 const balanceCmd = new Command("balance")
@@ -91,7 +90,7 @@ const balanceCmd = new Command("balance")
 
         const erc20Instance = new ethers.Contract(args.erc20Address, constants.ContractABIs.Erc20Mintable.abi, args.wallet);
         const balance = await erc20Instance.balanceOf(args.address)
-        console.log(`[ERC20 Balance] Account ${args.address} has a balance of ${balance}` )
+        log(args, `Account ${args.address} has a balance of ${balance}` )
     })
 
 const erc20Cmd = new Command("erc20")

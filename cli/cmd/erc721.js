@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const constants = require('../constants');
 
 const {Command} = require('commander');
-const {setupParentArgs, waitForTx} = require("./utils")
+const {setupParentArgs, waitForTx, log} = require("./utils")
 
 const mintCmd = new Command("mint")
     .description("Mint tokens")
@@ -12,9 +12,10 @@ const mintCmd = new Command("mint")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+
+        log(args, `Minting token with id ${args.id} to ${args.wallet.address} on contract ${args.erc721Address}!`);
         const tx = await erc721Instance.mint(args.wallet.address, args.id, args.metadata);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC721 Mint] Minted token with id ${args.id} to ${args.wallet.address}!`);
     })
 
 const ownerCmd = new Command("owner")
@@ -22,10 +23,10 @@ const ownerCmd = new Command("owner")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
     .option('--id <id>', "Token id", 1)
     .action(async function (args) {
-            await setupParentArgs(args, args.parent.parent)
-            const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
-            const owner = await erc721Instance.ownerOf(args.id)
-            console.log(`[ERC721] Owner of token ${args.id} is ${owner}`)
+        await setupParentArgs(args, args.parent.parent)
+        const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+        const owner = await erc721Instance.ownerOf(args.id)
+        log(args, `Owner of token ${args.id} is ${owner}`)
     })
 
 const addMinterCmd = new Command("add-minter")
@@ -36,9 +37,9 @@ const addMinterCmd = new Command("add-minter")
         await setupParentArgs(args, args.parent.parent)
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
         const MINTER_ROLE = await erc721Instance.MINTER_ROLE()
+        log(args, `Adding ${args.minter} as a minter of ${args.erc721Address}`)
         const tx = await erc721Instance.grantRole(MINTER_ROLE, args.minter);
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC721 Add Minter] Added ${args.minter} as a minter of ${args.erc721Address}`)
     })
 
 const approveCmd = new Command("approve")
@@ -48,11 +49,11 @@ const approveCmd = new Command("approve")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
-
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);
+
+        log(args, `Approving ${args.recipient} to spend token ${args.id} from ${args.wallet.address} on contract ${args.erc721Address}!`);
         const tx = await erc721Instance.approve(args.recipient, args.id, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log(`[ERC721 Approve] Approved ${args.recipient} to spend token ${args.id} from ${args.wallet.address}!`);
     })
 
 const depositCmd = new Command("deposit")
@@ -74,12 +75,13 @@ const depositCmd = new Command("deposit")
             ethers.utils.hexZeroPad(ethers.utils.hexlify((args.recipient.length - 2)/2), 32).substr(2) +       // len(recipientAddress) (32 bytes)
             ethers.utils.hexlify(args.recipient).substr(2)                // recipientAddress      (?? bytes)
 
-        console.log(`[ERC721 Deposit] Constructed deposit:`)
-        console.log(`[ERC721 Deposit]   Resource Id: ${args.resourceId}`)
-        console.log(`[ERC721 Deposit]   Token Id: ${args.id}`)
-        console.log(`[ERC721 Deposit]   len(recipient): ${(args.recipient.length - 2)/2}`)
-        console.log(`[ERC721 Deposit]   Recipient: ${args.recipient}`)
-        console.log(`[ERC721 Deposit]   Raw: ${data}`)
+        log(args, `Constructed deposit:`)
+        log(args, `  Resource Id: ${args.resourceId}`)
+        log(args, `  Token Id: ${args.id}`)
+        log(args, `  len(recipient): ${(args.recipient.length - 2)/2}`)
+        log(args, `  Recipient: ${args.recipient}`)
+        log(args, `  Raw: ${data}`)
+        log(args, "Creating deposit to initiate transfer!")
 
         // Perform deposit
         const tx = await bridgeInstance.deposit(
@@ -88,7 +90,6 @@ const depositCmd = new Command("deposit")
             data,
             { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
         await waitForTx(args.provider, tx.hash)
-        console.log("[ERC721 Deposit] Created deposit to initiate transfer!")
     })
 
 const erc721Cmd = new Command("erc721")

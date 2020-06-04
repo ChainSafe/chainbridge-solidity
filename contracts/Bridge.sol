@@ -191,7 +191,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Emits {RelayerAdded} event.
      */
     function adminAddRelayer(address relayerAddress) external onlyAdmin {
-        require(!hasRole(RELAYER_ROLE, relayerAddress), "addr already has relayer role!");
+        require(!hasRole(RELAYER_ROLE, relayerAddress), "Addr already has relayer role!");
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
         _totalRelayers++;
@@ -204,20 +204,10 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Emits {RelayerRemoved} event.
      */
     function adminRemoveRelayer(address relayerAddress) external onlyAdmin {
-        require(hasRole(RELAYER_ROLE, relayerAddress), "addr doesn't have relayer role!");
+        require(hasRole(RELAYER_ROLE, relayerAddress), "Addr doesn't have relayer role!");
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);
         _totalRelayers--;
-    }
-
-    /**
-        @notice Maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by an address that currently has the admin role.
-        @param handlerAddress Address of handler resource will be mapped to.
-        @param resourceID ResourceID to be used when making deposits.
-     */
-    function adminSetHandlerAddress(address handlerAddress, bytes32 resourceID) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
     }
 
     /**
@@ -285,7 +275,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param newFee Value {_fee} will be updated to.
      */
     function adminChangeFee(uint newFee) external onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to new fee");
+        require(_fee != newFee, "Current fee equal to new fee");
         _fee = newFee;
     }
 
@@ -346,7 +336,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
-        require(uint(proposal._status) <= 1, "proposal has already been passed, transferred, or cancelled");
+        require(uint(proposal._status) <= 1, "Passed, transferred, or cancelled");
         require(!_hasVotedOnProposal[chainID][depositNonce][msg.sender], "relayer already voted");
 
         if (uint(proposal._status) == 0) {
@@ -392,10 +382,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
         require((sub(block.number, proposal._proposedBlock)) > _expiry, "Proposal doesn't meet expiry");
-        
+
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
-
     }
 
     /**
@@ -413,9 +402,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         address handler = _resourceIDToHandlerAddress[proposal._resourceID];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
-        require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
+        require(proposal._status == ProposalStatus.Passed, "Not passed/Already transferred");
         require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
-            "provided data does not match proposal's data hash");
+            "Data/Proposal data hash mismatch");
 
         proposal._status = ProposalStatus.Transferred;
         
@@ -437,7 +426,11 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         }
     }
 
-    function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
+    function adminSetHandler(address handlerAddress, bytes32 resourceID) external onlyAdmin {
+        _setHandlerAddress(handlerAddress, resourceID);
+    }
+
+    function _setHandlerAddress(address handlerAddress, bytes32 resourceID) private {
         require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
     }

@@ -41,7 +41,7 @@ const createERC721DepositProposalData = (
 };
 
 const advanceBlock = () => {
-    let provider = new Ethers.providers.JsonRpcProvider("http://localhost:8545");
+    let provider = new Ethers.providers.Web3Provider(web3.currentProvider, "any");
     return provider.send("evm_mine", [new Date().getTime()])
 }
 

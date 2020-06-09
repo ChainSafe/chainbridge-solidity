@@ -42,7 +42,7 @@ const createERC721DepositProposalData = (
 
 const advanceBlock = () => {
     let provider = new Ethers.providers.Web3Provider(web3.currentProvider, "any");
-    return provider.send("evm_mine", [new Date().getTime()])
+    return provider.send("evm_mine", [new Date().getTime()]);
 }
 
 const createGenericDepositData = (resourceID, hexMetaData) => {

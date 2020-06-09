@@ -7,7 +7,7 @@ const {setupParentArgs, waitForTx, log} = require("./utils")
 const mintCmd = new Command("mint")
     .description("Mint tokens")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
-    .option('--id <id>', "Token id", 1)
+    .option('--id <id>', "Token id", "1")
     .option('--metadata <bytes>', "Metadata (tokenURI) for token", "")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
@@ -21,7 +21,7 @@ const mintCmd = new Command("mint")
 const ownerCmd = new Command("owner")
     .description("Query ownerOf")
     .option('--erc721Address <address>', 'ERC721 contract address', constants.ERC721_ADDRESS)
-    .option('--id <id>', "Token id", 1)
+    .option('--id <id>', "Token id", "1")
     .action(async function (args) {
         await setupParentArgs(args, args.parent.parent)
         const erc721Instance = new ethers.Contract(args.erc721Address, constants.ContractABIs.Erc721Mintable.abi, args.wallet);

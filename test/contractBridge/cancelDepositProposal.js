@@ -101,7 +101,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await TruffleAssert.passes(vote(relayer1Address));
 
-        for (i=0; i<15; i++) {
+        for (i=0; i<10; i++) {
             await Helpers.advanceBlock();
         }
 
@@ -124,7 +124,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     it("relayer can cancel proposal after threshold blocks have passed", async () => {
         await TruffleAssert.passes(vote(relayer2Address));
 
-        for (i=0; i<15; i++) {
+        for (i=0; i<10; i++) {
             await Helpers.advanceBlock();
         }
 
@@ -145,7 +145,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     it("admin can cancel proposal after threshold blocks have passed", async () => {
         await TruffleAssert.passes(vote(relayer3Address));
 
-        for (i=0; i<15; i++) {
+        for (i=0; i<10; i++) {
             await Helpers.advanceBlock();
         }
 

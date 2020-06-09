@@ -41,7 +41,7 @@ const createERC721DepositProposalData = (
 };
 
 const advanceBlock = () => {
-    let provider = new Ethers.providers.Web3Provider(web3.currentProvider);
+    let provider = new Ethers.providers.JsonRpcProvider();
     provider.getBlockNumber().then((blockNumber) => {
         console.log("Current block number: " + blockNumber);
     });

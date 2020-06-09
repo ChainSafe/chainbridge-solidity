@@ -38,5 +38,6 @@ jobs:
     
     - name: "Run coverage"
       script:
+        - SILENT=true make start-ganache
         - ./node_modules/.bin/truffle run coverage
         - cat ./coverage/lcov.info | node_modules/.bin/coveralls

@@ -28,7 +28,7 @@ cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE erc721 add-minter
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE bridge register-resource --handler $ERC721_HANDLER --resourceId $ERC721_RESOURCE_ID --targetContract $ERC721_CONTRACT
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE erc721 approve
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE bridge set-burn --handler $ERC721_HANDLER --tokenContract $ERC721_CONTRACT
-cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE erc721 deposit
+cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE erc721 deposit --id 0x1
 
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE bridge register-generic-resource --execute "store(bytes32)" --hash
 cb-sol-cli --gasLimit $GAS_LIMIT --gasPrice $GAS_PRICE cent getHash

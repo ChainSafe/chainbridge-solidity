@@ -42,6 +42,9 @@ const createERC721DepositProposalData = (
 
 const advanceBlock = () => {
     let provider = new Ethers.providers.Web3Provider(web3.currentProvider, "any");
+    provider.getBlockNumber().then((blockNumber) => {
+        console.log("Current block number: " + blockNumber);
+    });
     return provider.send("evm_mine", [new Date().getTime()]);
 }
 

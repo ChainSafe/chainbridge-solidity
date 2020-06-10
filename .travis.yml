@@ -38,5 +38,5 @@ jobs:
     
     - name: "Run coverage"
       script:
-        - ./node_modules/.bin/truffle run coverage
+        - ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
         - cat ./coverage/lcov.info | node_modules/.bin/coveralls

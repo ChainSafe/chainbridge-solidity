@@ -41,6 +41,7 @@ contract HandlerHelpers is IERCHandler {
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
     function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
+
         _setResource(resourceID, contractAddress);
     }
 

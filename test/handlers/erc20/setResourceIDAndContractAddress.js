@@ -72,17 +72,8 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         await BridgeInstance.adminSetHandlerAddress(ERC20MintableInstance2.address, initialResourceIDs[0])
 
         const bridgeHandlerAddress = await BridgeInstance._resourceIDToHandlerAddress.call(initialResourceIDs[0])
-        console.log("handler:", bridgeHandlerAddress)
-        console.log("mint address:", ERC20MintableInstance2.address)
+
         assert.strictEqual(bridgeHandlerAddress, ERC20MintableInstance2.address);
     });
 
-    it('should revert because contract address should already be set', async () => {
-        const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
-        const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
-
-        await TruffleAssert.reverts(BridgeInstance.adminSetResource(
-            ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance1.address),
-            'contract address already has corresponding resourceID');
-    });
 });

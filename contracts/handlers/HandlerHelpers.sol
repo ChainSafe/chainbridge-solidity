@@ -42,7 +42,6 @@ contract HandlerHelpers is IERCHandler {
      */
     function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
         bytes32 currentResourceID = _tokenContractAddressToResourceID[contractAddress];
-        require(currentResourceID == bytes32(0), "contract address already has corresponding resourceID");
 
         _setResource(resourceID, contractAddress);
     }

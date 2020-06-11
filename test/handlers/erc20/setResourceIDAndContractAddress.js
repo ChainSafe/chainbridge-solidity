@@ -67,14 +67,14 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     it('resourceID should be updated correctly with new handler address', async () => {
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = [Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
-
         ERC20HandlerInstance2 = await ERC20HandlerContract.new(BridgeInstance.address, secondERC20ResourceID, [ERC20MintableInstance2.address], burnableContractAddresses);
 
-        await BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance2.address, initialResourceIDs[0])
+        await BridgeInstance.adminSetHandlerAddress(ERC20MintableInstance2.address, initialResourceIDs[0])
 
-
-        const retrievedResourceID = await ERC20HandlerInstance2._tokenContractAddressToResourceID.call(ERC20MintableInstance2.address);
-        assert.strictEqual(initialResourceIDs[0].toLowerCase(), retrievedResourceID.toLowerCase());
+        const bridgeHandlerAddress = await BridgeInstance._resourceIDToHandlerAddress.call(initialResourceIDs[0])
+        console.log("handler:", bridgeHandlerAddress)
+        console.log("mint address:", ERC20MintableInstance2.address)
+        assert.strictEqual(bridgeHandlerAddress, ERC20MintableInstance2.address);
     });
 
     it('should revert because contract address should already be set', async () => {

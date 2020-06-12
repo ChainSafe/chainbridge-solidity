@@ -125,7 +125,6 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             erc20ResourceID,
             Helpers.createERCDepositData(
-                erc20ResourceID,
                 erc20TokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
@@ -142,7 +141,6 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             erc721ResourceID,
             Helpers.createERCDepositData(
-                erc721ResourceID,
                 erc721TokenID,
                 lenRecipientAddress,
                 recipientAddress),

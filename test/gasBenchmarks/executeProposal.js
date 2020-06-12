@@ -131,7 +131,6 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     it('Should execute ERC20 deposit proposal', async () => {
         const depositNonce = 1;
         const depositData = Helpers.createERCDepositData(
-            erc20ResourceID,
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);

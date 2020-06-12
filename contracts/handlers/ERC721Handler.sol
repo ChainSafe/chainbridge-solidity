@@ -100,8 +100,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external override onlyBridge {
-        bytes32      resourceID;
+    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external override onlyBridge {
         uint         lenDestinationRecipientAddress;
         uint         tokenID;
         bytes memory destinationRecipientAddress;

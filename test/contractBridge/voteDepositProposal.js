@@ -57,7 +57,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        depositData = Helpers.createERCDepositData(resourceID, depositAmount, 32, destinationChainRecipientAddress);
+        depositData = Helpers.createERCDepositData(depositAmount, 32, destinationChainRecipientAddress);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
         await Promise.all([

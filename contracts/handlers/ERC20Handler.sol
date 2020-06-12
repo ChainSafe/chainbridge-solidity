@@ -90,28 +90,26 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
     function deposit(
-        uint8 destinationChainID,
-        uint64 depositNonce,
+        bytes32 resourceID,
+        uint8   destinationChainID,
+        uint64  depositNonce,
         address depositer,
-        bytes calldata data
+        bytes   calldata data
     ) external override onlyBridge {
-        bytes32        resourceID;
         bytes   memory recipientAddress;
         uint256        amount;
         uint256        lenRecipientAddress;
 
         assembly {
-
-            resourceID := calldataload(0xA4)
-            amount := calldataload(0xC4)
+            amount := calldataload(0xA4)
 
             recipientAddress := mload(0x40)
-            lenRecipientAddress := calldataload(0xE4)
+            lenRecipientAddress := calldataload(0xC4)
             mstore(0x40, add(0x20, add(recipientAddress, lenRecipientAddress)))
 
             calldatacopy(
                 recipientAddress, // copy to destinationRecipientAddress
-                0xE4, // copy from calldata @ 0x104
+                0xC4, // copy from calldata @ 0x104
                 sub(calldatasize(), 0xE4) // copy size (calldatasize - 0x104)
             )
         }

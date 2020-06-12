@@ -52,7 +52,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });
 
-        depositData = Helpers.createERCDepositData(resourceID, tokenID, 20, recipientAddress);
+        depositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
         proposalData = Helpers.createERC721DepositProposalData(resourceID, tokenID, 20, recipientAddress, depositMetadata.length, depositMetadata);
         depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + proposalData.substr(2));
     });

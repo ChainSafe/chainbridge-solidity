@@ -20,12 +20,11 @@
     return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
  };
 
- const createERCDepositData = (resourceID, tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
+ const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
     return '0x' +
-        resourceID.substr(2) +
         toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
         toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
-        recipientAddress.substr(2);                                                        // recipientAddress               (?? bytes)
+        recipientAddress.substr(2);               // recipientAddress               (?? bytes)
 };
 
 const createERC721DepositProposalData = (

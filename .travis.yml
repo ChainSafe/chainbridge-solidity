@@ -27,14 +27,6 @@ jobs:
 #        - make install-deps
 #        - QUIET=true make start-geth &
 #        - truffle test --network geth
-    - name: "Verify contract deployment and binding creation"
-      env: CI=true
-      script:
-        - make install-deps && make install-cli
-        - make bindings
-        - SILENT=true make start-ganache
-        - ./scripts/ci_cli.sh
-
     
     - name: "Run coverage"
       script:

@@ -8,6 +8,8 @@ Read more [here](https://www.notion.so/chainsafe/ChainBridge-Solidity-ad0b0e53e5
 
 The ChainBridge specification can be found [here](https://github.com/ChainSafe/chainbridge-spec).
 
+A CLI to deploy and interact with these contracts can be found [here](https://github.com/ChainSafe/chainbridge-deploy/tree/master/cb-sol-cli).
+
 ## Dependencies
 
 Requires `nodejs` and `npm`.
@@ -27,9 +29,5 @@ Requires `nodejs` and `npm`.
 `make test`: Runs truffle tests.
 
 `make compile`: Compile contracts.
-
-## cb-sol-cli (JS CLI)
-
-This is a small CLI application to deploy the contracts and interact with the chain. See the [documentation](/cli/docs/docs.md) for details.
 
 

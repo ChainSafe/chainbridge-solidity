@@ -113,3 +113,4 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, depositRecord));
     });
 });
+

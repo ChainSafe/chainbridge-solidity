@@ -173,7 +173,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
         metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
      */
-    function executeProposal(bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256         tokenID;
         bytes32         resourceID;
         bytes  memory   destinationRecipientAddress;

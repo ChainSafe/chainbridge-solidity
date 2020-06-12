@@ -148,13 +148,12 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         destinationRecipientAddress length     uint256     bytes  64 - 96
         destinationRecipientAddress            bytes       bytes  96 - END
      */
-    function executeProposal(bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256       amount;
         bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
 
         assembly {
-            resourceID := calldataload(0x44)
             amount := calldataload(0x64)
 
             destinationRecipientAddress := mload(0x40)

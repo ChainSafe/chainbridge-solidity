@@ -12,9 +12,6 @@ import "./ERC721MinterBurnerPauser.sol";
 contract ERC721Safe {
     using SafeMath for uint256;
 
-    // ERC721 contract => amount of tokens owned by Safe
-    mapping(address => uint256) public _balances;
-
     // ERC721 contract => amount of tokens burned by Safe
     mapping(address => uint256) public _burnedTokens;
 
@@ -28,8 +25,6 @@ contract ERC721Safe {
     function fundERC721(address tokenAddress, address owner, uint tokenID) public {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, address(this), tokenID);
-
-        _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
 
     /**
@@ -44,7 +39,6 @@ contract ERC721Safe {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, recipient, tokenID);
 
-        _balances[tokenAddress] = _balances[tokenAddress].add(1);
     }
 
     /**
@@ -58,8 +52,6 @@ contract ERC721Safe {
     function releaseERC721(address tokenAddress, address owner, address recipient, uint256 tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, recipient, tokenID);
-
-        _balances[tokenAddress] = _balances[tokenAddress].sub(1);
     }
 
     /**
@@ -73,10 +65,6 @@ contract ERC721Safe {
     function mintERC721(address tokenAddress, address recipient, uint256 tokenID, bytes memory data) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.mint(recipient, tokenID, string(data));
-
-        if (address(this) == recipient) {
-            _balances[tokenAddress] = _balances[tokenAddress].add(1);
-        }
     }
 
     /**

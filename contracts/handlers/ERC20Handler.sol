@@ -150,7 +150,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256       amount;
-        bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
 
         assembly {

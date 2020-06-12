@@ -194,12 +194,8 @@ contract GenericHandler is IGenericHandler {
         {metaData} is expected to consist of needed function arguments.
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
-        bytes32      resourceID;
         bytes memory metaData;
         assembly {
-
-            resourceID := calldataload(0x44)
-
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)

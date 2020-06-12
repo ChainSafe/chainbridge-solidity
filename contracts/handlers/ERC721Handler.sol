@@ -175,12 +175,10 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256         tokenID;
-        bytes32         resourceID;
         bytes  memory   destinationRecipientAddress;
         bytes  memory   metaData;
 
         assembly {
-            resourceID := calldataload(0x44)
             tokenID    := calldataload(0x64)
 
 

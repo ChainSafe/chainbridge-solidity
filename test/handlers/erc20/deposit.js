@@ -45,11 +45,11 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
     });
 
-    it('[sanity] depositer owns tokenAmount od ERC20', async () => {
+    it('[sanity] depositer owns tokenAmount of ERC20', async () => {
         const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
         assert.equal(tokenAmount, depositerBalance);
     });

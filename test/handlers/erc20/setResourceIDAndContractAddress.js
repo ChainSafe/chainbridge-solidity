@@ -75,7 +75,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         const secondERC20ResourceID = [Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
         ERC20HandlerInstance2 = await ERC20HandlerContract.new(BridgeInstance.address, secondERC20ResourceID, [ERC20MintableInstance2.address], burnableContractAddresses);
 
-        await BridgeInstance.adminSetHandlerAddress(ERC20MintableInstance2.address, initialResourceIDs[0]);
+        await BridgeInstance.adminSetResource(ERC20MintableInstance2.address, initialResourceIDs[0], ERC20MintableInstance1.address);
 
         const bridgeHandlerAddress = await BridgeInstance._resourceIDToHandlerAddress.call(initialResourceIDs[0]);
         assert.strictEqual(bridgeHandlerAddress.toLowerCase(), ERC20MintableInstance2.address.toLowerCase());

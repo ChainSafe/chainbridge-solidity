@@ -48,7 +48,7 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, erc20ResourceID),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
         ]);
     });
 

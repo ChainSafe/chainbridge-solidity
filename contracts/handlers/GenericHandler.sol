@@ -201,7 +201,7 @@ contract GenericHandler is IGenericHandler {
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
             let lenMeta := calldataload(0x64)
-            mstore(0x40, add(0x60, add(metaData, lenMeta)))
+            mstore(0x40, add(0x20, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x64 after accounting for function signature, and 2 previous params
             calldatacopy(

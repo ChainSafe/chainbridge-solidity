@@ -55,18 +55,44 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         assert.strictEqual(secondERC20ResourceID.toLowerCase(), retrievedResourceID.toLowerCase());
     });
 
-    it('should revert because resourceID should already be set', async () => {
-        await TruffleAssert.reverts(BridgeInstance.adminSetResource(
-            ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address),
-            "resourceID already has a corresponding contract address");
+    it('existing resourceID should be updated correctly with new token contract address', async () => {
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address);
+
+        const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance2.address);
+
+        const retrievedTokenAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(initialResourceIDs[0]);
+        assert.strictEqual(ERC20MintableInstance2.address, retrievedTokenAddress);
+
+        const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance2.address);
+        assert.strictEqual(initialResourceIDs[0].toLowerCase(), retrievedResourceID.toLowerCase());
     });
 
-    it('should revert because contract address should already be set', async () => {
+    it('existing resourceID should be updated correctly with new handler address', async () => {
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address);
+
+        const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
+        const secondERC20ResourceID = [Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32)];
+        ERC20HandlerInstance2 = await ERC20HandlerContract.new(BridgeInstance.address, secondERC20ResourceID, [ERC20MintableInstance2.address], burnableContractAddresses);
+
+        await BridgeInstance.adminSetHandlerAddress(ERC20MintableInstance2.address, initialResourceIDs[0]);
+
+        const bridgeHandlerAddress = await BridgeInstance._resourceIDToHandlerAddress.call(initialResourceIDs[0]);
+        assert.strictEqual(bridgeHandlerAddress.toLowerCase(), ERC20MintableInstance2.address.toLowerCase());
+    });
+
+    it('existing resourceID should be replaced by new resourceID in handler', async () => {
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address);
+
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32);
 
-        await TruffleAssert.reverts(BridgeInstance.adminSetResource(
-            ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance1.address),
-            'contract address already has corresponding resourceID');
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, secondERC20ResourceID, ERC20MintableInstance1.address);
+
+        const retrievedResourceID = await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance1.address);
+        assert.strictEqual(secondERC20ResourceID.toLowerCase(), retrievedResourceID.toLowerCase());
+
+        const retrievedContractAddress = await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(secondERC20ResourceID);
+        assert.strictEqual(retrievedContractAddress.toLowerCase(), ERC20MintableInstance1.address.toLowerCase());
     });
 });

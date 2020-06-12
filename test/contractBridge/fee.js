@@ -48,7 +48,7 @@ contract('Bridge - [fee]', async (accounts) => {
 
         await BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, resourceID);
             
-        depositData = Helpers.createGenericDepositData(resourceID, '0xdeadbeef');
+        depositData = Helpers.createGenericDepositData('0xdeadbeef');
     });
 
     it('[sanity] Generic deposit can be made', async () => {

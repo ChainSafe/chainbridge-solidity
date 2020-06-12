@@ -59,7 +59,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         await BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, resourceID);
 
-        depositData = Helpers.createGenericDepositData(resourceID, hashOfCentrifugeAsset);
+        depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
     });
 

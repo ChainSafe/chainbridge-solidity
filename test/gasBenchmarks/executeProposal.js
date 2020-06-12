@@ -152,7 +152,6 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const lenMetaData = 0;
         const metaData = 0;
         const depositData = Helpers.createERC721DepositProposalData(
-            erc721ResourceID,
             erc721TokenID,
             lenRecipientAddress,
             recipientAddress,
@@ -174,7 +173,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     it('Should execute Generic deposit proposal - Centrifuge asset', async () => {
         const depositNonce = 3;
         const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
-        const depositData = Helpers.createGenericDepositData(centrifugeAssetResourceID, hashOfCentrifugeAsset);
+        const depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);
@@ -190,7 +189,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
 
     it('Should execute Generic deposit proposal - No Argument', async () => {
         const depositNonce = 4;
-        const depositData = Helpers.createGenericDepositData(noArgumentResourceID, null);
+        const depositData = Helpers.createGenericDepositData(null);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);
@@ -206,7 +205,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
 
     it('Should make Generic deposit - One Argument', async () => {
         const depositNonce = 5;
-        const depositData = Helpers.createGenericDepositData(oneArgumentResourceID, Helpers.toHex(42, 32));
+        const depositData = Helpers.createGenericDepositData(Helpers.toHex(42, 32));
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);
@@ -225,7 +224,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const argumentOne = [NoArgumentInstance.address, OneArgumentInstance.address, TwoArgumentsInstance.address];
         const argumentTwo = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
         const encodedMetaData = Helpers.abiEncode(['address[]','bytes4'], [argumentOne, argumentTwo]);
-        const depositData = Helpers.createGenericDepositData(twoArgumentsResourceID, encodedMetaData);
+        const depositData = Helpers.createGenericDepositData(encodedMetaData);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);
@@ -245,7 +244,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const argumentTwo = -42;
         const argumentThree = true;
         const encodedMetaData = Helpers.abiEncode(['string','int8','bool'], [argumentOne, argumentTwo, argumentThree]);
-        const depositData = Helpers.createGenericDepositData(threeArgumentsResourceID, encodedMetaData);
+        const depositData = Helpers.createGenericDepositData(encodedMetaData);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);

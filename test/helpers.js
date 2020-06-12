@@ -28,7 +28,7 @@
 };
 
 const createERC721DepositProposalData = (
-    resourceID, tokenAmountOrID, lenRecipientAddress,
+    tokenAmountOrID, lenRecipientAddress,
     recipientAddress, lenMetaData, metaData) => {
     return '0x' +
         toHex(tokenAmountOrID, 32).substr(2) +     // Token amount or ID to deposit (32 bytes)

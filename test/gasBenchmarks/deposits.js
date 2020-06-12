@@ -156,7 +156,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             centrifugeAssetResourceID,
-            Helpers.createGenericDepositData(centrifugeAssetResourceID, '0xc0ff33'),
+            Helpers.createGenericDepositData('0xc0ff33'),
             { from: depositerAddress }
         );
 
@@ -170,7 +170,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             noArgumentResourceID,
-            Helpers.createGenericDepositData(noArgumentResourceID, null),
+            Helpers.createGenericDepositData(null),
             { from: depositerAddress }
         );
 
@@ -184,7 +184,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             oneArgumentResourceID,
-            Helpers.createGenericDepositData(oneArgumentResourceID, Helpers.toHex(42, 32)),
+            Helpers.createGenericDepositData(Helpers.toHex(42, 32)),
             { from: depositerAddress }
         );
 
@@ -201,7 +201,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             twoArgumentsResourceID,
-            Helpers.createGenericDepositData(twoArgumentsResourceID, encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 
@@ -219,7 +219,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             threeArgumentsResourceID,
-            Helpers.createGenericDepositData(threeArgumentsResourceID, encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 

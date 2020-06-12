@@ -76,11 +76,11 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         ]);
 
         originDepositData = Helpers.createERCDepositData(tokenID, 32, recipientAddress);
-        originDepositProposalData = Helpers.createERC721DepositProposalData(destinationResourceID, tokenID, 20, recipientAddress, 32, 0);
+        originDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, 32, 0);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = Helpers.createERCDepositData(tokenID, 32, depositerAddress);
-        destinationDepositProposalData = Helpers.createERC721DepositProposalData(originResourceID, tokenID, 20, depositerAddress, 32, 0)
+        destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC721HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
 

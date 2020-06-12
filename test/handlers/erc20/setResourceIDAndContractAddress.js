@@ -81,7 +81,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         assert.strictEqual(bridgeHandlerAddress.toLowerCase(), ERC20MintableInstance2.address.toLowerCase());
     });
 
-    it('Existing resourceID should be replaced by new resourceID in handler', async () => {
+    it('existing resourceID should be replaced by new resourceID in handler', async () => {
         await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], ERC20MintableInstance1.address);
 
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");

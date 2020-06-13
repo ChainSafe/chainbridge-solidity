@@ -11,8 +11,6 @@ import "../interfaces/IGenericHandler.sol";
 contract GenericHandler is IGenericHandler {
     address public _bridgeAddress;
 
-    event Metadata(uint indexed metadata, bytes indexed metadata2);
-
     struct DepositRecord {
         uint8   _destinationChainID;
         address _depositer;
@@ -197,35 +195,32 @@ contract GenericHandler is IGenericHandler {
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
         bytes memory metaData;
-        uint lenMeta;
-        uint cd;
         assembly {
+
             // metadata has variable length
             // load free memory pointer to store metadata
             metaData := mload(0x40)
             // first 32 bytes of variable length in storage refer to length
-            lenMeta := calldataload(0x64)
-            mstore(0x40, add(0x20, add(metaData, lenMeta)))
+            let lenMeta := calldataload(0x64)
+            mstore(0x40, add(0x60, add(metaData, lenMeta)))
 
             // in the calldata, metadata is stored @0x64 after accounting for function signature, and 2 previous params
             calldatacopy(
                 metaData,                     // copy to metaData
                 0x64,                        // copy from calldata after data length declaration at 0x64
                 sub(calldatasize(), 0x64)   // copy size (calldatasize - 0x64)
-            )   
+            )
         }
-
-        emit Metadata(cd, metaData);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
 
-        // bytes4 sig = _contractAddressToExecuteFunctionSignature[contractAddress];
-        // if (sig != bytes4(0)) {
-        //     bytes memory callData = abi.encodePacked(sig, metaData);
-        //     (bool success,) = contractAddress.call(callData);
-        //     require(success, "delegatecall to contractAddress failed");
-        // }
+        bytes4 sig = _contractAddressToExecuteFunctionSignature[contractAddress];
+        if (sig != bytes4(0)) {
+            bytes memory callData = abi.encodePacked(sig, metaData);
+            (bool success,) = contractAddress.call(callData);
+            require(success, "delegatecall to contractAddress failed");
+        }
     }
 
     function _setResource(

@@ -123,7 +123,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     it("relayer shouldn't be able to vote on a depositProposal more than once", async () => {
         await TruffleAssert.passes(vote(relayer1Address));
 
-        await TruffleAssert.reverts(vote(relayer1Address), 'relayer has already voted on proposal');
+        await TruffleAssert.reverts(vote(relayer1Address), 'relayer already voted');
     });
 
     it("Should revert because dataHash doesn't match", async () => {

@@ -110,13 +110,13 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositerAddress }),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID),
-            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID),
-            BridgeInstance.adminSetResource(GenericHandlerInstance.address, centrifugeAssetResourceID),
-            BridgeInstance.adminSetResource(GenericHandlerInstance.address, noArgumentResourceID),
-            BridgeInstance.adminSetResource(GenericHandlerInstance.address, oneArgumentResourceID),
-            BridgeInstance.adminSetResource(GenericHandlerInstance.address, twoArgumentsResourceID),
-            BridgeInstance.adminSetResource(GenericHandlerInstance.address, threeArgumentsResourceID)
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, erc20ResourceID),
+            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, erc721ResourceID),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, centrifugeAssetResourceID),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, noArgumentResourceID),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, oneArgumentResourceID),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, twoArgumentsResourceID),
+            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, threeArgumentsResourceID)
         ]);
     });
 

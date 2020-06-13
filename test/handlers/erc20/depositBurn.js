@@ -52,8 +52,8 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID2),
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID1),
+            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID2),
         ]);
 
         depositData = Helpers.createERCDepositData(resourceID1, depositAmount, 32, recipientAddress);

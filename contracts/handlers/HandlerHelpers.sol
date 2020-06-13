@@ -1,6 +1,6 @@
 pragma solidity 0.6.4;
 
-import "../../interfaces/IERCHandler.sol";
+import "../interfaces/IERCHandler.sol";
 
 /**
     @title Function used across handler contracts.
@@ -56,6 +56,18 @@ contract HandlerHelpers is IERCHandler {
      */
     function setBurnable(address contractAddress) external override onlyBridge{
         _setBurnable(contractAddress);
+    }
+
+    function createResourceID (address tokenAddress, uint8 chainID) internal pure returns (bytes32) {
+        bytes11 padding;
+        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(tokenAddress, chainID));
+        bytes32 resourceID;
+
+        assembly {
+            resourceID := mload(add(encodedResourceID, 0x20))
+        }
+
+        return resourceID;
     }
 
     /**

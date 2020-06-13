@@ -71,8 +71,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await Promise.all([
             OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address),
-            OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID),
-            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID)
+            OriginBridgeInstance.adminSetHandlerAddress(OriginERC721HandlerInstance.address, originResourceID),
+            DestinationBridgeInstance.adminSetHandlerAddress(DestinationERC721HandlerInstance.address, destinationResourceID)
         ]);
 
         originDepositData = Helpers.createERCDepositData(originResourceID, tokenID, 32, recipientAddress);

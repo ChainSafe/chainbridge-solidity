@@ -2,9 +2,10 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
-import "./utils/HandlerHelpers.sol";
+import "./HandlerHelpers.sol";
 import "../ERC721Safe.sol";
 import "../ERC721MinterBurnerPauser.sol";
+import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
 
@@ -14,6 +15,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
+    using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
 
@@ -133,8 +135,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         // Check if the contract supports metadata, fetch it if it does
-        (bool success, bool result) = supportsInterface(tokenAddress, _INTERFACE_ERC721_METADATA);
-        if (success && result) {
+        if (tokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
             IERC721Metadata erc721 = IERC721Metadata(tokenAddress);
             metaData = bytes(erc721.tokenURI(tokenID));
         }
@@ -155,14 +156,6 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
             tokenID,
             metaData
         );
-    }
-
-
-    function supportsInterface(address tokenAddress, bytes4 interfaceID) private view returns (bool, bool) {
-        bytes memory encodedParams = abi.encodeWithSelector(_INTERFACE_ERC721_METADATA, interfaceID);
-        (bool success, bytes memory result) = tokenAddress.staticcall{ gas: 30000 }(encodedParams);
-        if (result.length < 32) return (false, false);
-        return (success,abi.decode(result, (bool)));
     }
 
     /**

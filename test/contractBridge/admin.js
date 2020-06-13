@@ -107,7 +107,7 @@ contract('Bridge - [admin]', async accounts => {
 
         assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), Ethers.constants.AddressZero);
 
-        TruffleAssert.passes(await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
+        TruffleAssert.passes(await BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID));
         assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), ERC20HandlerInstance.address);
     });
 

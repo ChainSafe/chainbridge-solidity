@@ -37,12 +37,8 @@ contract GenericHandler is IGenericHandler {
     mapping (address => bool) public _contractWhitelist;
 
     modifier onlyBridge() {
-        _onlyBridge();
+        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
         _;
-    }
-
-    function _onlyBridge() private {
-         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 
     /**
@@ -70,13 +66,13 @@ contract GenericHandler is IGenericHandler {
         bytes4[]  memory initialExecuteFunctionSignatures
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
-            "initialResourceIDs and initialContractAddresses len mismatch");
+            "mismatch length between initialResourceIDs and initialContractAddresses");
 
         require(initialContractAddresses.length == initialDepositFunctionSignatures.length,
-            "provided contract addresses and function signatures len mismatch");
+            "mismatch length between provided contract addresses and function signatures");
 
         require(initialDepositFunctionSignatures.length == initialExecuteFunctionSignatures.length,
-            "provided deposit and execute function signatures len mismatch");
+            "mismatch length between provided deposit and execute function signatures");
 
         _bridgeAddress = bridgeAddress;
 

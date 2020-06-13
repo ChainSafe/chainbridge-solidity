@@ -190,6 +190,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     it('Should execute Generic deposit proposal - No Argument', async () => {
         const depositNonce = 4;
         const depositData = Helpers.createGenericDepositData(null);
+
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         await deposit(centrifugeAssetResourceID, depositData);

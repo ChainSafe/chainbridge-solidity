@@ -438,7 +438,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
-        require(_resourceIDToHandlerAddress[resourceID] == address(0), "resourceID already set");
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
     }
 }

@@ -39,7 +39,6 @@ contract Bridge is Pausable, AccessControl {
     // destinationChainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
     // resourceID => handler address
-    mapping(bytes32 => address) public _resourceIDToHandlerAddress;
     // destinationChainID => depositNonce => bytes
     mapping(uint8 => mapping(uint64 => bytes)) public _depositRecords;
     // destinationChainID => depositNonce => Proposal
@@ -393,6 +392,7 @@ contract Bridge is Pausable, AccessControl {
 
     function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
+        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
         require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;

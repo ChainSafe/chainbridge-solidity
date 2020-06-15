@@ -48,15 +48,11 @@ const createGenericDepositData = (hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
             toHex(0, 32).substr(2) // len(metaData) (32 bytes)
-    } else {
-        const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
-        return '0x' +
-            toHex(hexMetaDataLength, 32).substr(2) +
-            hexMetaData.substr(2)
-
-    }
-
-
+    } 
+    const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
+    return '0x' +
+        toHex(hexMetaDataLength, 32).substr(2) +
+        hexMetaData.substr(2)
 };
 
 const createResourceID = (contractAddress, chainID) => {

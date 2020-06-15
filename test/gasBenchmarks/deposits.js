@@ -110,13 +110,13 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, erc20ResourceID),
-            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, erc721ResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, centrifugeAssetResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, noArgumentResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, oneArgumentResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, twoArgumentsResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, threeArgumentsResourceID)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, centrifugeAssetResourceID, genericInitialContractAddresses[0], genericInitialDepositFunctionSignatures[0], genericInitialExecuteFunctionSignatures[0]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], genericInitialDepositFunctionSignatures[1], genericInitialExecuteFunctionSignatures[1]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], genericInitialDepositFunctionSignatures[2], genericInitialExecuteFunctionSignatures[2]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], genericInitialDepositFunctionSignatures[3], genericInitialExecuteFunctionSignatures[3]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], genericInitialDepositFunctionSignatures[4], genericInitialExecuteFunctionSignatures[4])
         ]);
     });
 

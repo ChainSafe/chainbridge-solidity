@@ -47,7 +47,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
         await Promise.all([
             ERC721MintableInstance.mint(depositerAddress, tokenID, depositMetadata),
-            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, resourceID)
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID, ERC721MintableInstance.address)
         ]);
 
         await ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress });

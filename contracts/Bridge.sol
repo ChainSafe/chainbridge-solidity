@@ -213,16 +213,6 @@ contract Bridge is Pausable, AccessControl {
     }
 
     /**
-        @notice Maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by an address that currently has the admin role.
-        @param handlerAddress Address of handler resource will be mapped to.
-        @param resourceID ResourceID to be used when making deposits.
-     */
-    function adminSetHandlerAddress(address handlerAddress, bytes32 resourceID) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
-    }
-
-    /**
         @notice Sets a new resource for handler contracts that use the IERCHandler interface,
         and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
         @notice Only callable by an address that currently has the admin role.
@@ -231,7 +221,7 @@ contract Bridge is Pausable, AccessControl {
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
     function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
+        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
     }
@@ -251,7 +241,7 @@ contract Bridge is Pausable, AccessControl {
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
     ) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
+        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
@@ -439,7 +429,4 @@ contract Bridge is Pausable, AccessControl {
         }
     }
 
-    function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
-        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
-    }
 }

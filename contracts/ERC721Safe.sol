@@ -12,15 +12,11 @@ import "./ERC721MinterBurnerPauser.sol";
 contract ERC721Safe {
     using SafeMath for uint256;
 
-    // ERC721 contract => amount of tokens burned by Safe
-    mapping(address => uint256) public _burnedTokens;
-
     /**
         @notice Used to transfer tokens into the safe to fund proposals.
         @param tokenAddress Address of ERC721 to transfer.
         @param owner Address of current token owner.
         @param tokenID ID of token to transfer.
-        @notice Increments balance for {tokenAddress}.
      */
     function fundERC721(address tokenAddress, address owner, uint tokenID) public {
         IERC721 erc721 = IERC721(tokenAddress);
@@ -33,7 +29,6 @@ contract ERC721Safe {
         @param owner Address of current token owner.
         @param recipient Address to transfer token to.
         @param tokenID ID of token to transfer.
-        @notice Increments balance for {tokenAddress}.
      */
     function lockERC721(address tokenAddress, address owner, address recipient, uint tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
@@ -47,7 +42,6 @@ contract ERC721Safe {
         @param owner Address of current token owner.
         @param recipient Address to transfer token to.
         @param tokenID ID of token to transfer.
-        @notice Decrements balance for {tokenAddress}.
      */
     function releaseERC721(address tokenAddress, address owner, address recipient, uint256 tokenID) internal {
         IERC721 erc721 = IERC721(tokenAddress);
@@ -60,7 +54,6 @@ contract ERC721Safe {
         @param recipient Address to mint token to.
         @param tokenID ID of token to mint.
         @param data Optional data to send along with mint call.
-        @notice Increments balance for {tokenAddress}.
      */
     function mintERC721(address tokenAddress, address recipient, uint256 tokenID, bytes memory data) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
@@ -71,13 +64,10 @@ contract ERC721Safe {
         @notice Used to burn ERC721s.
         @param tokenAddress Address of ERC721 to burn.
         @param tokenID ID of token to burn.
-        @notice Increments {_burnedTokens} balance for {tokenAddress}.
      */
     function burnERC721(address tokenAddress, uint256 tokenID) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.burn(tokenID);
-
-        _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(1);
     }
 
 }

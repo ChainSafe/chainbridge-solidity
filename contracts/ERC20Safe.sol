@@ -13,15 +13,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 contract ERC20Safe {
     using SafeMath for uint256;
 
-    // ERC20 contract => amount of tokens burned by Safe
-    mapping(address => uint256) public _burnedTokens;
-
     /**
         @notice Used to transfer tokens into the safe to fund proposals.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.
         @param amount Amount of tokens to transfer.
-        @notice Increments balance for {tokenAddress}.
      */
     function fundERC20(address tokenAddress, address owner, uint256 amount) public {
         IERC20 erc20 = IERC20(tokenAddress);
@@ -34,7 +30,6 @@ contract ERC20Safe {
         @param owner Address of current token owner.
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
-        @notice Increments balance for {tokenAddress}.
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
@@ -46,7 +41,6 @@ contract ERC20Safe {
         @param tokenAddress Address of ERC20 to transfer.
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
-        @notice Decrements balance for {tokenAddress}.
      */
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
@@ -58,7 +52,6 @@ contract ERC20Safe {
         @param tokenAddress Address of ERC20 to transfer.
         @param recipient Address to mint token to.
         @param amount Amount of token to mint.
-        @notice Increments balance for {tokenAddress}.
      */
     function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
         ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
@@ -71,13 +64,10 @@ contract ERC20Safe {
         @param tokenAddress Address of ERC20 to burn.
         @param owner Current owner of tokens.
         @param amount Amount of tokens to burn.
-        @notice Increments {_burnedTokens} balance for {tokenAddress}.
      */
     function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
         ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
         erc20.burnFrom(owner, amount);
-
-        _burnedTokens[tokenAddress] = _burnedTokens[tokenAddress].add(amount);
     }
 
     /**

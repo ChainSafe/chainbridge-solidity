@@ -82,11 +82,11 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialExecuteFunctionSignatures);
         
         await Promise.all([
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[0]),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[1]),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[2]),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[3]),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, initialResourceIDs[4])
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialExecuteFunctionSignatures[0]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], initialDepositFunctionSignatures[1], initialExecuteFunctionSignatures[1]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], initialDepositFunctionSignatures[2], initialExecuteFunctionSignatures[2]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialExecuteFunctionSignatures[3]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialExecuteFunctionSignatures[4])
         ]);
                 
         depositData = Helpers.createGenericDepositData(initialResourceIDs[0], '0xdeadbeef');

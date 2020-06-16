@@ -228,8 +228,8 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(encodedMetaData);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
-        await deposit(twoArgumentResourceID, depositData);
-        await vote(twoArgumentResourceID, depositNonce, depositDataHash, relayerAddress);
+        await deposit(twoArgumentsResourceID, depositData);
+        await vote(twoArgumentsResourceID, depositNonce, depositDataHash, relayerAddress);
 
         const executeTx = await execute(depositNonce, depositData);
 
@@ -248,8 +248,8 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(encodedMetaData);
         const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
-        await deposit(threeArgumentResourceID, depositData);
-        await vote(threeArgumentResourceID, depositNonce, depositDataHash, relayerAddress);
+        await deposit(threeArgumentsResourceID, depositData);
+        await vote(threeArgumentsResourceID, depositNonce, depositDataHash, relayerAddress);
 
         const executeTx = await execute(depositNonce, depositData);
 

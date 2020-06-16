@@ -178,7 +178,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         };
 
         await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
-        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce), "proposal already cancelled")
+        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce), "Proposal already cancelled")
 
     });
 

@@ -48,7 +48,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         await Promise.all([
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, resourceID)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
         
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });

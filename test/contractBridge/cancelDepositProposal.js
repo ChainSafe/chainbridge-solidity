@@ -62,7 +62,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await Promise.all([
             DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
-            BridgeInstance.adminSetHandlerAddress(DestinationERC20HandlerInstance.address, resourceID)
+            BridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, resourceID, DestinationERC20MintableInstance.address)
         ]);
 
         vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer});

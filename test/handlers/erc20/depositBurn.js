@@ -66,39 +66,4 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
             assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
         }
     });
-
-    it('[sanity] ERC20HandlerInstance.address should have an allowance of depositAmount from depositerAddress', async () => {
-        const handlerAllowance = await ERC20MintableInstance1.allowance(depositerAddress, ERC20HandlerInstance.address);
-        assert.strictEqual(handlerAllowance.toNumber(), depositAmount);
-    });
-
-    it('depositAmount of ERC20MintableInstance1 tokens should have been burned', async () => {
-        await BridgeInstance.deposit(
-            chainID,
-            resourceID1,
-            depositData,
-            { from: depositerAddress }
-        );
-
-        const handlerAllowance = await ERC20MintableInstance1.allowance(depositerAddress, ERC20HandlerInstance.address);
-        assert.strictEqual(handlerAllowance.toNumber(), 0);
-
-        const handlerBalance = await ERC20MintableInstance1.balanceOf(ERC20HandlerInstance.address);
-        assert.strictEqual(handlerBalance.toNumber(), 0);
-
-        const zeroAddressBalance = await ERC20MintableInstance1.balanceOf(Ethers.utils.hexZeroPad('0x0', 20));
-        assert.strictEqual(zeroAddressBalance.toNumber(), 0);
-    });
-
-    it('_burnedTokens for ERC20MintableInstance1.address should have been incremented by depositAmount', async () => {
-        await BridgeInstance.deposit(
-            chainID,
-            resourceID1,
-            depositData,
-            { from: depositerAddress }
-        );
-
-        const numBurnedTokens = await ERC20HandlerInstance._burnedTokens.call(ERC20MintableInstance1.address);
-        assert.strictEqual(numBurnedTokens.toNumber(), depositAmount);
-    });
 });

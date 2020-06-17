@@ -77,16 +77,16 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
             OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
             DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
-            OriginBridgeInstance.adminSetHandlerAddress(OriginERC20HandlerInstance.address, originResourceID),
-            DestinationBridgeInstance.adminSetHandlerAddress(DestinationERC20HandlerInstance.address, destinationResourceID)
+            OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
+            DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address)
         ]);
 
-        originDepositData = Helpers.createERCDepositData(originResourceID, depositAmount, 32, recipientAddress);
-        originDepositProposalData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 20, recipientAddress);
+        originDepositData = Helpers.createERCDepositData(depositAmount, 32, recipientAddress);
+        originDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
         
-        destinationDepositData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 32, depositerAddress);
-        destinationDepositProposalData = Helpers.createERCDepositData(originResourceID, depositAmount, 20, depositerAddress);
+        destinationDepositData = Helpers.createERCDepositData(depositAmount, 32, depositerAddress);
+        destinationDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, depositerAddress);
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC20HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
     

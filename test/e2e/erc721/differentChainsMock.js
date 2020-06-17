@@ -71,16 +71,16 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await Promise.all([
             OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address),
-            OriginBridgeInstance.adminSetHandlerAddress(OriginERC721HandlerInstance.address, originResourceID),
-            DestinationBridgeInstance.adminSetHandlerAddress(DestinationERC721HandlerInstance.address, destinationResourceID)
+            OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
+            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address)
         ]);
 
-        originDepositData = Helpers.createERCDepositData(originResourceID, tokenID, 32, recipientAddress);
-        originDepositProposalData = Helpers.createERC721DepositProposalData(destinationResourceID, tokenID, 20, recipientAddress, 32, 0);
+        originDepositData = Helpers.createERCDepositData(tokenID, 32, recipientAddress);
+        originDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, 32, 0);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
-        destinationDepositData = Helpers.createERCDepositData(destinationResourceID, tokenID, 32, depositerAddress);
-        destinationDepositProposalData = Helpers.createERC721DepositProposalData(originResourceID, tokenID, 20, depositerAddress, 32, 0)
+        destinationDepositData = Helpers.createERCDepositData(tokenID, 32, depositerAddress);
+        destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC721HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
 

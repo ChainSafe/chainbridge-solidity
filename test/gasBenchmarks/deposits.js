@@ -110,13 +110,13 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, erc20ResourceID),
-            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, erc721ResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, centrifugeAssetResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, noArgumentResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, oneArgumentResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, twoArgumentsResourceID),
-            BridgeInstance.adminSetHandlerAddress(GenericHandlerInstance.address, threeArgumentsResourceID)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, centrifugeAssetResourceID, genericInitialContractAddresses[0], genericInitialDepositFunctionSignatures[0], genericInitialExecuteFunctionSignatures[0]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], genericInitialDepositFunctionSignatures[1], genericInitialExecuteFunctionSignatures[1]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], genericInitialDepositFunctionSignatures[2], genericInitialExecuteFunctionSignatures[2]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], genericInitialDepositFunctionSignatures[3], genericInitialExecuteFunctionSignatures[3]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], genericInitialDepositFunctionSignatures[4], genericInitialExecuteFunctionSignatures[4])
         ]);
     });
 
@@ -125,7 +125,6 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             erc20ResourceID,
             Helpers.createERCDepositData(
-                erc20ResourceID,
                 erc20TokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
@@ -142,7 +141,6 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             erc721ResourceID,
             Helpers.createERCDepositData(
-                erc721ResourceID,
                 erc721TokenID,
                 lenRecipientAddress,
                 recipientAddress),
@@ -158,7 +156,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             centrifugeAssetResourceID,
-            Helpers.createGenericDepositData(centrifugeAssetResourceID, '0xc0ff33'),
+            Helpers.createGenericDepositData('0xc0ff33'),
             { from: depositerAddress }
         );
 
@@ -172,7 +170,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             noArgumentResourceID,
-            Helpers.createGenericDepositData(noArgumentResourceID, null),
+            Helpers.createGenericDepositData(null),
             { from: depositerAddress }
         );
 
@@ -186,7 +184,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             oneArgumentResourceID,
-            Helpers.createGenericDepositData(oneArgumentResourceID, Helpers.toHex(42, 32)),
+            Helpers.createGenericDepositData(Helpers.toHex(42, 32)),
             { from: depositerAddress }
         );
 
@@ -203,7 +201,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             twoArgumentsResourceID,
-            Helpers.createGenericDepositData(twoArgumentsResourceID, encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 
@@ -221,7 +219,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             threeArgumentsResourceID,
-            Helpers.createGenericDepositData(threeArgumentsResourceID, encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 

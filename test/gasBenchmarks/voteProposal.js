@@ -48,13 +48,12 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC20HandlerInstance.address, erc20ResourceID),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
         ]);
     });
 
     it('Should create proposal - relayerThreshold = 2, not finalized', async () => {
         const depositData = Helpers.createERCDepositData(
-            erc20ResourceID,
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);
@@ -70,7 +69,6 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
     it('Should vote proposal - relayerThreshold = 2, finalized', async () => {
         const depositData = Helpers.createERCDepositData(
-            erc20ResourceID,
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);
@@ -89,7 +87,6 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
         await BridgeInstance.adminChangeRelayerThreshold(1);
 
         const depositData = Helpers.createERCDepositData(
-            erc20ResourceID,
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);

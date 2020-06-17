@@ -48,7 +48,6 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         await BridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, resourceID, DestinationERC20MintableInstance.address);
         
         data = Helpers.createERCDepositData(
-            resourceID,
             depositAmount,
             32,
             destinationRecipientAddress);
@@ -191,7 +190,6 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         await BridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, resourceID, DestinationERC20MintableInstance.address);
         
         data = Helpers.createERCDepositData(
-            resourceID,
             depositAmount,
             32,
             destinationRecipientAddress);

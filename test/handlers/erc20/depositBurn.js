@@ -56,7 +56,8 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address),
         ]);
 
-        depositData = Helpers.createERCDepositData(resourceID1, depositAmount, 32, recipientAddress);
+        depositData = Helpers.createERCDepositData(depositAmount, 32, recipientAddress);
+        
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {

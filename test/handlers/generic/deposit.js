@@ -89,7 +89,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialExecuteFunctionSignatures[4])
         ]);
                 
-        depositData = Helpers.createGenericDepositData(initialResourceIDs[0], '0xdeadbeef');
+        depositData = Helpers.createGenericDepositData('0xdeadbeef');
     });
 
     it('deposit can be made successfully', async () => {
@@ -131,7 +131,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[1],
-            Helpers.createGenericDepositData(initialResourceIDs[1], null),
+            Helpers.createGenericDepositData(null),
             { from: depositerAddress }
         );
 
@@ -154,7 +154,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[2],
-            Helpers.createGenericDepositData(initialResourceIDs[2], Helpers.toHex(argumentOne, 32)),
+            Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)),
             { from: depositerAddress }
         );
 
@@ -179,7 +179,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[3],
-            Helpers.createGenericDepositData(initialResourceIDs[3], encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 
@@ -208,7 +208,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[4],
-            Helpers.createGenericDepositData(initialResourceIDs[4], encodedMetaData),
+            Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
 

@@ -81,12 +81,12 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address)
         ]);
 
-        originDepositData = Helpers.createERCDepositData(originResourceID, depositAmount, 32, recipientAddress);
-        originDepositProposalData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 20, recipientAddress);
+        originDepositData = Helpers.createERCDepositData(depositAmount, 32, recipientAddress);
+        originDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
         
-        destinationDepositData = Helpers.createERCDepositData(destinationResourceID, depositAmount, 32, depositerAddress);
-        destinationDepositProposalData = Helpers.createERCDepositData(originResourceID, depositAmount, 20, depositerAddress);
+        destinationDepositData = Helpers.createERCDepositData(depositAmount, 32, depositerAddress);
+        destinationDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, depositerAddress);
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC20HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
     

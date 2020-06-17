@@ -82,27 +82,28 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
 
-        resourceID                  bytes32     bytes   0 - 32
-        amount                      uint256     bytes  32 - 64
-        recipientAddress length     uint256     bytes  64 - 96
-        recipientAddress            bytes       bytes  96 - END
+        amount                      uint256     bytes   0 - 32
+        recipientAddress length     uint256     bytes  32 - 64
+        recipientAddress            bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
     function deposit(
-        uint8 destinationChainID,
-        uint64 depositNonce,
+        bytes32 resourceID,
+        uint8   destinationChainID,
+        uint64  depositNonce,
         address depositer,
-        bytes calldata data
+        bytes   calldata data
     ) external override onlyBridge {
-        bytes32        resourceID;
         bytes   memory recipientAddress;
         uint256        amount;
         uint256        lenRecipientAddress;
 
         assembly {
 
-            resourceID := calldataload(0xA4)
+            // 0000000000000000000000000000000000000000000000000000000000000064
+            // 0000000000000000000000000000000000000000000000000000000000000020
+            // 2aef8939cc4a7f6bbcd7d176e55f672eed5cbd4aa9e5a505d16a856b29a868ad
             amount := calldataload(0xC4)
 
             recipientAddress := mload(0x40)
@@ -112,7 +113,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
             calldatacopy(
                 recipientAddress, // copy to destinationRecipientAddress
                 0xE4, // copy from calldata @ 0x104
-                sub(calldatasize(), 0xE4) // copy size (calldatasize - 0x104)
+                sub(calldatasize(), 0xE) // copy size (calldatasize - 0x104)
             )
         }
 
@@ -147,13 +148,11 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         destinationRecipientAddress length     uint256     bytes  64 - 96
         destinationRecipientAddress            bytes       bytes  96 - END
      */
-    function executeProposal(bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256       amount;
-        bytes32       resourceID;
         bytes  memory destinationRecipientAddress;
 
         assembly {
-            resourceID := calldataload(0x44)
             amount := calldataload(0x64)
 
             destinationRecipientAddress := mload(0x40)

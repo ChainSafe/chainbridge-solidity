@@ -20,19 +20,17 @@
     return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
  };
 
- const createERCDepositData = (resourceID, tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
+ const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
     return '0x' +
-        resourceID.substr(2) +
         toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
         toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
-        recipientAddress.substr(2);                                                        // recipientAddress               (?? bytes)
+        recipientAddress.substr(2);               // recipientAddress               (?? bytes)
 };
 
 const createERC721DepositProposalData = (
-    resourceID, tokenAmountOrID, lenRecipientAddress,
+    tokenAmountOrID, lenRecipientAddress,
     recipientAddress, lenMetaData, metaData) => {
     return '0x' +
-        resourceID.substr(2) +
         toHex(tokenAmountOrID, 32).substr(2) +     // Token amount or ID to deposit (32 bytes)
         toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
         recipientAddress.substr(2) +               // recipientAddress               (?? bytes)
@@ -46,16 +44,13 @@ const advanceBlock = () => {
     return provider.send("evm_mine", [time]);
 }
 
-const createGenericDepositData = (resourceID, hexMetaData) => {
+const createGenericDepositData = (hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
-            resourceID.substr(2) +
             toHex(0, 32).substr(2) // len(metaData) (32 bytes)
-    }
-    
+    } 
     const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
     return '0x' +
-        resourceID.substr(2) +
         toHex(hexMetaDataLength, 32).substr(2) +
         hexMetaData.substr(2)
 };

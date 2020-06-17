@@ -76,7 +76,6 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
             chainID,
             resourceID,
             Helpers.createERCDepositData(
-                resourceID,
                 tokenID,
                 lenRecipientAddress,
                 recipientAddress),
@@ -105,7 +104,6 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
             chainID,
             resourceID,
             Helpers.createERCDepositData(
-                resourceID,
                 tokenID,
                 lenRecipientAddress,
                 recipientAddress),

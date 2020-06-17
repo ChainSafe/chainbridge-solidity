@@ -306,7 +306,7 @@ contract Bridge is Pausable, AccessControl {
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit (uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
+    function deposit(uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
         address handler = _resourceIDToHandlerAddress[resourceID];
@@ -316,7 +316,7 @@ contract Bridge is Pausable, AccessControl {
         _depositRecords[destinationChainID][depositNonce] = data;
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
+        depositHandler.deposit(resourceID, destinationChainID, depositNonce, msg.sender, data);
 
         emit Deposit(destinationChainID, resourceID, depositNonce);
     }
@@ -412,7 +412,7 @@ contract Bridge is Pausable, AccessControl {
         proposal._status = ProposalStatus.Transferred;
         
         IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
-        depositHandler.executeProposal(data);
+        depositHandler.executeProposal(proposal._resourceID, data);
 
         emit ProposalExecuted(chainID, _chainID, depositNonce);
     }

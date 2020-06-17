@@ -50,7 +50,6 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });
 
         depositData = Helpers.createERCDepositData(
-            resourceID,
             depositAmount,
             20,
             recipientAddress);

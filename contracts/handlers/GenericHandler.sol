@@ -136,14 +136,11 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
-        bytes32      resourceID;
+    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
         bytes32      lenMetadata;
         bytes memory metadata;
 
         assembly {
-            // Load resource ID from data + 32
-            resourceID := calldataload(0xA4)
             // Load length of metadata from data + 64
             lenMetadata  := calldataload(0xC4)
             // Load free memory pointer
@@ -190,12 +187,9 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToExecuteFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function executeProposal(bytes calldata data) external onlyBridge {
-        bytes32      resourceID;
+    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
         bytes memory metaData;
         assembly {
-
-            resourceID := calldataload(0x44)
 
             // metadata has variable length
             // load free memory pointer to store metadata

@@ -144,6 +144,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             originChainID,
             expectedDepositNonce,
             originDepositProposalData,
+            destinationResourceID,
             { from: destinationRelayer2Address }
         ));
 
@@ -201,6 +202,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             destinationChainID,
             expectedDepositNonce,
             destinationDepositProposalData,
+            originResourceID,
             { from: originRelayer2Address }
         ));
 

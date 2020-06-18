@@ -115,6 +115,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             chainID,
             expectedDepositNonce,
             proposalData,
+            resourceID,
             { from: relayer2Address }
         ));
 

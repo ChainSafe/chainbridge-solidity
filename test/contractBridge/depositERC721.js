@@ -129,7 +129,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             { from: depositerAddress }
         );
 
-        const depositRecord = await BridgeInstance._depositRecords.call(destinationChainID, expectedDepositNonce);
+        const depositRecord = await BridgeInstance._depositRecords.call(expectedDepositNonce, destinationChainID);
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 

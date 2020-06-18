@@ -52,7 +52,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
 
     const deposit = (resourceID, depositData) => BridgeInstance.deposit(chainID, resourceID, depositData, { from: depositerAddress });
     const vote = (resourceID, depositNonce, depositDataHash) => BridgeInstance.voteProposal(chainID, depositNonce, resourceID, depositDataHash, { from: relayerAddress });
-    const execute = (depositNonce, depositData) => BridgeInstance.executeProposal(chainID, depositNonce, depositData);
+    const execute = (depositNonce, depositData, resourceID) => BridgeInstance.executeProposal(chainID, depositNonce, depositData, resourceID);
 
     before(async () => {
         await Promise.all([
@@ -139,7 +139,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(erc20ResourceID, depositData);
         await vote(erc20ResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, erc20ResourceID);
 
         gasBenchmarks.push({
             type: 'ERC20',
@@ -162,7 +162,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(erc721ResourceID, depositData);
         await vote(erc721ResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, erc721ResourceID);
 
         gasBenchmarks.push({
             type: 'ERC721',
@@ -179,7 +179,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(centrifugeAssetResourceID, depositData);
         await vote(centrifugeAssetResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, centrifugeAssetResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Centrifuge Asset',
@@ -196,7 +196,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(noArgumentResourceID, depositData);
         await vote(noArgumentResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, noArgumentResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - No Argument',
@@ -212,7 +212,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(oneArgumentResourceID, depositData);
         await vote(oneArgumentResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, oneArgumentResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - One Argument',
@@ -231,7 +231,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(twoArgumentsResourceID, depositData);
         await vote(twoArgumentsResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, twoArgumentsResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Two Argument',
@@ -251,7 +251,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         await deposit(threeArgumentsResourceID, depositData);
         await vote(threeArgumentsResourceID, depositNonce, depositDataHash, relayerAddress);
 
-        const executeTx = await execute(depositNonce, depositData);
+        const executeTx = await execute(depositNonce, depositData, threeArgumentsResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Three Argument',

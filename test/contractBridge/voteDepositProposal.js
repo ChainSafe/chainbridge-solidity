@@ -126,14 +126,14 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await TruffleAssert.reverts(vote(relayer1Address), 'relayer has already voted on proposal');
     });
 
-    it("Should revert because dataHash doesn't match", async () => {
+    it("Should be able to create a proposal with a different hash", async () => {
         await TruffleAssert.passes(vote(relayer1Address));
 
-        await TruffleAssert.reverts(
+        await TruffleAssert.passes(
             BridgeInstance.voteProposal(
                 originChainID, expectedDepositNonce,
                 resourceID, Ethers.utils.keccak256(depositDataHash),
-                {from: relayer2Address}), 'datahash mismatch');
+                {from: relayer2Address}));
     });
 
     it("Relayer's vote should be recorded correctly - yes vote", async () => {
@@ -178,7 +178,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await TruffleAssert.passes(vote(relayer1Address));
 
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
-            originChainID, expectedDepositNonce, relayer1Address);
+            Helpers.nonceAndId(expectedDepositNonce, originChainID), depositDataHash, relayer1Address);
         assert.isTrue(hasVoted);
     });
 

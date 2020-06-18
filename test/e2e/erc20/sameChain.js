@@ -106,6 +106,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             chainID,
             expectedDepositNonce,
             depositProposalData,
+            resourceID,
             { from: relayer2Address }
         ));
 

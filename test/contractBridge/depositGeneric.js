@@ -74,7 +74,7 @@ contract('Bridge - [deposit - Generic]', async () => {
             depositData
         );
         
-        const depositRecord = await BridgeInstance._depositRecords.call(destinationChainID, expectedDepositNonce);
+        const depositRecord = await BridgeInstance._depositRecords.call(expectedDepositNonce, destinationChainID);
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 

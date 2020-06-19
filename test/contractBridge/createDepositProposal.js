@@ -94,7 +94,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it("getProposal should be called successfully", async () => {
         await TruffleAssert.passes(BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce
+            destinationChainID, expectedDepositNonce, dataHash
         ));
     });
 
@@ -116,7 +116,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         const depositProposal = await BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce);
+            destinationChainID, expectedDepositNonce, dataHash);
         Helpers.assertObjectsMatch(expectedDepositProposal, Object.assign({}, depositProposal));
     });
 
@@ -129,7 +129,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
-            destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+            Helpers.nonceAndId(expectedDepositNonce, destinationChainID), dataHash, originChainRelayerAddress);
         assert.isTrue(hasVoted);
     });
 
@@ -252,7 +252,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         const depositProposal = await BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce);
+            destinationChainID, expectedDepositNonce, dataHash);
         Helpers.assertObjectsMatch(expectedDepositProposal, Object.assign({}, depositProposal));
     });
 
@@ -265,7 +265,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
-            destinationChainID, expectedDepositNonce, originChainRelayerAddress);
+            Helpers.nonceAndId(expectedDepositNonce, destinationChainID), dataHash, originChainRelayerAddress);
         assert.isTrue(hasVoted);
     });
 

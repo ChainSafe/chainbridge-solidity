@@ -90,7 +90,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         };
 
         const depositProposal = await BridgeInstance.getProposal(
-            originChainID, expectedDepositNonce);
+            originChainID, expectedDepositNonce, depositDataHash);
 
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
     });
@@ -114,7 +114,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce, depositDataHash);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
         await TruffleAssert.reverts(vote(relayer3Address), "proposal has already been passed, transferred, or cancelled.")
 
@@ -135,8 +135,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
-        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash))
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce, depositDataHash);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
         await TruffleAssert.reverts(vote(relayer4Address), "proposal has already been passed, transferred, or cancelled.")
 
@@ -156,8 +156,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
-        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce);
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash))
+        const depositProposal = await BridgeInstance.getProposal(originChainID, expectedDepositNonce, depositDataHash);
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
         await TruffleAssert.reverts(vote(relayer2Address), "proposal has already been passed, transferred, or cancelled.")
 
@@ -177,8 +177,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             _status: '4' // Cancelled
         };
 
-        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
-        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce), "Proposal already cancelled")
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash))
+        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash), "Proposal already cancelled")
 
     });
 

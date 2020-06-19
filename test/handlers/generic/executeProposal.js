@@ -96,6 +96,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             chainID,
             expectedDepositNonce,
             depositData,
+            resourceID,
             { from: relayer2Address }
         ));
         
@@ -136,6 +137,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             chainID,
             expectedDepositNonce,
             depositData,
+            resourceID,
             { from: relayer2Address }
         );
 

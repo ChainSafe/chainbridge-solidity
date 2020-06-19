@@ -91,6 +91,10 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
         assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);    
     }
 };
+//uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
+const nonceAndId = (nonce, id) => {
+    return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
+}
 
 module.exports = {
     advanceBlock,
@@ -102,5 +106,6 @@ module.exports = {
     createGenericDepositData,
     createERC721DepositProposalData,
     createResourceID,
-    assertObjectsMatch
+    assertObjectsMatch,
+    nonceAndId
 };

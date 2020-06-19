@@ -101,17 +101,22 @@ contract('Bridge - [fee]', async (accounts) => {
         // check the balance is 0
         assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
         await BridgeInstance.deposit(destinationChainID, resourceID, depositData, {value: Ethers.utils.parseEther("1")})
+        assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "1");
 
+        let b1Before = await web3.eth.getBalance(accounts[1]);
+        let b2Before = await web3.eth.getBalance(accounts[2]);
+
+        let payout = Ethers.utils.parseEther("0.5")
         // Transfer the funds
         TruffleAssert.passes(
             await BridgeInstance.transferFunds(
                 [accounts[1], accounts[2]], 
-                [Ethers.utils.parseEther("0.5"), Ethers.utils.parseEther("0.5")]
+                [payout, payout]
             )
         )
         b1 = await web3.eth.getBalance(accounts[1]);
         b2 = await web3.eth.getBalance(accounts[2]);
-        assert.equal(web3.utils.fromWei(b1), "100.5");
-        assert.equal(web3.utils.fromWei(b2), "100.5");
+        assert.equal(b1, Ethers.utils.bigNumberify(b1Before).add(payout));
+        assert.equal(b2, Ethers.utils.bigNumberify(b2Before).add(payout));
     })
 });

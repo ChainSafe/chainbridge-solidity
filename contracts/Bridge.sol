@@ -273,7 +273,7 @@ contract Bridge is Pausable, AccessControl {
         return _proposals[nonceAndID][dataHash];
     }
 
-    /** 
+    /**
         @notice Changes deposit fee.
         @notice Only callable by admin.
         @param newFee Value {_fee} will be updated to.
@@ -399,6 +399,7 @@ contract Bridge is Pausable, AccessControl {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
+        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
         require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;

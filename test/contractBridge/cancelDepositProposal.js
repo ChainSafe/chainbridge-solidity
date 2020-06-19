@@ -163,5 +163,23 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
     });
 
+    it("proposal cannot be cancelled twice", async () => {
+        await TruffleAssert.passes(vote(relayer3Address));
+
+        for (i=0; i<10; i++) {
+            await Helpers.advanceBlock();
+        }
+
+        const expectedDepositProposal = {
+            _dataHash: depositDataHash,
+            _yesVotes: [relayer3Address],
+            _noVotes: [],
+            _status: '4' // Cancelled
+        };
+
+        await TruffleAssert.passes(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce))
+        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce), "Proposal already cancelled")
+
+    });
 
 });

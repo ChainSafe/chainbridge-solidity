@@ -383,6 +383,7 @@ contract Bridge is Pausable, AccessControl {
 
     function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
         Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
+        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
         require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;

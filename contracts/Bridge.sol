@@ -40,7 +40,7 @@ contract Bridge is Pausable, AccessControl {
     mapping(uint8 => uint64) public _depositCounts;
     // resourceID => handler address
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
-    // destinationChainID => depositNonce => bytes
+    // depositNonce => destinationChainID => bytes
     mapping(uint64 => mapping(uint8 => bytes)) public _depositRecords;
     // destinationChainID + depositNonce => dataHash => Proposal
     mapping(uint72 => mapping(bytes32 => Proposal)) public _proposals;

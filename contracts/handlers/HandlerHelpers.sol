@@ -54,6 +54,7 @@ contract HandlerHelpers is IERCHandler {
         _setBurnable(contractAddress);
     }
 
+    
     function createResourceID (address tokenAddress, uint8 chainID) internal pure returns (bytes32) {
         bytes11 padding;
         bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(tokenAddress, chainID));

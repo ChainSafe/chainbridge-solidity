@@ -106,7 +106,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await TruffleAssert.passes(vote(relayer3Address));
 
-        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed, transferred, or cancelled.');
+        await TruffleAssert.reverts(vote(relayer4Address), 'proposal already passed/transferred/cancelled.');
     });
 
     it("depositProposal shouldn't be voted on if it has a Transferred status", async () => {
@@ -118,14 +118,14 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         await TruffleAssert.passes(executeProposal(relayer1Address));
 
-        await TruffleAssert.reverts(vote(relayer4Address), 'proposal has already been passed, transferred, or cancelled.');
+        await TruffleAssert.reverts(vote(relayer4Address), 'proposal already passed/transferred/cancelled.');
 
     });
 
     it("relayer shouldn't be able to vote on a depositProposal more than once", async () => {
         await TruffleAssert.passes(vote(relayer1Address));
 
-        await TruffleAssert.reverts(vote(relayer1Address), 'relayer has already voted on proposal');
+        await TruffleAssert.reverts(vote(relayer1Address), 'relayer already voted');
     });
 
     it("Should be able to create a proposal with a different hash", async () => {

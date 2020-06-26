@@ -1,12 +1,11 @@
 pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./utils/Pausable.sol";
+import "./utils/SafeMath.sol";
 import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IBridge.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 
@@ -14,8 +13,7 @@ import "./interfaces/IGenericHandler.sol";
     @title Facilitates deposits, creation and votiing of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
-contract Bridge is Pausable, AccessControl {
-    using SafeMath for uint;
+contract Bridge is Pausable, AccessControl, SafeMath {
 
     uint8   public _chainID;
     uint256 public _relayerThreshold;
@@ -92,15 +90,15 @@ contract Bridge is Pausable, AccessControl {
 
     function _onlyAdminOrRelayer() private {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
-                "sender does not have admin role");
+                "sender is not relayer or admin");
     }
 
     function _onlyAdmin() private {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender does not have admin role");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
     }
 
     function _onlyRelayers() private {
-        require(hasRole(RELAYER_ROLE, msg.sender), "sender does not have relayer role");
+        require(hasRole(RELAYER_ROLE, msg.sender), "sender doesn't have relayer role");
     }
 
     /**
@@ -264,7 +262,7 @@ contract Bridge is Pausable, AccessControl {
         @param newFee Value {_fee} will be updated to.
      */
     function adminChangeFee(uint newFee) external onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to proposed new fee");
+        require(_fee != newFee, "Current fee is equal to new fee");
         _fee = newFee;
     }
 
@@ -297,7 +295,7 @@ contract Bridge is Pausable, AccessControl {
         require(msg.value == _fee, "Incorrect fee supplied");
 
         address handler = _resourceIDToHandlerAddress[resourceID];
-        require(handler != address(0), "resourceID not mapped to handler address");
+        require(handler != address(0), "resourceID not mapped to handler");
 
         uint64 depositNonce = ++_depositCounts[destinationChainID];
         _depositRecords[depositNonce][destinationChainID] = data;
@@ -325,8 +323,8 @@ contract Bridge is Pausable, AccessControl {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
-        require(uint(proposal._status) <= 1, "proposal has already been passed, transferred, or cancelled");
-        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer has already voted on proposal");
+        require(uint(proposal._status) <= 1, "proposal already passed/transferred/cancelled");
+        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer already voted");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;
@@ -342,7 +340,7 @@ contract Bridge is Pausable, AccessControl {
             proposal._yesVotes[0] = msg.sender;
             emit ProposalEvent(chainID, depositNonce, ProposalStatus.Active, resourceID, dataHash);
         } else {
-            if ((block.number).sub(proposal._proposedBlock) > _expiry) {
+            if (sub(block.number, proposal._proposedBlock) > _expiry) {
                 // if the number of blocks that has passed since this proposal was
                 // submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;
@@ -384,7 +382,7 @@ contract Bridge is Pausable, AccessControl {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
-        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        require(sub(block.number, proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, proposal._dataHash);
@@ -409,8 +407,8 @@ contract Bridge is Pausable, AccessControl {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
-        require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
-        require(dataHash == proposal._dataHash, "provided data does not match proposal's data hash");
+        require(proposal._status == ProposalStatus.Passed, "proposal already transferred");
+        require(dataHash == proposal._dataHash, "data doesn't match datahash");
 
         proposal._status = ProposalStatus.Transferred;
         

@@ -54,18 +54,6 @@ contract HandlerHelpers is IERCHandler {
         _setBurnable(contractAddress);
     }
 
-    function createResourceID (address tokenAddress, uint8 chainID) internal pure returns (bytes32) {
-        bytes11 padding;
-        bytes memory encodedResourceID = abi.encodePacked(padding, abi.encodePacked(tokenAddress, chainID));
-        bytes32 resourceID;
-
-        assembly {
-            resourceID := mload(add(encodedResourceID, 0x20))
-        }
-
-        return resourceID;
-    }
-
     /**
         @notice Used to manually release funds from ERC safes.
         @param tokenAddress Address of token contract to release.

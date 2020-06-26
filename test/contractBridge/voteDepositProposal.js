@@ -24,6 +24,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 3;
+    const expectedFinalizedEventStatus = 2;
+    const expectedExecutedEventStatus = 3;
 
     let BridgeInstance;
     let DestinationERC20MintableInstance;
@@ -188,10 +190,12 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         const voteTx = await vote(relayer3Address);
 
-        TruffleAssert.eventEmitted(voteTx, 'ProposalFinalized', (event) => {
+        TruffleAssert.eventEmitted(voteTx, 'ProposalEvent', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
-                event.depositNonce.toNumber() === expectedDepositNonce
+                event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toNumber() === expectedFinalizedEventStatus &&
+                event.resourceID === resourceID.toLowerCase() &&
+                event.dataHash === depositDataHash
         });
     });
 
@@ -200,7 +204,6 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         TruffleAssert.eventEmitted(voteTx, 'ProposalVote', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.status.toNumber() === 1
         });
@@ -213,18 +216,22 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         const voteTx = await vote(relayer3Address);
 
-        TruffleAssert.eventEmitted(voteTx, 'ProposalFinalized', (event) => {
+        TruffleAssert.eventEmitted(voteTx, 'ProposalEvent', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
-                event.depositNonce.toNumber() === expectedDepositNonce
+                event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toNumber() === expectedFinalizedEventStatus &&
+                event.resourceID === resourceID.toLowerCase() &&
+                event.dataHash === depositDataHash
         });
 
         const executionTx = await executeProposal(relayer1Address)
 
-        TruffleAssert.eventEmitted(executionTx, 'ProposalExecuted', (event) => {
+        TruffleAssert.eventEmitted(executionTx, 'ProposalEvent', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === destinationChainID &&
-                event.depositNonce.toNumber() === expectedDepositNonce
+            event.depositNonce.toNumber() === expectedDepositNonce &&
+            event.status.toNumber() === expectedExecutedEventStatus &&
+            event.resourceID === resourceID.toLowerCase() &&
+            event.dataHash === depositDataHash
         });
     });
 });

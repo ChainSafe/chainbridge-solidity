@@ -21,6 +21,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 1;
+    const expectedCreateEventStatus = 1;
     
     let BridgeInstance;
     let DestinationERC20MintableInstance;
@@ -142,10 +143,10 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             { from: originChainRelayerAddress }
         );
 
-        TruffleAssert.eventEmitted(proposalTx, 'ProposalCreated', (event) => {
+        TruffleAssert.eventEmitted(proposalTx, 'ProposalEvent', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === originChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toNumber() === expectedCreateEventStatus &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.dataHash === dataHash
         });
@@ -162,6 +163,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 2;
+    const expectedCreateEventStatus = 1;
+
     
     let BridgeInstance;
     let DestinationERC20MintableInstance;
@@ -278,10 +281,10 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             { from: originChainRelayerAddress }
         );
 
-        TruffleAssert.eventEmitted(proposalTx, 'ProposalCreated', (event) => {
+        TruffleAssert.eventEmitted(proposalTx, 'ProposalEvent', (event) => {
             return event.originChainID.toNumber() === originChainID &&
-                event.destinationChainID.toNumber() === originChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toNumber() === expectedCreateEventStatus &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.dataHash === dataHash
         });

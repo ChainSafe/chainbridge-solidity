@@ -44,7 +44,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         address[] memory burnableContractAddresses
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
-            "mismatch length between initialResourceIDs and initialContractAddresses");
+            "initialResourceIDs and initialContractAddresses len mismatch");
 
         _bridgeAddress = bridgeAddress;
 

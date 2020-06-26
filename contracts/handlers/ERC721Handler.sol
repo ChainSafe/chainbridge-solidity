@@ -52,7 +52,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         address[] memory burnableContractAddresses
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
-            "mismatch length between initialResourceIDs and initialContractAddresses");
+            "initialResourceIDs and initialContractAddresses len mismatch");
 
         _bridgeAddress = bridgeAddress;
 

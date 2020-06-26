@@ -59,7 +59,7 @@ contract('GenericHandler - [constructor]', async () => {
                 initialExecuteFunctionSignatures));
     });
 
-    it('should revert because mismatch length between initialResourceIDs and initialContractAddresses', async () => {
+    it('should revert because initialResourceIDs and initialContractAddresses len mismatch', async () => {
         await TruffleAssert.reverts(
             GenericHandlerContract.new(
                 BridgeInstance.address,
@@ -67,10 +67,10 @@ contract('GenericHandler - [constructor]', async () => {
                 initialContractAddresses,
                 initialDepositFunctionSignatures,
                 initialExecuteFunctionSignatures),
-                "mismatch length between initialResourceIDs and initialContractAddresses");
+                "initialResourceIDs and initialContractAddresses len mismatch");
     });
 
-    it('should revert because mismatch length between provided contract addresses and function signatures', async () => {
+    it('should revert because provided contract addresses and function signatures len mismatch.', async () => {
         await TruffleAssert.reverts(
             GenericHandlerContract.new(
                 BridgeInstance.address,
@@ -78,10 +78,10 @@ contract('GenericHandler - [constructor]', async () => {
                 initialContractAddresses,
                 [],
                 initialExecuteFunctionSignatures),
-                "mismatch length between provided contract addresses and function signatures");
+                "provided contract addresses and function signatures len mismatch.");
     });
 
-    it('should revert because mismatch length between provided deposit and execute function signatures', async () => {
+    it('should revert because provided deposit and execute function signatures len mismatch', async () => {
         await TruffleAssert.reverts(
             GenericHandlerContract.new(
                 BridgeInstance.address,
@@ -89,7 +89,7 @@ contract('GenericHandler - [constructor]', async () => {
                 initialContractAddresses,
                 initialDepositFunctionSignatures,
                 []),
-                "mismatch length between provided deposit and execute function signatures");
+                "provided deposit and execute function signatures len mismatch");
     });
 
     it('contract mappings were set with expected values', async () => {

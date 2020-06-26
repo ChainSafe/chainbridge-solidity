@@ -324,7 +324,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
         require(uint(proposal._status) <= 1, "proposal already passed/transferred/cancelled");
-        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer has already voted");
+        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer already voted");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;

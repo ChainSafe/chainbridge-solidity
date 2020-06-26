@@ -44,7 +44,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
 
         await Promise.all([
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
-            BridgeInstance.adminSetHandlerAddress(ERC721HandlerInstance.address, resourceID)
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID, ERC721MintableInstance.address)
         ]);
     });
 
@@ -76,7 +76,6 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
             chainID,
             resourceID,
             Helpers.createERCDepositData(
-                resourceID,
                 tokenID,
                 lenRecipientAddress,
                 recipientAddress),
@@ -105,7 +104,6 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
             chainID,
             resourceID,
             Helpers.createERCDepositData(
-                resourceID,
                 tokenID,
                 lenRecipientAddress,
                 recipientAddress),

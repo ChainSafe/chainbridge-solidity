@@ -50,7 +50,6 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });
 
         depositData = Helpers.createERCDepositData(
-            resourceID,
             depositAmount,
             20,
             recipientAddress);
@@ -110,7 +109,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             { from: depositerAddress }
         );
 
-        const depositRecord = await BridgeInstance._depositRecords.call(destinationChainID, expectedDepositNonce);
+        const depositRecord = await BridgeInstance._depositRecords.call(expectedDepositNonce, destinationChainID);
         assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
     });
 

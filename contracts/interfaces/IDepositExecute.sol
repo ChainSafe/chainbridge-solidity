@@ -12,11 +12,11 @@ interface IDepositExecute {
         @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of additional data needed for a specific deposit.
      */
-    function deposit(uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external;
+    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external;
 
     /**
         @notice It is intended that proposals are executed by the Bridge contract.
         @param data Consists of additional data needed for a specific deposit execution.
      */
-    function executeProposal(bytes calldata data) external;
+    function executeProposal(bytes32 resourceID, bytes calldata data) external;
 }

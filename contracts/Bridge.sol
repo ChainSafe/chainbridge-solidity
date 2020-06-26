@@ -23,6 +23,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     uint256 public _expiry;
 
     enum Vote {No, Yes}
+
     enum ProposalStatus {Inactive, Active, Passed, Transferred, Cancelled}
 
     struct Proposal {
@@ -38,12 +39,12 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     mapping(uint8 => uint64) public _depositCounts;
     // resourceID => handler address
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
-    // destinationChainID => depositNonce => bytes
-    mapping(uint8 => mapping(uint64 => bytes)) public _depositRecords;
-    // destinationChainID => depositNonce => Proposal
-    mapping(uint8 => mapping(uint64 => Proposal)) public _proposals;
-    // destinationChainID => depositNonce => relayerAddress => bool
-    mapping(uint8 => mapping(uint64 => mapping(address => bool))) public _hasVotedOnProposal;
+    // depositNonce => destinationChainID => bytes
+    mapping(uint64 => mapping(uint8 => bytes)) public _depositRecords;
+    // destinationChainID + depositNonce => dataHash => Proposal
+    mapping(uint72 => mapping(bytes32 => Proposal)) public _proposals;
+    // destinationChainID + depositNonce => dataHash => relayerAddress => bool
+    mapping(uint72 => mapping(bytes32 => mapping(address => bool))) public _hasVotedOnProposal;
 
     event RelayerThresholdChanged(uint indexed newThreshold);
     event RelayerAdded(address indexed relayer);
@@ -53,38 +54,22 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 indexed resourceID,
         uint64  indexed depositNonce
     );
-    event ProposalCreated(
-        uint8   indexed originChainID,
-        uint8   indexed destinationChainID,
-        uint64  indexed depositNonce,
-        bytes32         resourceID,
-        bytes32         dataHash
+    event ProposalEvent(
+        uint8           indexed originChainID,
+        uint64          indexed depositNonce,
+        ProposalStatus  indexed status,
+        bytes32                 resourceID,
+        bytes32                 dataHash
     );
-    event ProposalCancelled(
-        uint8   indexed originChainID,
-        uint8   indexed destinationChainID,
-        uint64  indexed depositNonce,
-        bytes32         resourceID,
-        bytes32         dataHash
-    );
+
     event ProposalVote(
         uint8   indexed originChainID,
-        uint8   indexed destinationChainID,
         uint64  indexed depositNonce,
         bytes32         resourceID,
         ProposalStatus status
     );
-    event ProposalFinalized(
-        uint8   indexed originChainID,
-        uint8   indexed destinationChainID,
-        uint64  indexed depositNonce,
-        bytes32         resourceID
-    );
-    event ProposalExecuted(
-        uint8   indexed originChainID,
-        uint8   indexed destinationChainID,
-        uint64 indexed depositNonce
-    );
+
+
 
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
@@ -211,16 +196,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     /**
-        @notice Maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by an address that currently has the admin role.
-        @param handlerAddress Address of handler resource will be mapped to.
-        @param resourceID ResourceID to be used when making deposits.
-     */
-    function adminSetHandlerAddress(address handlerAddress, bytes32 resourceID) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
-    }
-
-    /**
         @notice Sets a new resource for handler contracts that use the IERCHandler interface,
         and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
         @notice Only callable by an address that currently has the admin role.
@@ -229,7 +204,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
     function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
+        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
     }
@@ -249,7 +224,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes4 depositFunctionSig,
         bytes4 executeFunctionSig
     ) external onlyAdmin {
-        _setHandlerAddress(handlerAddress, resourceID);
+        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
     }
@@ -269,14 +244,16 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Returns a proposal.
         @param originChainID Chain ID deposit originated from.
         @param depositNonce ID of proposal generated by proposal's origin Bridge contract.
+        @param dataHash Hash of data to be provided when deposit proposal is executed.
         @return Proposal which consists of:
         - _dataHash Hash of data to be provided when deposit proposal is executed.
         - _yesVotes Number of votes in favor of proposal.
         - _noVotes Number of votes against proposal.
         - _status Current status of proposal.
      */
-    function getProposal(uint8 originChainID, uint64 depositNonce) external view returns (Proposal memory) {
-        return _proposals[originChainID][depositNonce];
+    function getProposal(uint8 originChainID, uint64 depositNonce, bytes32 dataHash) external view returns (Proposal memory) {
+        uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(originChainID);
+        return _proposals[nonceAndID][dataHash];
     }
 
     /**
@@ -314,17 +291,17 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit (uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
+    function deposit(uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
         address handler = _resourceIDToHandlerAddress[resourceID];
         require(handler != address(0), "resourceID not mapped to handler");
 
         uint64 depositNonce = ++_depositCounts[destinationChainID];
-        _depositRecords[destinationChainID][depositNonce] = data;
+        _depositRecords[depositNonce][destinationChainID] = data;
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        depositHandler.deposit(destinationChainID, depositNonce, msg.sender, data);
+        depositHandler.deposit(resourceID, destinationChainID, depositNonce, msg.sender, data);
 
         emit Deposit(destinationChainID, resourceID, depositNonce);
     }
@@ -337,21 +314,21 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param dataHash Hash of data provided when deposit was made.
         @notice Proposal must not have already been passed or transferred.
         @notice {msg.sender} must not have already voted on proposal.
-        @notice Emits {ProposalCreated} event when no proposal exists for deposit.
+        @notice Emits {ProposalEvent} event with status indicating the proposal status.
         @notice Emits {ProposalVote} event.
-        @notice Emits {ProposalFinalized} event when number of {_yesVotes} is greater than or equal to
-        {_relayerThreshold}.
      */
     function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) external onlyRelayers whenNotPaused {
-        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
+
+        uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
+        Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
         require(uint(proposal._status) <= 1, "proposal has already been passed, transferred, or cancelled");
-        require(!_hasVotedOnProposal[chainID][depositNonce][msg.sender], "relayer already voted");
+        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer has already voted on proposal");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;
-            _proposals[chainID][depositNonce] = Proposal({
+            _proposals[nonceAndID][dataHash] = Proposal({
                 _resourceID: resourceID,
                 _dataHash: dataHash,
                 _yesVotes: new address[](1),
@@ -361,40 +338,33 @@ contract Bridge is Pausable, AccessControl, SafeMath {
                 });
 
             proposal._yesVotes[0] = msg.sender;
-            emit ProposalCreated(chainID, _chainID, depositNonce, resourceID, dataHash);
+            emit ProposalEvent(chainID, depositNonce, ProposalStatus.Active, resourceID, dataHash);
         } else {
             if (sub(block.number, proposal._proposedBlock) > _expiry) {
                 // if the number of blocks that has passed since this proposal was
                 // submitted exceeds the expiry threshold set, cancel the proposal
                 proposal._status = ProposalStatus.Cancelled;
-                emit ProposalCancelled(chainID, _chainID, depositNonce, resourceID, dataHash);
+                emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, resourceID, dataHash);
             } else {
                 require(dataHash == proposal._dataHash, "datahash mismatch");
                 proposal._yesVotes.push(msg.sender);
+
 
             }
 
         }
         if (proposal._status != ProposalStatus.Cancelled) {
-            _hasVotedOnProposal[chainID][depositNonce][msg.sender] = true;
-            emit ProposalVote(chainID, _chainID, depositNonce, resourceID, proposal._status);
+            _hasVotedOnProposal[nonceAndID][dataHash][msg.sender] = true;
+            emit ProposalVote(chainID, depositNonce, resourceID, proposal._status);
 
             // If _depositThreshold is set to 1, then auto finalize
             // or if _relayerThreshold has been exceeded
             if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
                 proposal._status = ProposalStatus.Passed;
-                emit ProposalFinalized(chainID, _chainID, depositNonce, resourceID);
+                
+                emit ProposalEvent(chainID, depositNonce, ProposalStatus.Passed, resourceID, dataHash);
             }
         }
-
-    }
-
-    function cancelProposal(uint8 chainID, uint64 depositNonce) public onlyAdminOrRelayer {
-        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        require((sub(block.number, proposal._proposedBlock)) > _expiry, "Proposal doesn't meet expiry");
-        
-        proposal._status = ProposalStatus.Cancelled;
-        emit ProposalCancelled(chainID, _chainID, depositNonce, proposal._resourceID, proposal._dataHash);
 
     }
 
@@ -403,26 +373,49 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by relayers when Bridge is not paused.
         @param chainID ID of chain deposit originated from.
         @param depositNonce ID of deposited generated by origin Bridge contract.
+        @param dataHash Hash of data originally provided when deposit was made.
+        @notice Proposal must be past expiry threshold.
+        @notice Emits {ProposalEvent} event with status {Cancelled}.
+     */
+    function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyAdminOrRelayer {
+        uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
+        Proposal storage proposal = _proposals[nonceAndID][dataHash];
+
+        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
+        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        
+        proposal._status = ProposalStatus.Cancelled;
+        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, proposal._dataHash);
+
+    }
+
+    /**
+        @notice Executes a deposit proposal that is considered passed using a specified handler contract.
+        @notice Only callable by relayers when Bridge is not paused.
+        @param chainID ID of chain deposit originated from.
+        @param resourceID ResourceID to be used when making deposits.
+        @param depositNonce ID of deposited generated by origin Bridge contract.
         @param data Data originally provided when deposit was made.
         @notice Proposal must have Passed status.
         @notice Hash of {data} must equal proposal's {dataHash}.
-        @notice Emits {ProposalExecuted} event.
+        @notice Emits {ProposalEvent} event with status {Transferred}.
      */
-    function executeProposal(uint8 chainID, uint64 depositNonce, bytes calldata data) external onlyRelayers whenNotPaused {
-        Proposal storage proposal = _proposals[uint8(chainID)][depositNonce];
-        address handler = _resourceIDToHandlerAddress[proposal._resourceID];
+    function executeProposal(uint8 chainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID) external onlyRelayers whenNotPaused {
+        address handler = _resourceIDToHandlerAddress[resourceID];
+        uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
+        bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
+        Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
         require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
-        require(keccak256(abi.encodePacked(handler, data)) == proposal._dataHash,
-            "provided data does not match proposal's data hash");
+        require(dataHash == proposal._dataHash, "provided data does not match proposal's data hash");
 
         proposal._status = ProposalStatus.Transferred;
         
         IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
-        depositHandler.executeProposal(data);
+        depositHandler.executeProposal(proposal._resourceID, data);
 
-        emit ProposalExecuted(chainID, _chainID, depositNonce);
+        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Transferred, proposal._resourceID, proposal._dataHash);
     }
 
     /**
@@ -437,7 +430,4 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         }
     }
 
-    function _setHandlerAddress(address handlerAddress, bytes32 resourceID) internal {
-        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
-    }
 }

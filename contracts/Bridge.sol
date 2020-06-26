@@ -382,7 +382,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
-        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
+        require(sub(block.number, proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, proposal._dataHash);

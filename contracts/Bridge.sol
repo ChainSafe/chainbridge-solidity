@@ -323,8 +323,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(_resourceIDToHandlerAddress[resourceID] != address(0), "no handler for resourceID");
-        require(uint(proposal._status) <= 1, "proposal has already been passed, transferred, or cancelled");
-        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer has already voted on proposal");
+        require(uint(proposal._status) <= 1, "proposal already been passed, transferred, or cancelled");
+        require(!_hasVotedOnProposal[nonceAndID][dataHash][msg.sender], "relayer has already voted");
 
         if (uint(proposal._status) == 0) {
             ++_totalProposals;
@@ -382,7 +382,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
-        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal does not meet expiry threshold");
+        require((block.number).sub(proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
         
         proposal._status = ProposalStatus.Cancelled;
         emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, proposal._dataHash);
@@ -407,8 +407,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
-        require(proposal._status == ProposalStatus.Passed, "proposal was not passed or has already been transferred");
-        require(dataHash == proposal._dataHash, "provided data does not match proposal's data hash");
+        require(proposal._status == ProposalStatus.Passed, "proposal already transferred");
+        require(dataHash == proposal._dataHash, "data doesn't match datahash");
 
         proposal._status = ProposalStatus.Transferred;
         

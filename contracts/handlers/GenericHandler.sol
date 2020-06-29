@@ -132,10 +132,8 @@ contract GenericHandler is IGenericHandler {
         @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-
-        resourceID                             bytes32     bytes  0 - 32
-        len(data)                              uint256     bytes  32 - 64
-        data                                   bytes       bytes  96 - END
+        len(data)                              uint256     bytes  0  - 32
+        data                                   bytes       bytes  64 - END
         @notice {contractAddress} is required to be whitelisted
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
@@ -184,9 +182,8 @@ contract GenericHandler is IGenericHandler {
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         @param data Consists of {resourceID}, {lenMetaData}, and {metaData}.
         @notice Data passed into the function should be constructed as follows:
-        resourceID                             bytes32     bytes  0 - 32
-        len(data)                              uint256     bytes  32 - 64
-        data                                   bytes       bytes  96 - END
+        len(data)                              uint256     bytes  0  - 32
+        data                                   bytes       bytes  32 - END
         @notice {contractAddress} is required to be whitelisted
         @notice If {_contractAddressToExecuteFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.

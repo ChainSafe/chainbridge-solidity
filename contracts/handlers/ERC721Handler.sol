@@ -90,11 +90,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param data Consists of: {resourceID}, {tokenID}, {lenDestinationRecipientAddress},
         and {destinationRecipientAddress} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-
-        resourceID                                  bytes32    bytes     0 - 32
-        tokenID                                     uint256    bytes    32 - 64
-        destinationRecipientAddress     length      uint256    bytes    64 - 96
-        destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
+        tokenID                                     uint256    bytes    0  - 32
+        destinationRecipientAddress     length      uint256    bytes    32 - 64
+        destinationRecipientAddress                   bytes    bytes    64 - (64 + len(destinationRecipientAddress))
         @notice If the corresponding {tokenAddress} for the parsed {resourceID} supports {_INTERFACE_ERC721_METADATA},
         then {metaData} will be set according to the {tokenURI} method in the token contract.
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
@@ -166,12 +164,11 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @param data Consists of {tokenID}, {resourceID}, {lenDestinationRecipientAddress},
         {destinationRecipientAddress}, {lenMeta}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        resourceID                                  bytes32    bytes    0 - 32
-        tokenID                                     uint256    bytes    32 - 64
-        destinationRecipientAddress     length      uint256    bytes    64 - 96
-        destinationRecipientAddress                   bytes    bytes    96 - (96 + len(destinationRecipientAddress))
-        metadata                        length      uint256    bytes    (96 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress) + 32)
-        metadata                                      bytes    bytes    (96 + len(destinationRecipientAddress) + 32) - END
+        tokenID                                     uint256    bytes    0  - 32
+        destinationRecipientAddress     length      uint256    bytes    32 - 64
+        destinationRecipientAddress                   bytes    bytes    64 - (64 + len(destinationRecipientAddress))
+        metadata                        length      uint256    bytes    (64 + len(destinationRecipientAddress)) - (64 + len(destinationRecipientAddress) + 32)
+        metadata                                      bytes    bytes    (64 + len(destinationRecipientAddress) + 32) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256         tokenID;

@@ -272,7 +272,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         assert.isTrue(hasVoted);
     });
 
-    it('DepositProposalCreated event  should be emitted with expected values', async () => {
+    it('DepositProposalCreated event should be emitted with expected values', async () => {
         const proposalTx = await BridgeInstance.voteProposal(
             originChainID,
             expectedDepositNonce,

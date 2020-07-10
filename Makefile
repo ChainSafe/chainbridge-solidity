@@ -8,6 +8,9 @@ install-cli: compile
 	@echo " > \033[32mInstalling cb-sol-cli... \033[0m "
 	npm link ./cli 
 
+install-celo-ganache:
+	@echo " > \033[32mInstalling dependencies... \033[0m "
+	npm install -g celo-ganache@npm:@celo/ganache-cli
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "

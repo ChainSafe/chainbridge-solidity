@@ -17,7 +17,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         uint8   _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
-        address _depositor;
+        address _depositer; // REVIEW: typo, depositor.
         uint    _amount;
     }
 

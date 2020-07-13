@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./utils/Pausable.sol";
 import "./utils/SafeMath.sol";
 import "./interfaces/IDepositExecute.sol";
-import "./interfaces/IBridge.sol";
+import "./interfaces/IBridge.sol"; // REVIEW: not used.
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 

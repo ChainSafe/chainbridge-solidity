@@ -24,7 +24,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     const relayerAddress = accounts[0];
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    const lenRecipientAddress = 32;
+    const lenRecipientAddress = 20;
     const gasBenchmarks = [];
 
     const initialRelayers = [relayerAddress];

@@ -9,8 +9,12 @@ install-cli: compile
 	npm link ./cli 
 
 install-celo-ganache:
-	@echo " > \033[32mInstalling dependencies... \033[0m "
-	npm install -g celo-ganache@npm:@celo/ganache-cli
+	git clone https://github.com/celo-org/ganache-cli.git
+	nvm use 10
+	npm install --prefix ./ganache-cli
+	ln -f -t ~/.local/bin/ ./ganache-cli/cli.js
+	mv ~/.local/bin/cli.js ~/.local/bin/celo-ganache
+
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "

@@ -11,7 +11,7 @@ install-cli: compile
 install-celo-ganache:
 	git clone https://github.com/celo-org/ganache-cli.git || cd ./ganache-cli/; git pull
 	npm install --prefix ./ganache-cli
-	ln -s ./ganache-cli/cli.js ~/.local/bin
+	ln -f -s  ~/chainbridge-solidity/ganache-cli/cli.js  ~/.local/bin
 	mv ~/.local/bin/cli.js ~/.local/bin/celo-ganache
 
 .PHONY: test
@@ -39,4 +39,4 @@ bindings: compile
 	@echo " > \033[32mCreating go bindings for ethereum contracts... \033[0m "
 	./scripts/create_bindings.sh
 celo-ganache:
-	./ganache-cli/start_ganache.sh
+	./scripts/start_ganache.sh

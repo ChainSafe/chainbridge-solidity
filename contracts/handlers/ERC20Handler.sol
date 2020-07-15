@@ -108,8 +108,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
             calldatacopy(
                 recipientAddress, // copy to destinationRecipientAddress
-                0xE4, // copy from calldata @ 0x104
-                sub(calldatasize(), 0xE) // copy size (calldatasize - 0x104)
+                0xE4, // copy from calldata @ 0xE4
+                sub(calldatasize(), 0xE4) // copy size (calldatasize - 0xE4)
             )
         }
 

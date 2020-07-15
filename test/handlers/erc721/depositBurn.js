@@ -55,7 +55,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID2, ERC721MintableInstance2.address),
         ]);
 
-        depositData = Helpers.createERCDepositData(tokenID, 32, recipientAddress);
+        depositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {

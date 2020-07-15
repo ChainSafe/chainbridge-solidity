@@ -50,7 +50,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         
         data = Helpers.createERCDepositData(
             depositAmount,
-            32,
+            20,
             destinationRecipientAddress);
         dataHash = Ethers.utils.keccak256(data);
     });
@@ -194,7 +194,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         
         data = Helpers.createERCDepositData(
             depositAmount,
-            32,
+            20,
             destinationRecipientAddress);
         dataHash = Ethers.utils.keccak256(data);
     });

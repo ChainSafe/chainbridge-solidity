@@ -13,11 +13,10 @@ import "../ERC20Safe.sol";
 contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     struct DepositRecord {
         address _tokenAddress;
-        uint8    _lenDestinationRecipientAddress; // REVIEW: Duplicate. It is already stored in _destinationRecipientAddress.
         uint8   _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
-        address _depositer; // REVIEW: typo, depositor.
+        address _depositor;
         uint    _amount;
     }
 
@@ -63,7 +62,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         - _tokenAddress Address used when {deposit} was executed.
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
-        - _lenDestinationRecipientAddress Used to parse recipient's address from {_destinationRecipientAddress}
         - _destinationRecipientAddress Address tokens are intended to be deposited to on desitnation chain.
         - _depositor Address that initially called {deposit} in the Bridge contract.
         - _amount Amount of tokens that were deposited.
@@ -111,7 +109,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
-            uint8(lenRecipientAddress),
             destinationChainID,
             resourceID,
             recipientAddress,

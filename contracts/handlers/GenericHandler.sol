@@ -13,7 +13,7 @@ contract GenericHandler is IGenericHandler {
 
     struct DepositRecord {
         uint8   _destinationChainID;
-        address _depositer;
+        address _depositor;
         bytes32 _resourceID;
         bytes   _metaData;
     }
@@ -95,7 +95,7 @@ contract GenericHandler is IGenericHandler {
         @return DepositRecord which consists of:
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
-        - _depositer Address that initially called {deposit} in the Bridge contract.
+        - _depositor Address that initially called {deposit} in the Bridge contract.
         - _metaData Data to be passed to method executed in corresponding {resourceID} contract.
     */
     function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
@@ -129,7 +129,7 @@ contract GenericHandler is IGenericHandler {
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID deposit is expected to be bridged to.
         @param depositNonce This value is generated as an ID by the Bridge contract.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32
@@ -138,7 +138,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
+    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositor, bytes calldata data) external onlyBridge {
         bytes32      lenMetadata;
         bytes memory metadata;
 
@@ -172,7 +172,7 @@ contract GenericHandler is IGenericHandler {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             destinationChainID,
-            depositer,
+            depositor,
             resourceID,
             metadata
         );

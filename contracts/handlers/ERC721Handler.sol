@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/IDepositExecute.sol";
 import "./HandlerHelpers.sol";
 import "../ERC721Safe.sol";
-import "../ERC721MinterBurnerPauser.sol";
 import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
 
@@ -21,16 +20,15 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     struct DepositRecord {
         address _tokenAddress;
-        uint8    _lenDestinationRecipientAddress;
         uint8   _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
-        address _depositer;
+        address _depositor;
         uint    _tokenID;
         bytes   _metaData;
     }
 
-    // DepositNonce => Deposit Record
+    // destId => depositNonce => Deposit Record
     mapping (uint8 => mapping (uint64 => DepositRecord)) public _depositRecords;
 
     /**
@@ -72,9 +70,8 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         - _tokenAddress Address used when {deposit} was executed.
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
-        - _lenDestinationRecipientAddress Used to parse recipient's address from {_destinationRecipientAddress}
         - _destinationRecipientAddress Address tokens are intended to be deposited to on desitnation chain.
-        - _depositer Address that initially called {deposit} in the Bridge contract.
+        - _depositor Address that initially called {deposit} in the Bridge contract.
         - _tokenID ID of ERC721.
         - _metaData Optional ERC721 metadata.
     */
@@ -86,7 +83,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID of chain token is expected to be bridged to.
         @param depositNonce This value is generated as an ID by the Bridge contract.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {tokenID}, {lenDestinationRecipientAddress},
         and {destinationRecipientAddress} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
@@ -101,35 +98,16 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     function deposit(bytes32    resourceID,
                     uint8       destinationChainID,
                     uint64      depositNonce,
-                    address     depositer,
+                    address     depositor,
                     bytes       calldata data
                     ) external override onlyBridge {
-        uint         lenDestinationRecipientAddress;
         uint         tokenID;
+        uint         lenDestinationRecipientAddress;
         bytes memory destinationRecipientAddress;
         bytes memory metaData;
 
-        assembly {
-
-            // Load tokenID from data + 32
-            tokenID := calldataload(0xC4)
-
-            // Load length of recipient address from data + 96
-            lenDestinationRecipientAddress := calldataload(0xE4)
-            // Load free mem pointer for recipient
-            destinationRecipientAddress := mload(0x40)
-            // Store recipient address
-            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
-
-            // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
-            // bytes lenght (32) + resourceId (32) + tokenId (32) + length (32) = 0xE4
-
-            calldatacopy(
-                destinationRecipientAddress,    // copy to destinationRecipientAddress
-                0xE4,                           // copy from calldata after destinationRecipientAddress length declaration @0xE4
-                sub(calldatasize(), 0xE4)       // copy size (calldatasize - (0xE4 + 0x20))
-            )
-        }
+        (tokenID, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
+        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
@@ -143,16 +121,15 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         if (_burnList[tokenAddress]) {
             burnERC721(tokenAddress, tokenID);
         } else {
-            lockERC721(tokenAddress, depositer, address(this), tokenID);
+            lockERC721(tokenAddress, depositor, address(this), tokenID);
         }
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
-            uint8(lenDestinationRecipientAddress),
             uint8(destinationChainID),
             resourceID,
             destinationRecipientAddress,
-            depositer,
+            depositor,
             tokenID,
             metaData
         );
@@ -171,48 +148,18 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         metadata                                      bytes    bytes    (64 + len(destinationRecipientAddress) + 32) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
-        uint256         tokenID;
-        bytes  memory   destinationRecipientAddress;
-        bytes  memory   metaData;
+        uint         tokenID;
+        uint         lenDestinationRecipientAddress;
+        bytes memory destinationRecipientAddress;
+        uint         offsetMetaData;
+        uint         lenMetaData;
+        bytes memory metaData;
 
-        assembly {
-            tokenID    := calldataload(0x64)
-
-
-            // set up destinationRecipientAddress
-            destinationRecipientAddress        := mload(0x40)              // load free memory pointer
-            let lenDestinationRecipientAddress := calldataload(0x84)
-
-            // set up metaData
-            // 0xA4 is a combination of 0x24 (position of {data} in calldata) and
-            // 0x80 is the relative position of the {metadata} length in {data}
-            let lenMeta := calldataload(add(0xA4, lenDestinationRecipientAddress))
-
-            mstore(0x40, add(0x40, add(destinationRecipientAddress, lenDestinationRecipientAddress))) // shift free memory pointer
-
-            calldatacopy(
-                destinationRecipientAddress,                             // copy to destinationRecipientAddress
-                0x84,                                                    // copy from calldata after destinationRecipientAddress length declaration @0x84
-                sub(calldatasize(), add(0x84, add(0x20, lenMeta)))       // copy size (calldatasize - (0xC4 + the space metaData takes up))
-            )
-
-            // metadata has variable length
-            // load free memory pointer to store metadata
-            metaData := mload(0x40)
-
-            // incrementing free memory pointer
-            mstore(0x40, add(0x40, add(metaData, lenMeta)))
-
-            // metadata is located at (0x84 + 0x20 + lenDestinationRecipientAddress) in calldata
-            let metaDataLoc := add(0xA4, lenDestinationRecipientAddress)
-
-            // in the calldata, metadata is stored @0x124 after accounting for function signature and the depositNonce
-            calldatacopy(
-                metaData,                           // copy to metaData
-                metaDataLoc,                       // copy from calldata after metaData length declaration
-                sub(calldatasize(), metaDataLoc)   // copy size (calldatasize - metaDataLoc)
-            )
-        }
+        (tokenID, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
+        offsetMetaData = 64 + lenDestinationRecipientAddress;
+        destinationRecipientAddress = bytes(data[64:offsetMetaData]);
+        lenMetaData = abi.decode(data[offsetMetaData:], (uint));
+        metaData = bytes(data[offsetMetaData + 32:offsetMetaData + 32 + lenMetaData]);
 
         bytes20 recipientAddress;
 

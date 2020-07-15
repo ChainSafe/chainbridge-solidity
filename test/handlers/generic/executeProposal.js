@@ -17,7 +17,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     const chainID = 1;
     const expectedDepositNonce = 1;
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const relayer1Address = accounts[2];
     const relayer2Address = accounts[3];
 
@@ -68,7 +68,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             chainID,
             resourceID,
             depositData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
 
         // relayer1 creates the deposit proposal
@@ -109,7 +109,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             chainID,
             resourceID,
             depositData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
 
         // relayer1 creates the deposit proposal

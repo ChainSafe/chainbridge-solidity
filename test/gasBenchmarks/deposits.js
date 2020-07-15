@@ -19,7 +19,7 @@ const Helpers = require('../helpers');
 contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const chainID = 1;
     const relayerThreshold = 1;
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
     const lenRecipientAddress = 20;
     const gasBenchmarks = [];
@@ -101,15 +101,15 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address, erc20InitialResourceIDs, erc20InitialContractAddresses, erc20BurnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
-            ERC20MintableInstance.mint(depositerAddress, erc20TokenAmount),
+            ERC20MintableInstance.mint(depositorAddress, erc20TokenAmount),
             ERC721HandlerContract.new(BridgeInstance.address, erc721InitialResourceIDs, erc721InitialContractAddresses, erc721BurnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
-            ERC721MintableInstance.mint(depositerAddress, erc721TokenID, ""),
+            ERC721MintableInstance.mint(depositorAddress, erc721TokenID, ""),
             GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, genericInitialResourceIDs, genericInitialContractAddresses, genericInitialDepositFunctionSignatures, genericInitialExecuteFunctionSignatures)
         ]);
 
         await Promise.all([
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
-            ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositerAddress }),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositorAddress }),
+            ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositorAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, centrifugeAssetResourceID, genericInitialContractAddresses[0], genericInitialDepositFunctionSignatures[0], genericInitialExecuteFunctionSignatures[0]),
@@ -128,7 +128,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
                 erc20TokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
-            { from: depositerAddress });
+            { from: depositorAddress });
 
         gasBenchmarks.push({
             type: 'ERC20',
@@ -144,7 +144,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
                 erc721TokenID,
                 lenRecipientAddress,
                 recipientAddress),
-            { from: depositerAddress });
+            { from: depositorAddress });
 
         gasBenchmarks.push({
             type: 'ERC721',
@@ -157,7 +157,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             centrifugeAssetResourceID,
             Helpers.createGenericDepositData('0xc0ff33'),
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         gasBenchmarks.push({
@@ -171,7 +171,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             noArgumentResourceID,
             Helpers.createGenericDepositData(null),
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         gasBenchmarks.push({
@@ -185,7 +185,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             oneArgumentResourceID,
             Helpers.createGenericDepositData(Helpers.toHex(42, 32)),
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         gasBenchmarks.push({
@@ -202,7 +202,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             twoArgumentsResourceID,
             Helpers.createGenericDepositData(encodedMetaData),
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         gasBenchmarks.push({
@@ -220,7 +220,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             chainID,
             threeArgumentsResourceID,
             Helpers.createGenericDepositData(encodedMetaData),
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         gasBenchmarks.push({

@@ -19,7 +19,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     const relayer2Address = accounts[1];
     const relayer3Address = accounts[2];
     const relayer4Address = accounts[3]
-    const depositerAddress = accounts[4];
+    const depositorAddress = accounts[4];
     const destinationChainRecipientAddress = accounts[4];
     const depositAmount = 10;
     const expectedDepositNonce = 1;
@@ -67,8 +67,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             BridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, resourceID, DestinationERC20MintableInstance.address)
         ]);
 
-        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer});
-        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, resourceID, {from: relayer});
+        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, { from: relayer });
+        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, resourceID, { from: relayer });
     });
 
     it ('[sanity] bridge configured with threshold and relayers', async () => {
@@ -95,8 +95,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
     });
 
-    it('should revert because depositerAddress is not a relayer', async () => {
-        await TruffleAssert.reverts(vote(depositerAddress));
+    it('should revert because depositorAddress is not a relayer', async () => {
+        await TruffleAssert.reverts(vote(depositorAddress));
     });
 
     it("depositProposal shouldn't be voted on if it has a Passed status", async () => {
@@ -135,7 +135,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             BridgeInstance.voteProposal(
                 originChainID, expectedDepositNonce,
                 resourceID, Ethers.utils.keccak256(depositDataHash),
-                {from: relayer2Address}));
+                { from: relayer2Address }));
     });
 
     it("Relayer's vote should be recorded correctly - yes vote", async () => {

@@ -178,7 +178,7 @@ contract GenericHandler is IGenericHandler {
         bytes memory metaData;
 
         lenMetadata = abi.decode(data, (uint));
-        metadata = bytes(data[32:32 + lenMetadata]);
+        metaData = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");

@@ -13,12 +13,12 @@ contract GenericHandler is IGenericHandler {
 
     struct DepositRecord {
         uint8   _destinationChainID;
-        address _depositor;
+        address _depositer;
         bytes32 _resourceID;
         bytes   _metaData;
     }
 
-    // depositNonce => Deposit Record
+    // destId => depositNonce => Deposit Record
     mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
     // resourceID => contract address
@@ -95,7 +95,7 @@ contract GenericHandler is IGenericHandler {
         @return DepositRecord which consists of:
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
-        - _depositor Address that initially called {deposit} in the Bridge contract.
+        - _depositer Address that initially called {deposit} in the Bridge contract.
         - _metaData Data to be passed to method executed in corresponding {resourceID} contract.
     */
     function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
@@ -129,7 +129,7 @@ contract GenericHandler is IGenericHandler {
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID deposit is expected to be bridged to.
         @param depositNonce This value is generated as an ID by the Bridge contract.
-        @param depositor Address of account making the deposit in the Bridge contract.
+        @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32
@@ -138,27 +138,12 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositor, bytes calldata data) external onlyBridge {
-        bytes32      lenMetadata;
+    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
+        uint      lenMetadata;
         bytes memory metadata;
 
-        assembly {
-            // Load length of metadata from data + 64
-            lenMetadata  := calldataload(0xC4)
-            // Load free memory pointer
-            metadata := mload(0x40)
-
-            mstore(0x40, add(0x20, add(metadata, lenMetadata)))
-
-            // func sig (4) + destinationChainId (padded to 32) + depositNonce (32) + depositor (32) +
-            // bytes length (32) + resourceId (32) + length (32) = 0xC4
-
-            calldatacopy(
-                metadata, // copy to metadata
-                0xC4, // copy from calldata after metadata length declaration @0xC4
-                sub(calldatasize(), 0xC4)      // copy size (calldatasize - (0xC4 + the space metaData takes up))
-            )
-        }
+        lenMetadata = abi.decode(data, (uint));
+        metadata = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
@@ -172,7 +157,7 @@ contract GenericHandler is IGenericHandler {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             destinationChainID,
-            depositor,
+            depositer,
             resourceID,
             metadata
         );
@@ -189,23 +174,11 @@ contract GenericHandler is IGenericHandler {
         {metaData} is expected to consist of needed function arguments.
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
+        uint      lenMetadata;
         bytes memory metaData;
-        assembly {
 
-            // metadata has variable length
-            // load free memory pointer to store metadata
-            metaData := mload(0x40)
-            // first 32 bytes of variable length in storage refer to length
-            let lenMeta := calldataload(0x64)
-            mstore(0x40, add(0x60, add(metaData, lenMeta)))
-
-            // in the calldata, metadata is stored @0x64 after accounting for function signature, and 2 previous params
-            calldatacopy(
-                metaData,                     // copy to metaData
-                0x64,                        // copy from calldata after data length declaration at 0x64
-                sub(calldatasize(), 0x64)   // copy size (calldatasize - 0x64)
-            )
-        }
+        lenMetadata = abi.decode(data, (uint));
+        metadata = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");

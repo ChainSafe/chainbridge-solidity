@@ -23,7 +23,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         uint8   _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
-        address _depositor;
+        address _depositer;
         uint    _tokenID;
         bytes   _metaData;
     }
@@ -71,7 +71,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
         - _destinationRecipientAddress Address tokens are intended to be deposited to on desitnation chain.
-        - _depositor Address that initially called {deposit} in the Bridge contract.
+        - _depositer Address that initially called {deposit} in the Bridge contract.
         - _tokenID ID of ERC721.
         - _metaData Optional ERC721 metadata.
     */
@@ -83,7 +83,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID of chain token is expected to be bridged to.
         @param depositNonce This value is generated as an ID by the Bridge contract.
-        @param depositor Address of account making the deposit in the Bridge contract.
+        @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {tokenID}, {lenDestinationRecipientAddress},
         and {destinationRecipientAddress} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
@@ -98,7 +98,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     function deposit(bytes32    resourceID,
                     uint8       destinationChainID,
                     uint64      depositNonce,
-                    address     depositor,
+                    address     depositer,
                     bytes       calldata data
                     ) external override onlyBridge {
         uint         tokenID;
@@ -121,7 +121,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         if (_burnList[tokenAddress]) {
             burnERC721(tokenAddress, tokenID);
         } else {
-            lockERC721(tokenAddress, depositor, address(this), tokenID);
+            lockERC721(tokenAddress, depositer, address(this), tokenID);
         }
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
@@ -129,7 +129,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
             uint8(destinationChainID),
             resourceID,
             destinationRecipientAddress,
-            depositor,
+            depositer,
             tokenID,
             metaData
         );

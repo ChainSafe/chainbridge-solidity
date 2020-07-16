@@ -19,7 +19,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     const relayer2Address = accounts[1];
     const relayer3Address = accounts[2];
     const relayer4Address = accounts[3]
-    const depositorAddress = accounts[4];
+    const depositerAddress = accounts[4];
     const destinationChainRecipientAddress = accounts[4];
     const depositAmount = 10;
     const expectedDepositNonce = 1;
@@ -95,8 +95,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
     });
 
-    it('should revert because depositorAddress is not a relayer', async () => {
-        await TruffleAssert.reverts(vote(depositorAddress));
+    it('should revert because depositerAddress is not a relayer', async () => {
+        await TruffleAssert.reverts(vote(depositerAddress));
     });
 
     it("depositProposal shouldn't be voted on if it has a Passed status", async () => {

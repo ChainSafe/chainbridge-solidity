@@ -15,7 +15,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     const relayerThreshold = 2;
     const chainID = 1;
 
-    const depositorAddress = accounts[1];
+    const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
 
     const initialTokenAmount = 100;
@@ -47,11 +47,11 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
-            ERC20MintableInstance1.mint(depositorAddress, initialTokenAmount)
+            ERC20MintableInstance1.mint(depositerAddress, initialTokenAmount)
         ]);
 
         await Promise.all([
-            ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
+            ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address),
         ]);

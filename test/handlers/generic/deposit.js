@@ -20,7 +20,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const chainID = 1;
     const expectedDepositNonce = 1;
 
-    const depositorAddress = accounts[1];
+    const depositerAddress = accounts[1];
 
     let BridgeInstance;
     let CentrifugeAssetInstance;
@@ -97,7 +97,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[0],
             depositData,
-            { from: depositorAddress }
+            { from: depositerAddress }
         ));
     });
 
@@ -105,7 +105,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[0],
-            _depositor: depositorAddress,
+            _depositer: depositerAddress,
             _metaData: '0xdeadbeef'
         };
 
@@ -113,7 +113,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[0],
             depositData,
-            { from: depositorAddress }
+            { from: depositerAddress }
         ));
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
@@ -124,7 +124,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[1],
-            _depositor: depositorAddress,
+            _depositer: depositerAddress,
             _metaData: null
         };
 
@@ -132,7 +132,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[1],
             Helpers.createGenericDepositData(null),
-            { from: depositorAddress }
+            { from: depositerAddress }
         );
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
@@ -147,7 +147,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[2],
-            _depositor: depositorAddress,
+            _depositer: depositerAddress,
             _metaData: argumentOne
         };
         
@@ -155,7 +155,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[2],
             Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)),
-            { from: depositorAddress }
+            { from: depositerAddress }
         );
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
@@ -172,7 +172,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[3],
-            _depositor: depositorAddress,
+            _depositer: depositerAddress,
             _metaData: encodedMetaData
         };
         
@@ -180,7 +180,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[3],
             Helpers.createGenericDepositData(encodedMetaData),
-            { from: depositorAddress }
+            { from: depositerAddress }
         );
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
@@ -201,7 +201,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[4],
-            _depositor: depositorAddress,
+            _depositer: depositerAddress,
             _metaData: encodedMetaData
         };
         
@@ -209,7 +209,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             chainID,
             initialResourceIDs[4],
             Helpers.createGenericDepositData(encodedMetaData),
-            { from: depositorAddress }
+            { from: depositerAddress }
         );
 
         const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);

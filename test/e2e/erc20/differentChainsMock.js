@@ -18,7 +18,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     const destinationRelayer1Address = accounts[3];
     const destinationRelayer2Address = accounts[4];
     
-    const depositorAddress = accounts[1];
+    const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const initialTokenAmount = 100;
     const depositAmount = 10;
@@ -71,10 +71,10 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
                 .then(instance => DestinationERC20HandlerInstance = instance),
         ]);
 
-        await OriginERC20MintableInstance.mint(depositorAddress, initialTokenAmount);
+        await OriginERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
 
         await Promise.all([
-            OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
+            OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
             OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
             DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
             OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
@@ -85,18 +85,18 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         originDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + originDepositProposalData.substr(2));
         
-        destinationDepositData = Helpers.createERCDepositData(depositAmount, 20, depositorAddress);
-        destinationDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, depositorAddress);
+        destinationDepositData = Helpers.createERCDepositData(depositAmount, 20, depositerAddress);
+        destinationDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, depositerAddress);
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC20HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
     
-    it("[sanity] depositorAddress' balance should be equal to initialTokenAmount", async () => {
-        const depositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
-        assert.strictEqual(depositorBalance.toNumber(), initialTokenAmount);
+    it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {
+        const depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
+        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount);
     });
 
-    it("[sanity] OriginERC20HandlerInstance.address should have an allowance of depositAmount from depositorAddress", async () => {
-        const handlerAllowance = await OriginERC20MintableInstance.allowance(depositorAddress, OriginERC20HandlerInstance.address);
+    it("[sanity] OriginERC20HandlerInstance.address should have an allowance of depositAmount from depositerAddress", async () => {
+        const handlerAllowance = await OriginERC20MintableInstance.allowance(depositerAddress, OriginERC20HandlerInstance.address);
         assert.strictEqual(handlerAllowance.toNumber(), depositAmount);
     });
 
@@ -106,15 +106,15 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20 owned by recipientAddress and back again", async () => {
-        let depositorBalance;
+        let depositerBalance;
         let recipientBalance;
 
-        // depositorAddress makes initial deposit of depositAmount
+        // depositerAddress makes initial deposit of depositAmount
         TruffleAssert.passes(await OriginBridgeInstance.deposit(
             destinationChainID,
             originResourceID,
             originDepositData,
-            { from: depositorAddress }
+            { from: depositerAddress }
         ));
 
         // destinationRelayer1 creates the deposit proposal
@@ -149,9 +149,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
 
-        // Assert ERC20 balance was transferred from depositorAddress
-        depositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
-        assert.strictEqual(depositorBalance.toNumber(), initialTokenAmount - depositAmount, "depositAmount wasn't transferred from depositorAddress");
+        // Assert ERC20 balance was transferred from depositerAddress
+        depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
+        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount, "depositAmount wasn't transferred from depositerAddress");
 
         
         // Assert ERC20 balance was transferred to recipientAddress
@@ -160,8 +160,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
 
         // At this point a representation of OriginERC20Mintable has been transferred from
-        // depositor to the recipient using Both Bridges and DestinationERC20Mintable.
-        // Next we will transfer DestinationERC20Mintable back to the depositor
+        // depositer to the recipient using Both Bridges and DestinationERC20Mintable.
+        // Next we will transfer DestinationERC20Mintable back to the depositer
 
         await DestinationERC20MintableInstance.approve(DestinationERC20HandlerInstance.address, depositAmount, { from: recipientAddress });
 
@@ -211,7 +211,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         assert.strictEqual(recipientBalance.toNumber(), 0);
         
         // Assert ERC20 balance was transferred to recipientAddress
-        depositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
-        assert.strictEqual(depositorBalance.toNumber(), initialTokenAmount);
+        depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
+        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount);
     });
 });

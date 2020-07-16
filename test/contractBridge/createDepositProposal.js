@@ -14,7 +14,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [create a deposit proposal (voteProposal) with relayerThreshold = 1]', async (accounts) => {
     const originChainRelayerAddress = accounts[1];
-    const depositorAddress = accounts[2];
+    const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
     const originChainID = 1;
     const destinationChainID = 2;
@@ -65,13 +65,13 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         ));
     });
 
-    it('should revert because depositorAddress is not a relayer', async () => {
+    it('should revert because depositerAddress is not a relayer', async () => {
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
-            { from: depositorAddress }
+            { from: depositerAddress }
         ));
     });
 
@@ -156,7 +156,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 contract('Bridge - [create a deposit proposal (voteProposal) with relayerThreshold > 1]', async (accounts) => {
     // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
-    const depositorAddress = accounts[2];
+    const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
     const originChainID = 1;
     const destinationChainID = 2;
@@ -209,13 +209,13 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         ));
     });
 
-    it('should revert because depositorAddress is not a relayer', async () => {
+    it('should revert because depositerAddress is not a relayer', async () => {
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
             destinationChainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
-            { from: depositorAddress }
+            { from: depositerAddress }
         ));
     });
 

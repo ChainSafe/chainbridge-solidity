@@ -16,7 +16,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         uint8   _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
-        address _depositor;
+        address _depositer;
         uint    _amount;
     }
 
@@ -63,7 +63,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         - _destinationChainID ChainID deposited tokens are intended to end up on.
         - _resourceID ResourceID used when {deposit} was executed.
         - _destinationRecipientAddress Address tokens are intended to be deposited to on desitnation chain.
-        - _depositor Address that initially called {deposit} in the Bridge contract.
+        - _depositer Address that initially called {deposit} in the Bridge contract.
         - _amount Amount of tokens that were deposited.
     */
     function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
@@ -74,7 +74,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param destinationChainID Chain ID of chain tokens are expected to be bridged to.
         @param depositNonce This value is generated as an ID by the Bridge contract.
-        @param depositor Address of account making the deposit in the Bridge contract.
+        @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {amount}, {lenRecipientAddress}, and {recipientAddress}
         all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
@@ -88,7 +88,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         bytes32 resourceID,
         uint8   destinationChainID,
         uint64  depositNonce,
-        address depositor,
+        address depositer,
         bytes   calldata data
     ) external override onlyBridge {
         bytes   memory recipientAddress;
@@ -102,9 +102,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
-            burnERC20(tokenAddress, depositor, amount);
+            burnERC20(tokenAddress, depositer, amount);
         } else {
-            lockERC20(tokenAddress, depositor, address(this), amount);
+            lockERC20(tokenAddress, depositer, address(this), amount);
         }
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
@@ -112,7 +112,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
             destinationChainID,
             resourceID,
             recipientAddress,
-            depositor,
+            depositer,
             amount
         );
     }

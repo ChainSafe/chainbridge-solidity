@@ -113,7 +113,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         _expiry = expiry;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
 
         for (uint i; i < initialRelayers.length; i++) {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
@@ -136,6 +135,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param newAdmin Address that admin role will be granted to.
      */
     function renounceAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != msg.sender, "newAdmin cannot be current admin!");
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -173,7 +173,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param relayerAddress Address of relayer to be added.
         @notice Emits {RelayerAdded} event.
      */
-    function adminAddRelayer(address relayerAddress) external onlyAdmin {
+    function adminAddRelayer(address relayerAddress) external {
         require(!hasRole(RELAYER_ROLE, relayerAddress), "addr already has relayer role!");
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
@@ -186,7 +186,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param relayerAddress Address of relayer to be removed.
         @notice Emits {RelayerRemoved} event.
      */
-    function adminRemoveRelayer(address relayerAddress) external onlyAdmin {
+    function adminRemoveRelayer(address relayerAddress) external {
         require(hasRole(RELAYER_ROLE, relayerAddress), "addr doesn't have relayer role!");
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);

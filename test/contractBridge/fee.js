@@ -79,7 +79,7 @@ contract('Bridge - [fee]', async (accounts) => {
         // current fee is set to 0
         assert.equal(await BridgeInstance._fee.call(), 0)
         // Change fee to 0.5 ether
-        await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("0.5"), {from: relayer})
+        await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("0.5"), { from: relayer })
         assert.equal(web3.utils.fromWei((await BridgeInstance._fee.call()), "ether"), "0.5");
 
         await TruffleAssert.passes(
@@ -95,7 +95,7 @@ contract('Bridge - [fee]', async (accounts) => {
     });
 
     it('distribute fees', async () => {
-        await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("1"), {from: relayer});
+        await BridgeInstance.adminChangeFee(Ethers.utils.parseEther("1"), { from: relayer });
         assert.equal(web3.utils.fromWei((await BridgeInstance._fee.call()), "ether"), "1");
 
         // check the balance is 0

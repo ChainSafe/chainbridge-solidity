@@ -66,7 +66,6 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
             _tokenAddress: ERC20MintableInstance.address,
             _destinationChainID: chainID,
             _resourceID: resourceID,
-            _lenDestinationRecipientAddress: lenRecipientAddress,
             _destinationRecipientAddress: recipientAddress,
             _depositer: depositerAddress,
             _amount: tokenAmount
@@ -93,7 +92,6 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
             _tokenAddress: ERC20MintableInstance.address,
             _destinationChainID: chainID,
             _resourceID: resourceID,
-            _lenDestinationRecipientAddress: lenRecipientAddress,
             _destinationRecipientAddress: recipientAddress,
             _depositer: depositerAddress,
             _amount: tokenAmount

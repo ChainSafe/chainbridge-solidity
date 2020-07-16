@@ -53,7 +53,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
 
-        depositData = Helpers.createERCDepositData(depositAmount, 32, recipientAddress)
+        depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
     });

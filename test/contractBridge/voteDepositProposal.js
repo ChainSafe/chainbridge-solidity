@@ -59,7 +59,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
-        depositData = Helpers.createERCDepositData(depositAmount, 32, destinationChainRecipientAddress);
+        depositData = Helpers.createERCDepositData(depositAmount, 20, destinationChainRecipientAddress);
         depositDataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + depositData.substr(2));
 
         await Promise.all([
@@ -67,8 +67,8 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             BridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, resourceID, DestinationERC20MintableInstance.address)
         ]);
 
-        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, {from: relayer});
-        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, resourceID, {from: relayer});
+        vote = (relayer) => BridgeInstance.voteProposal(originChainID, expectedDepositNonce, resourceID, depositDataHash, { from: relayer });
+        executeProposal = (relayer) => BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, resourceID, { from: relayer });
     });
 
     it ('[sanity] bridge configured with threshold and relayers', async () => {
@@ -135,7 +135,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             BridgeInstance.voteProposal(
                 originChainID, expectedDepositNonce,
                 resourceID, Ethers.utils.keccak256(depositDataHash),
-                {from: relayer2Address}));
+                { from: relayer2Address }));
     });
 
     it("Relayer's vote should be recorded correctly - yes vote", async () => {

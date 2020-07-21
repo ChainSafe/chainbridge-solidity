@@ -75,11 +75,11 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address)
         ]);
 
-        originDepositData = Helpers.createERCDepositData(tokenID, 32, recipientAddress);
+        originDepositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
         originDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, 32, 0);
         originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
-        destinationDepositData = Helpers.createERCDepositData(tokenID, 32, depositerAddress);
+        destinationDepositData = Helpers.createERCDepositData(tokenID, 20, depositerAddress);
         destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC721HandlerInstance.address + destinationDepositProposalData.substr(2));
     });
@@ -107,7 +107,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             destinationChainID,
             originResourceID,
             originDepositData,
-            {from: depositerAddress}
+            { from: depositerAddress }
         ));
 
         // Handler should own tokenID
@@ -120,7 +120,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             destinationResourceID,
             originDepositProposalDataHash,
-            {from: destinationRelayer1Address}
+            { from: destinationRelayer1Address }
         ));
 
         // destinationRelayer2 votes in favor of the deposit proposal
@@ -131,7 +131,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             destinationResourceID,
             originDepositProposalDataHash,
-            {from: destinationRelayer2Address}
+            { from: destinationRelayer2Address }
         ));
 
         // destinationRelayer1 will execute the deposit proposal
@@ -140,7 +140,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             originDepositProposalData,
             destinationResourceID,
-            {from: destinationRelayer2Address}
+            { from: destinationRelayer2Address }
         ));
 
         // Handler should still own tokenID of OriginERC721MintableInstance
@@ -155,14 +155,14 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         // depositer to the recipient using Both Bridges and DestinationERC721Mintable.
         // Next we will transfer DestinationERC721Mintable back to the depositer
 
-        await DestinationERC721MintableInstance.approve(DestinationERC721HandlerInstance.address, tokenID, {from: recipientAddress});
+        await DestinationERC721MintableInstance.approve(DestinationERC721HandlerInstance.address, tokenID, { from: recipientAddress });
 
         // recipientAddress makes a deposit of the received depositAmount
         TruffleAssert.passes(await DestinationBridgeInstance.deposit(
             originChainID,
             destinationResourceID,
             destinationDepositData,
-            {from: recipientAddress}
+            { from: recipientAddress }
         ));
 
         // Token should no longer exist
@@ -174,7 +174,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             originResourceID,
             destinationDepositProposalDataHash,
-            {from: originRelayer1Address}
+            { from: originRelayer1Address }
         ));
 
         // destinationRelayer2 votes in favor of the deposit proposal
@@ -185,7 +185,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             originResourceID,
             destinationDepositProposalDataHash,
-            {from: originRelayer2Address}
+            { from: originRelayer2Address }
         ));
 
         // destinationRelayer1 will execute the deposit proposal
@@ -194,7 +194,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             expectedDepositNonce,
             destinationDepositProposalData,
             originResourceID,
-            {from: originRelayer2Address}
+            { from: originRelayer2Address }
         ));
 
         // Assert Destination tokenID no longer exists

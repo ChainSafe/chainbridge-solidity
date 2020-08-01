@@ -21,7 +21,7 @@ contract('Bridge - [admin]', async accounts => {
     const initialRelayerThreshold = 2;
 
     const expectedBridgeAdmin = accounts[0];
-    const someone = accounts[9];
+    const someone = accounts[4];
     const bytes32 = "0x0";
     let ADMIN_ROLE;
     

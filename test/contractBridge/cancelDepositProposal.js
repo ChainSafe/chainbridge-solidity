@@ -140,6 +140,12 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await TruffleAssert.reverts(vote(relayer4Address), "proposal already passed/executed/cancelled.")
     });
 
+    it("relayer cannot cancel proposal before threshold blocks have passed", async () => {
+        await TruffleAssert.passes(vote(relayer2Address));
+
+        await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash), "Proposal not at expiry threshold")
+    });
+
     it("admin can cancel proposal after threshold blocks have passed", async () => {
         await TruffleAssert.passes(vote(relayer3Address));
 

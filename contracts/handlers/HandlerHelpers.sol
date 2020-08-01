@@ -27,7 +27,7 @@ contract HandlerHelpers is IERCHandler {
         _;
     }
 
-    function _onlyBridge() private {
+    function _onlyBridge() private view {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 

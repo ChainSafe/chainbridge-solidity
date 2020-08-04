@@ -177,7 +177,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash), "Proposal cannot be cancelled")
     });
 
-    it("incative proposal cannot be cancelled", async () => {
+    it("inactive proposal cannot be cancelled", async () => {
         await TruffleAssert.reverts(BridgeInstance.cancelProposal(originChainID, expectedDepositNonce, depositDataHash), "Proposal cannot be cancelled")
     });
 

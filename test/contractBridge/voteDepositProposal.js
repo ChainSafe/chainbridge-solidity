@@ -240,11 +240,11 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         await vote(relayer2Address);
         await vote(relayer3Address);
         await executeProposal(relayer1Address);
-        await TruffleAssert.reverts(executeProposal(relayer1Address), "Proposal already transferred");
+        await TruffleAssert.reverts(executeProposal(relayer1Address), "Proposal must have Passed status");
     });
 
     it('Execution requires active proposal', async () => {
-        await TruffleAssert.reverts(BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, '0x0', { from: relayer1Address }), "Proposal is not active");
+        await TruffleAssert.reverts(BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, '0x0', { from: relayer1Address }), "Proposal must have Passed status");
     });
 
     it('Voting requires resourceID that is mapped to a handler', async () => {

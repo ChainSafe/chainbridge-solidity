@@ -380,10 +380,10 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyAdminOrRelayer {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
+        ProposalStatus currentStatus = proposal._status;
 
-        require(proposal._status != ProposalStatus.Inactive, "Proposal is not active");
-        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
-        require(proposal._status != ProposalStatus.Executed, "Proposal already executed");
+        require(currentStatus == ProposalStatus.Active || currentStatus == ProposalStatus.Passed,
+            "Proposal cannot be cancelled");
         require(sub(block.number, proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
@@ -407,8 +407,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
-        require(proposal._status != ProposalStatus.Inactive, "Proposal is not active");
-        require(proposal._status == ProposalStatus.Passed, "Proposal already transferred");
+        require(proposal._status == ProposalStatus.Passed, "Proposal must have Passed status");
         require(dataHash == proposal._dataHash, "Data doesn't match datahash");
 
         proposal._status = ProposalStatus.Executed;

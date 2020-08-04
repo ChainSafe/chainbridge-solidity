@@ -21,7 +21,7 @@ contract('Bridge - [admin]', async accounts => {
     const initialRelayerThreshold = 2;
 
     const expectedBridgeAdmin = accounts[0];
-    const someone = accounts[4];
+    const someAddress = "0xcafecafecafecafecafecafecafecafecafecafe";
     const bytes32 = "0x0";
     let ADMIN_ROLE;
     
@@ -131,7 +131,7 @@ contract('Bridge - [admin]', async accounts => {
     });
 
     it('Should require admin role to set a ERC20 Resource ID and contract address', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetResource, someone, bytes32, someone);
+        await assertOnlyAdmin(BridgeInstance.adminSetResource, someAddress, bytes32, someAddress);
     });
 
     // Set Generic Resource
@@ -147,7 +147,7 @@ contract('Bridge - [admin]', async accounts => {
     });
 
     it('Should require admin role to set a Generic Resource ID and contract address', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetGenericResource, someone, bytes32, someone, '0x00000000', '0x00000000');
+        await assertOnlyAdmin(BridgeInstance.adminSetGenericResource, someAddress, bytes32, someAddress, '0x00000000', '0x00000000');
     });
 
     // Set burnable
@@ -162,7 +162,7 @@ contract('Bridge - [admin]', async accounts => {
     });
 
     it('Should require admin role to set ERC20MintableInstance.address as burnable', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetBurnable, someone, someone);
+        await assertOnlyAdmin(BridgeInstance.adminSetBurnable, someAddress, someAddress);
     });
 
     // Set fee
@@ -214,6 +214,6 @@ contract('Bridge - [admin]', async accounts => {
     });
 
     it('Should require admin role to withdraw funds', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminWithdraw, someone, someone, someone, 0);
+        await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, someAddress, someAddress, 0);
     });
 });

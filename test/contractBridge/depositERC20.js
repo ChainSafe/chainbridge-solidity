@@ -140,4 +140,8 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
                 event.depositNonce.toNumber() === expectedDepositNonce + 1
         });
     });
+
+    it('deposit requires resourceID that is mapped to a handler', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(destinationChainID, '0x0', depositData, { from: depositerAddress }), "resourceID not mapped to handler");
+    });
 });

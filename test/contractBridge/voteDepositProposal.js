@@ -234,4 +234,20 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
             event.dataHash === depositDataHash
         });
     });
+
+    it('Proposal cannot be executed twice', async () => {
+        await vote(relayer1Address);
+        await vote(relayer2Address);
+        await vote(relayer3Address);
+        await executeProposal(relayer1Address);
+        await TruffleAssert.reverts(executeProposal(relayer1Address), "Proposal must have Passed status");
+    });
+
+    it('Execution requires active proposal', async () => {
+        await TruffleAssert.reverts(BridgeInstance.executeProposal(originChainID, expectedDepositNonce, depositData, '0x0', { from: relayer1Address }), "Proposal must have Passed status");
+    });
+
+    it('Voting requires resourceID that is mapped to a handler', async () => {
+        await TruffleAssert.reverts(BridgeInstance.voteProposal(originChainID, expectedDepositNonce, '0x0', depositDataHash, { from: relayer1Address }), "no handler for resourceID");
+    });
 });

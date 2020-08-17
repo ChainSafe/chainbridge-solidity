@@ -14,9 +14,9 @@ import "./interfaces/IGenericHandler.sol";
  */
 contract Bridge is Pausable, AccessControl, SafeMath {
 
-    uint8   public _chainID;
-    uint256 public _relayerThreshold;
-    uint256 public _totalProposals;
+    uint8   public _chainID; // REVIEW: purely informational, can be kept offchain.
+    uint256 public _relayerThreshold; // REVIEW: can be reduced to uint8 if we can set a restriction to 255 max relayers.
+    uint256 public _totalProposals; // REVIEW: purely informational, can be kept offchain.
     uint256 public _fee;
     uint256 public _expiry;
 
@@ -29,20 +29,20 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         address[] _noVotes;
         ProposalStatus _status;
         uint256 _proposedBlock;
-    }
+    } // REVIEW: can be reduced to: { ProposalStatus _status; bytes31 _yesVotes } if we can set a restriction to 248 max relayers and dumping _noVotes. _yesVotes becomes a bitmap. Will save us 125000 gas on proposal creation and 40000 gas on each vote.
 
     // destinationChainID => number of deposits
-    mapping(uint8 => uint64) public _depositCounts;
+    mapping(uint8 => uint64) public _depositCounts; // REVIEW: can use a universal counter across all target chains.
     // resourceID => handler address
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
     // depositNonce => destinationChainID => bytes
-    mapping(uint64 => mapping(uint8 => bytes)) public _depositRecords;
+    mapping(uint64 => mapping(uint8 => bytes)) public _depositRecords; // REVIEW: can be kept offchain. Will save 60000+ gas on ERC20 deposit and 100000+ gas on ERC721 deposit.
     // destinationChainID + depositNonce => dataHash => Proposal
     mapping(uint72 => mapping(bytes32 => Proposal)) public _proposals;
     // destinationChainID + depositNonce => dataHash => relayerAddress => bool
-    mapping(uint72 => mapping(bytes32 => mapping(address => bool))) public _hasVotedOnProposal;
+    mapping(uint72 => mapping(bytes32 => mapping(address => bool))) public _hasVotedOnProposal; // REVIEW: can be removed if we make _yesVotes a bitmap.
 
-    event RelayerThresholdChanged(uint indexed newThreshold);
+    event RelayerThresholdChanged(uint indexed newThreshold); // REVIEW: if we are not planning to utilize event logs filtering by indexed args and instead will just aggregate all of them offchain, then we can remove all the indexes.
     event RelayerAdded(address indexed relayer);
     event RelayerRemoved(address indexed relayer);
     event Deposit(

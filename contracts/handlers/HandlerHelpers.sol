@@ -14,13 +14,13 @@ contract HandlerHelpers is IERCHandler {
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
     // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
+    mapping (address => bytes32) public _tokenContractAddressToResourceID; // REVIEW: not used in the contract, can be kept offchain. Will make Bridge.setResource ~21000 gas cheaper.
 
     // token contract address => is whitelisted
-    mapping (address => bool) public _contractWhitelist;
+    mapping (address => bool) public _contractWhitelist; // REVIEW: if _resourceIDToTokenContractAddress[resourceID] != 0x0 then _contractWhitelist[_resourceIDToTokenContractAddress[resourceID]] is always true, can be safely removed. Will make deposit/execute ~1000 gas cheaper. Will make setResource ~21000 gas cheaper. Also can be moved to _resourceIDToTokenContractAddress with about the same effect.
 
     // token contract address => is burnable
-    mapping (address => bool) public _burnList;
+    mapping (address => bool) public _burnList; // REVIEW: can be moved into the same storaage slot as _resourceIDToTokenContractAddress. Will require updating setBurnable interface to accept resourceID. Will make deposit/execute ~1000 gas cheaper.
 
     modifier onlyBridge() {
         _onlyBridge();

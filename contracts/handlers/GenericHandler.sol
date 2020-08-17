@@ -8,7 +8,7 @@ import "../interfaces/IGenericHandler.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract GenericHandler is IGenericHandler {
+contract GenericHandler is IGenericHandler { // REVIEW: Partly same as for HandlerHelpers + ERC20Handler.
     address public _bridgeAddress;
 
     struct DepositRecord {
@@ -28,10 +28,10 @@ contract GenericHandler is IGenericHandler {
     mapping (address => bytes32) public _contractAddressToResourceID;
 
     // contract address => deposit function signature
-    mapping (address => bytes4) public _contractAddressToDepositFunctionSignature;
+    mapping (address => bytes4) public _contractAddressToDepositFunctionSignature; // REVIEW: Can be moved into _resourceIDToContractAddress. Will save 21000 gas on setResource.
 
     // contract address => execute proposal function signature
-    mapping (address => bytes4) public _contractAddressToExecuteFunctionSignature;
+    mapping (address => bytes4) public _contractAddressToExecuteFunctionSignature; // REVIEW: Can be moved into _resourceIDToContractAddress. Will save 21000 gas on setResource.
 
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;

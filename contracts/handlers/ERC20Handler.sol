@@ -21,7 +21,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     }
 
     // destId => depositNonce => Deposit Record
-    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
+    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords; // REVIEW: Not used on chain, so doesn't have to be stored on chain, emitting an event is enough. Will save ~120000 gas on deposit.
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
@@ -66,7 +66,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         - _depositer Address that initially called {deposit} in the Bridge contract.
         - _amount Amount of tokens that were deposited.
     */
-    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) { // REVIEW: if we remove deposit records, we will remove this too.
         return _depositRecords[destId][depositNonce];
     }
 

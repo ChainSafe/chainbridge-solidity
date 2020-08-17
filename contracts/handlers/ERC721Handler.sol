@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
+contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe { // REVIEW: All the same optimizations as for ERC20Handler could be applied.
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;

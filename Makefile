@@ -8,11 +8,6 @@ install-cli: compile
 	@echo " > \033[32mInstalling cb-sol-cli... \033[0m "
 	npm link ./cli 
 
-install-celo-ganache:
-	git clone https://github.com/celo-org/ganache-cli.git
-	npm install --prefix ./ganache-cli
-	ln -f -s  $PWD/ganache-cli/cli.js  ~/.local/bin/celo-ganache
-
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "
@@ -37,5 +32,3 @@ deploy:
 bindings: compile
 	@echo " > \033[32mCreating go bindings for ethereum contracts... \033[0m "
 	./scripts/create_bindings.sh
-celo-ganache:
-	./scripts/start_celo_ganache.sh

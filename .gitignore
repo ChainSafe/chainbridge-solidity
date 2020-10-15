@@ -6,3 +6,5 @@ gethdata/
 gethdata2/
 coverage/
 coverage.json
+src/ethers
+src/web3

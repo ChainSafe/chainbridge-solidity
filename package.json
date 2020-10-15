@@ -1,12 +1,20 @@
 {
-  "name": "evm-contracts",
+  "name": "@chainsafe/chainbridge-contracts",
   "version": "1.0.0",
   "description": "",
-  "main": "truffle-config.js",
+  "main": "src/index.ts",
+  "files": [
+    "src"
+  ],
   "directories": {
     "test": "test"
   },
   "scripts": {
+    "compile": "truffle compile",
+    "publish": "npm run generate-types && npm publish",
+    "generate-types": "npm run generate-types:web3 && npm run generate-types:ethers",
+    "generate-types:web3": "npx typechain \"build/contracts/Bridge.json\" --target=web3-v1 --outDir src/web3",
+    "generate-types:ethers": "npx typechain \"build/contracts/Bridge.json\" --target=ethers-v5 --outDir src/ethers",
     "test": "echo \\\\\\\"Error: no test specified\\\\\\\" && exit 1"
   },
   "author": "",
@@ -17,12 +25,19 @@
     "ethers": "^4.0.40",
     "ganache-cli": "^6.9.1",
     "solidity-coverage": "^0.7.4",
-    "truffle-assertions": "^0.9.2"
+    "truffle-assertions": "^0.9.2",
+    "typechain": "^3.0.0",
+    "@typechain/ethers-v5": "^2.0.0",
+    "@typechain/web3-v1": "^1.0.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.0.0",
     "commander": "^4.0.1",
     "rimraf": "^3.0.2",
     "truffle": "^5.1.15"
+  },
+  "peerDependencies": {
+    "ethers": ">= 5.0.0",
+    "web3": ">= 1.0.0"
   }
 }

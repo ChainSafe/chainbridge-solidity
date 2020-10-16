@@ -21,7 +21,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const relayerThreshold = 1;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    const lenRecipientAddress = 32;
+    const lenRecipientAddress = 20;
     const gasBenchmarks = [];
 
     const erc20TokenAmount = 100;

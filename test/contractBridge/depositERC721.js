@@ -63,7 +63,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         depositData = Helpers.createERCDepositData(
             originChainTokenID,
-            32,
+            20,
             recipientAddress);
     });
 

@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./utils/Pausable.sol";
 import "./utils/SafeMath.sol";
 import "./interfaces/IDepositExecute.sol";
-import "./interfaces/IBridge.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 
@@ -17,12 +16,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
     uint8   public _chainID;
     uint256 public _relayerThreshold;
-    uint256 public _totalRelayers;
     uint256 public _totalProposals;
     uint256 public _fee;
     uint256 public _expiry;
-
-    enum Vote {No, Yes}
 
     enum ProposalStatus {Inactive, Active, Passed, Executed, Cancelled}
 
@@ -86,16 +82,16 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         _;
     }
 
-    function _onlyAdminOrRelayer() private {
+    function _onlyAdminOrRelayer() private view {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(RELAYER_ROLE, msg.sender),
             "sender is not relayer or admin");
     }
 
-    function _onlyAdmin() private {
+    function _onlyAdmin() private view {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
     }
 
-    function _onlyRelayers() private {
+    function _onlyRelayers() private view {
         require(hasRole(RELAYER_ROLE, msg.sender), "sender doesn't have relayer role");
     }
 
@@ -113,11 +109,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         _expiry = expiry;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setRoleAdmin(RELAYER_ROLE, DEFAULT_ADMIN_ROLE);
 
         for (uint i; i < initialRelayers.length; i++) {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
-            _totalRelayers++;
         }
 
     }
@@ -136,6 +130,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param newAdmin Address that admin role will be granted to.
      */
     function renounceAdmin(address newAdmin) external onlyAdmin {
+        require(msg.sender != newAdmin, 'Cannot renounce oneself');
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -168,29 +163,29 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     /**
-        @notice Grants {relayerAddress} the relayer role and increases {_totalRelayer} count.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Grants {relayerAddress} the relayer role.
+        @notice Only callable by an address that currently has the admin role, which is
+                checked in grantRole().
         @param relayerAddress Address of relayer to be added.
         @notice Emits {RelayerAdded} event.
      */
-    function adminAddRelayer(address relayerAddress) external onlyAdmin {
+    function adminAddRelayer(address relayerAddress) external {
         require(!hasRole(RELAYER_ROLE, relayerAddress), "addr already has relayer role!");
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
-        _totalRelayers++;
     }
 
     /**
-        @notice Removes relayer role for {relayerAddress} and decreases {_totalRelayer} count.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Removes relayer role for {relayerAddress}.
+        @notice Only callable by an address that currently has the admin role, which is
+                checked in revokeRole().
         @param relayerAddress Address of relayer to be removed.
         @notice Emits {RelayerRemoved} event.
      */
-    function adminRemoveRelayer(address relayerAddress) external onlyAdmin {
+    function adminRemoveRelayer(address relayerAddress) external {
         require(hasRole(RELAYER_ROLE, relayerAddress), "addr doesn't have relayer role!");
         revokeRole(RELAYER_ROLE, relayerAddress);
         emit RelayerRemoved(relayerAddress);
-        _totalRelayers--;
     }
 
     /**
@@ -252,6 +247,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     function getProposal(uint8 originChainID, uint64 depositNonce, bytes32 dataHash) external view returns (Proposal memory) {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(originChainID);
         return _proposals[nonceAndID][dataHash];
+    }
+
+    /**
+        @notice Returns total relayers number.
+        @notice Added for backwards compatibility.
+     */
+    function _totalRelayers() external view returns (uint) {
+        return AccessControl.getRoleMemberCount(RELAYER_ROLE);
     }
 
     /**
@@ -355,9 +358,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             _hasVotedOnProposal[nonceAndID][dataHash][msg.sender] = true;
             emit ProposalVote(chainID, depositNonce, proposal._status, resourceID);
 
-            // If _depositThreshold is set to 1, then auto finalize
-            // or if _relayerThreshold has been exceeded
-            if (_relayerThreshold <= 1 || proposal._yesVotes.length >= _relayerThreshold) {
+            // Finalize if _relayerThreshold has been reached
+            if (proposal._yesVotes.length >= _relayerThreshold) {
                 proposal._status = ProposalStatus.Passed;
 
                 emit ProposalEvent(chainID, depositNonce, ProposalStatus.Passed, resourceID, dataHash);
@@ -367,7 +369,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     /**
-        @notice Executes a deposit proposal that is considered passed using a specified handler contract.
+        @notice Cancels a deposit proposal that has not been executed yet.
         @notice Only callable by relayers when Bridge is not paused.
         @param chainID ID of chain deposit originated from.
         @param depositNonce ID of deposited generated by origin Bridge contract.
@@ -378,13 +380,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyAdminOrRelayer {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
+        ProposalStatus currentStatus = proposal._status;
 
-        require(proposal._status != ProposalStatus.Cancelled, "Proposal already cancelled");
+        require(currentStatus == ProposalStatus.Active || currentStatus == ProposalStatus.Passed,
+            "Proposal cannot be cancelled");
         require(sub(block.number, proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
-        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, proposal._dataHash);
-
+        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, proposal._resourceID, dataHash);
     }
 
     /**
@@ -404,16 +407,15 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
-        require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
-        require(proposal._status == ProposalStatus.Passed, "proposal already transferred");
-        require(dataHash == proposal._dataHash, "data doesn't match datahash");
+        require(proposal._status == ProposalStatus.Passed, "Proposal must have Passed status");
+        require(dataHash == proposal._dataHash, "Data doesn't match datahash");
 
         proposal._status = ProposalStatus.Executed;
 
-        IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
+        IDepositExecute depositHandler = IDepositExecute(handler);
         depositHandler.executeProposal(proposal._resourceID, data);
 
-        emit ProposalEvent(chainID, depositNonce, proposal._status, proposal._resourceID, proposal._dataHash);
+        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Executed, resourceID, dataHash);
     }
 
     /**

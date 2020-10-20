@@ -9,3 +9,4 @@ coverage.json
 src/ethers
 src/web3
 ganache-cli/
+dist/

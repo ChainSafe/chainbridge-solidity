@@ -150,7 +150,7 @@ contract GenericHandler is IGenericHandler {
 
         bytes4 sig = _contractAddressToDepositFunctionSignature[contractAddress];
         if (sig != bytes4(0)) {
-            bytes memory callData = abi.encodePacked(sig, metadata);
+            bytes memory callData = abi.encodePacked(sig, metadata, abi.encode(depositer));
             (bool success,) = contractAddress.call(callData);
             require(success, "delegatecall to contractAddress failed");
         }

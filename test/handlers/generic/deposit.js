@@ -80,7 +80,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialContractAddresses,
             initialDepositFunctionSignatures,
             initialExecuteFunctionSignatures);
-        
+
         await Promise.all([
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialExecuteFunctionSignatures[0]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], initialDepositFunctionSignatures[1], initialExecuteFunctionSignatures[1]),
@@ -88,7 +88,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialExecuteFunctionSignatures[3]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialExecuteFunctionSignatures[4])
         ]);
-                
+
         depositData = Helpers.createGenericDepositData('0xdeadbeef');
     });
 
@@ -140,6 +140,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
         const internalTx = await TruffleAssert.createTransactionResult(NoArgumentInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'NoArgumentCalled');
+        TruffleAssert.eventEmitted(internalTx, 'DepositArg', event => event.depositer === depositerAddress);
     });
 
     it('oneArgument can be called successfully and depositRecord is created with expected values', async () => {
@@ -150,7 +151,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             _depositer: depositerAddress,
             _metaData: argumentOne
         };
-        
+
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[2],
@@ -163,6 +164,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
         const internalTx = await TruffleAssert.createTransactionResult(OneArgumentInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'OneArgumentCalled', event => event.argumentOne.toNumber() === argumentOne);
+        TruffleAssert.eventEmitted(internalTx, 'DepositArg', event => event.depositer === depositerAddress);
     });
 
     it('twoArguments can be called successfully and depositRecord is created with expected values', async () => {
@@ -175,7 +177,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             _depositer: depositerAddress,
             _metaData: encodedMetaData
         };
-        
+
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[3],
@@ -191,6 +193,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             return JSON.stringify(event.argumentOne), JSON.stringify(argumentOne) &&
             event.argumentTwo === argumentTwo
         });
+        TruffleAssert.eventEmitted(internalTx, 'DepositArg', event => event.depositer === depositerAddress);
     });
 
     it('threeArguments can be called successfully and depositRecord is created with expected values', async () => {
@@ -204,7 +207,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             _depositer: depositerAddress,
             _metaData: encodedMetaData
         };
-        
+
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[4],
@@ -220,5 +223,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             event.argumentOne === argumentOne &&
             event.argumentTwo.toNumber() === argumentTwo &&
             event.argumentThree === argumentThree);
+        TruffleAssert.eventEmitted(internalTx, 'DepositArg', event => event.depositer === depositerAddress);
     });
 });

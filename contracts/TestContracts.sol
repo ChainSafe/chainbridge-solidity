@@ -31,3 +31,11 @@ contract ThreeArguments {
         emit ThreeArgumentsCalled(argumentOne, argumentTwo, argumentThree);
     }
 }
+
+contract WithDepositer {
+    event WithDepositerCalled(address argumentOne, uint256 argumentTwo);
+
+    function withDepositer(address argumentOne, uint256 argumentTwo) external {
+        emit WithDepositerCalled(argumentOne, argumentTwo);
+    }
+}

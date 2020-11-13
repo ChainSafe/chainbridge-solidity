@@ -56,6 +56,8 @@ contract GenericHandler is IGenericHandler {
         called to perform deposit and execution calls.
         @param initialDepositFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
         and are the function that will be called when executing {deposit}
+        @param initialDepositFunctionDepositerOffsets These are the offsets of depositer positions, inside of metadata used to call
+        {initialContractAddresses} when executing {deposit}
         @param initialExecuteFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
         and are the function that will be called when executing {executeProposal}
 

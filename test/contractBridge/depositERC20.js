@@ -101,18 +101,6 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         assert.strictEqual(originChainHandlerBalance.toNumber(), depositAmount);
     });
 
-    it('depositRecord is created with expected depositNonce and correct value', async () => {
-        await BridgeInstance.deposit(
-            destinationChainID,
-            resourceID,
-            depositData,
-            { from: depositerAddress }
-        );
-
-        const depositRecord = await BridgeInstance._depositRecords.call(expectedDepositNonce, destinationChainID);
-        assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
-    });
-
     it('Deposit event is fired with expected value', async () => {
         let depositTx = await BridgeInstance.deposit(
             destinationChainID,

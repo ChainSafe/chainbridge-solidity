@@ -101,26 +101,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ));
     });
 
-    it('depositRecord is created with expected values', async () => {
-        const expectedDepositRecord = {
-            _destinationChainID: chainID,
-            _resourceID: initialResourceIDs[0],
-            _depositer: depositerAddress,
-            _metaData: '0xdeadbeef'
-        };
-
-        TruffleAssert.passes(await BridgeInstance.deposit(
-            chainID,
-            initialResourceIDs[0],
-            depositData,
-            { from: depositerAddress }
-        ));
-
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
-    });
-
-    it('noArgument can be called successfully and depositRecord is created with expected values', async () => {
+    it('noArgument can be called successfully', async () => {
         const expectedDepositRecord = {
             _destinationChainID: chainID,
             _resourceID: initialResourceIDs[1],
@@ -135,14 +116,11 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         );
 
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
-
         const internalTx = await TruffleAssert.createTransactionResult(NoArgumentInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'NoArgumentCalled');
     });
 
-    it('oneArgument can be called successfully and depositRecord is created with expected values', async () => {
+    it('oneArgument can be called successfully', async () => {
         const argumentOne = 42;
         const expectedDepositRecord = {
             _destinationChainID: chainID,
@@ -158,14 +136,11 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         );
 
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
-
         const internalTx = await TruffleAssert.createTransactionResult(OneArgumentInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'OneArgumentCalled', event => event.argumentOne.toNumber() === argumentOne);
     });
 
-    it('twoArguments can be called successfully and depositRecord is created with expected values', async () => {
+    it('twoArguments can be called successfully', async () => {
         const argumentOne = [NoArgumentInstance.address, OneArgumentInstance.address, TwoArgumentsInstance.address];
         const argumentTwo = initialDepositFunctionSignatures[3];
         const encodedMetaData = Helpers.abiEncode(['address[]','bytes4'], [argumentOne, argumentTwo]);
@@ -183,9 +158,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         );
 
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
-
         const internalTx = await TruffleAssert.createTransactionResult(TwoArgumentsInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'TwoArgumentsCalled', event => {
             return JSON.stringify(event.argumentOne), JSON.stringify(argumentOne) &&
@@ -193,7 +165,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         });
     });
 
-    it('threeArguments can be called successfully and depositRecord is created with expected values', async () => {
+    it('threeArguments can be called successfully', async () => {
         const argumentOne = 'soylentGreenIsPeople';
         const argumentTwo = -42;
         const argumentThree = true;
@@ -211,9 +183,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
         );
-
-        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
-        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
 
         const internalTx = await TruffleAssert.createTransactionResult(ThreeArgumentsInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'ThreeArgumentsCalled', event =>

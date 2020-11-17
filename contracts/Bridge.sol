@@ -42,7 +42,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     // destinationChainID + depositNonce => dataHash => relayerAddress => bool
     mapping(uint72 => mapping(bytes32 => mapping(address => bool))) public _hasVotedOnProposal;
 
-    event RelayerThresholdChanged(uint indexed newThreshold);
+    event RelayerThresholdChanged(uint256 indexed newThreshold);
     event RelayerAdded(address indexed relayer);
     event RelayerRemoved(address indexed relayer);
     event Deposit(
@@ -102,7 +102,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param initialRelayers Addresses that should be initially granted the relayer role.
         @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
      */
-    constructor (uint8 chainID, address[] memory initialRelayers, uint initialRelayerThreshold, uint256 fee, uint256 expiry) public {
+    constructor (uint8 chainID, address[] memory initialRelayers, uint256 initialRelayerThreshold, uint256 fee, uint256 expiry) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold;
         _fee = fee;
@@ -110,7 +110,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
-        for (uint i; i < initialRelayers.length; i++) {
+        for (uint256 i; i < initialRelayers.length; i++) {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
         }
 
@@ -157,7 +157,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param newThreshold Value {_relayerThreshold} will be changed to.
         @notice Emits {RelayerThresholdChanged} event.
      */
-    function adminChangeRelayerThreshold(uint newThreshold) external onlyAdmin {
+    function adminChangeRelayerThreshold(uint256 newThreshold) external onlyAdmin {
         _relayerThreshold = newThreshold;
         emit RelayerThresholdChanged(newThreshold);
     }
@@ -215,11 +215,12 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 resourceID,
         address contractAddress,
         bytes4 depositFunctionSig,
+        uint256 depositFunctionDepositerOffset,
         bytes4 executeFunctionSig
     ) external onlyAdmin {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
-        handler.setResource(resourceID, contractAddress, depositFunctionSig, executeFunctionSig);
+        handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
     }
 
     /**
@@ -262,7 +263,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by admin.
         @param newFee Value {_fee} will be updated to.
      */
-    function adminChangeFee(uint newFee) external onlyAdmin {
+    function adminChangeFee(uint256 newFee) external onlyAdmin {
         require(_fee != newFee, "Current fee is equal to new fee");
         _fee = newFee;
     }
@@ -425,7 +426,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param amounts Array of amonuts to transfer to {addrs}.
      */
     function transferFunds(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
-        for (uint i = 0; i < addrs.length; i++) {
+        for (uint256 i = 0; i < addrs.length; i++) {
             addrs[i].transfer(amounts[i]);
         }
     }

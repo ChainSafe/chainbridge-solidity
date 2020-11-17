@@ -139,15 +139,15 @@ contract('Bridge - [admin]', async accounts => {
     it('Should set a Generic Resource ID and contract address', async () => {
         const CentrifugeAssetInstance = await CentrifugeAssetContract.new();
         const resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
-        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, [], [], [], []);
+        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, [], [], [], [], []);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, '0x00000000', '0x00000000'));
+        await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, '0x00000000', 0, '0x00000000'));
         assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), CentrifugeAssetInstance.address);
         assert.equal(await GenericHandlerInstance._contractAddressToResourceID.call(CentrifugeAssetInstance.address), resourceID.toLowerCase());
     });
 
     it('Should require admin role to set a Generic Resource ID and contract address', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetGenericResource, someAddress, bytes32, someAddress, '0x00000000', '0x00000000');
+        await assertOnlyAdmin(BridgeInstance.adminSetGenericResource, someAddress, bytes32, someAddress, '0x00000000', 0, '0x00000000');
     });
 
     // Set burnable

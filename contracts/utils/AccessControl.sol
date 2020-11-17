@@ -102,7 +102,10 @@ abstract contract AccessControl is Context {
         return _roles[role].members.at(index);
     }
 
-    function getRoleMemberIndex(bytes32 role, address account) public view returns (uint) {
+    /**
+     * @dev Returns the index of the account that have `role`.
+     */
+    function getRoleMemberIndex(bytes32 role, address account) public view returns (uint256) {
         return _roles[role].members._inner._indexes[bytes32(uint256(account))];
     }
 

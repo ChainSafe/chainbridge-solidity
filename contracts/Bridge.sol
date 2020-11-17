@@ -16,6 +16,9 @@ import "./interfaces/IGenericHandler.sol";
 contract Bridge is Pausable, AccessControl, SafeMath {
     using SafeCast for *;
 
+    // Limit relayers number because proposal can fit only so much votes
+    uint constant public MAX_RELAYERS = 200;
+
     uint8   public _chainID;
     uint8   public _relayerThreshold;
     uint128 public _fee;
@@ -25,9 +28,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
     struct Proposal {
         ProposalStatus _status;
-        uint200 _yesVotes;
+        uint200 _yesVotes;      // bitmap, 200 maximum votes
         uint8   _yesVotesTotal;
-        uint40  _proposedBlock;
+        uint40  _proposedBlock; // 1099511627775 maximum block
     }
 
     // destinationChainID => number of deposits
@@ -36,18 +39,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
     // destinationChainID + depositNonce => dataHash => Proposal
     mapping(uint72 => mapping(bytes32 => Proposal)) private _proposals;
-
-    function _relayerBit(address relayer) private view returns(uint) {
-        return uint(1) << sub(AccessControl.getRoleMemberIndex(RELAYER_ROLE, relayer), 1);
-    }
-
-    function _hasVotedOnProposal(uint72 destNonce, bytes32 dataHash, address relayer) public view returns(bool) {
-        return _hasVoted(_proposals[destNonce][dataHash], relayer);
-    }
-
-    function _hasVoted(Proposal memory proposal, address relayer) private view returns(bool) {
-        return (_relayerBit(relayer) & uint(proposal._yesVotes)) > 0;
-    }
 
     event RelayerThresholdChanged(uint newThreshold);
     event RelayerAdded(address relayer);
@@ -63,7 +54,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         ProposalStatus status,
         bytes32 dataHash
     );
-
     event ProposalVote(
         uint8   originChainID,
         uint64  depositNonce,
@@ -101,6 +91,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         require(hasRole(RELAYER_ROLE, msg.sender), "sender doesn't have relayer role");
     }
 
+    function _relayerBit(address relayer) private view returns(uint) {
+        return uint(1) << sub(AccessControl.getRoleMemberIndex(RELAYER_ROLE, relayer), 1);
+    }
+
+    function _hasVoted(Proposal memory proposal, address relayer) private view returns(bool) {
+        return (_relayerBit(relayer) & uint(proposal._yesVotes)) > 0;
+    }
+
     /**
         @notice Initializes Bridge, creates and grants {msg.sender} the admin role,
         creates and grants {initialRelayers} the relayer role.
@@ -120,6 +118,17 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
         }
 
+    }
+
+    /**
+        @notice Returns true if {relayer} has voted on {destNonce} {dataHash} proposal.
+        @notice Naming left unchanged for backward compatibility.
+        @param destNonce destinationChainID + depositNonce of the proposal.
+        @param dataHash Hash of data to be provided when deposit proposal is executed.
+        @param relayer Address to check.
+     */
+    function _hasVotedOnProposal(uint72 destNonce, bytes32 dataHash, address relayer) public view returns(bool) {
+        return _hasVoted(_proposals[destNonce][dataHash], relayer);
     }
 
     /**
@@ -177,7 +186,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
      */
     function adminAddRelayer(address relayerAddress) external {
         require(!hasRole(RELAYER_ROLE, relayerAddress), "addr already has relayer role!");
-        require(_totalRelayers() < 200, "relayers limit reached");
+        require(_totalRelayers() < MAX_RELAYERS, "relayers limit reached");
         grantRole(RELAYER_ROLE, relayerAddress);
         emit RelayerAdded(relayerAddress);
     }

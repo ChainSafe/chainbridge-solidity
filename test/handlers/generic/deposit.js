@@ -245,6 +245,12 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const argumentOne = depositerAddress;
         const argumentTwo = 100;
         const encodedMetaData = Helpers.abiEncode(['address','uint256'], [argumentOne, argumentTwo]);
+        const expectedDepositRecord = {
+            _destinationChainID: chainID,
+            _resourceID: initialResourceIDs[5],
+            _depositer: depositerAddress,
+            _metaData: encodedMetaData
+        };
 
         const depositTx = await BridgeInstance.deposit(
             chainID,

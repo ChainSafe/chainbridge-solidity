@@ -117,7 +117,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         for (uint256 i; i < initialRelayers.length; i++) {
             grantRole(RELAYER_ROLE, initialRelayers[i]);
         }
-
     }
 
     /**
@@ -348,7 +347,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
                 _status : ProposalStatus.Active,
                 _yesVotes : 0,
                 _yesVotesTotal: 0,
-                _proposedBlock : block.number.toUint40()
+                _proposedBlock : uint40(block.number) // Overflow is desired.
             });
 
             emit ProposalEvent(chainID, depositNonce, ProposalStatus.Active, dataHash);

@@ -33,7 +33,7 @@ contract('Bridge - [constructor]', async accounts => {
 
     it('Bridge should not allow to set fee above 2**128 - 1', async () => {
         return TruffleAssert.reverts(BridgeContract.new(
-            chainID, initialRelayers, initialRelayerThreshold, web3.utils.toBN(2).pow(web3.utils.toBN(128)), 100), "value does not fit in 128 bits");
+            chainID, initialRelayers, initialRelayerThreshold, BN(2).pow(BN(128)), 100), "value does not fit in 128 bits");
     });
 
     it('Bridge should not allow to set expiry above 2**32 - 1', async () => {

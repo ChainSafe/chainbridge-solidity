@@ -22,7 +22,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     uint8   public _chainID;
     uint8   public _relayerThreshold;
     uint128 public _fee;
-    uint32  public _expiry;
+    uint40  public _expiry;
 
     enum ProposalStatus {Inactive, Active, Passed, Executed, Cancelled}
 
@@ -110,7 +110,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold.toUint8();
         _fee = fee.toUint128();
-        _expiry = expiry.toUint32();
+        _expiry = expiry.toUint40();
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
@@ -346,12 +346,12 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             proposal = Proposal({
                 _status : ProposalStatus.Active,
                 _yesVotes : 0,
-                _yesVotesTotal: 0,
+                _yesVotesTotal : 0,
                 _proposedBlock : uint40(block.number) // Overflow is desired.
             });
 
             emit ProposalEvent(chainID, depositNonce, ProposalStatus.Active, dataHash);
-        } else if (sub(block.number, proposal._proposedBlock) > _expiry) {
+        } else if (uint40(sub(block.number, proposal._proposedBlock)) > _expiry) {
             // if the number of blocks that has passed since this proposal was
             // submitted exceeds the expiry threshold set, cancel the proposal
             proposal._status = ProposalStatus.Cancelled;
@@ -391,7 +391,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         require(currentStatus == ProposalStatus.Active || currentStatus == ProposalStatus.Passed,
             "Proposal cannot be cancelled");
-        require(sub(block.number, proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
+        require(uint40(sub(block.number, proposal._proposedBlock)) > _expiry, "Proposal not at expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
         _proposals[nonceAndID][dataHash] = proposal;

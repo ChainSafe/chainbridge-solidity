@@ -14,9 +14,9 @@ library SafeCast {
         return uint128(value);
     }
 
-    function toUint32(uint256 value) internal pure returns (uint32) {
-        require(value < 2**32, "value does not fit in 32 bits");
-        return uint32(value);
+    function toUint40(uint256 value) internal pure returns (uint40) {
+        require(value < 2**40, "value does not fit in 40 bits");
+        return uint40(value);
     }
 
     function toUint8(uint256 value) internal pure returns (uint8) {

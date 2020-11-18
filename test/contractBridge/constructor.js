@@ -36,7 +36,7 @@ contract('Bridge - [constructor]', async accounts => {
             chainID, initialRelayers, initialRelayerThreshold, BN(2).pow(BN(128)), 100), "value does not fit in 128 bits");
     });
 
-    it('Bridge should not allow to set expiry above 2**32 - 1', async () => {
-        return TruffleAssert.reverts(BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0, BN(2).pow(BN(32))), "value does not fit in 32 bits");
+    it('Bridge should not allow to set expiry above 2**40 - 1', async () => {
+        return TruffleAssert.reverts(BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0, BN(2).pow(BN(40))), "value does not fit in 40 bits");
     });
 });

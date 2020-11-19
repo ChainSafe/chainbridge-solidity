@@ -9,7 +9,7 @@ import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 
 /**
-    @title Facilitates deposits, creation and votiing of deposit proposals, and deposit executions.
+    @title Facilitates deposits, creation and voting of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
 contract Bridge is Pausable, AccessControl, SafeMath {

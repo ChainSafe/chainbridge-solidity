@@ -1,8 +1,8 @@
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
 // This is adapted from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.0.0/contracts/presets/ERC721PresetMinterPauserAutoId.sol
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./utils/AccessControl.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";

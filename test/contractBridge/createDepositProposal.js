@@ -14,6 +14,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('Bridge - [create a deposit proposal (voteProposal) with relayerThreshold = 1]', async (accounts) => {
     const originChainRelayerAddress = accounts[1];
+    const originChainRelayerBit = 1 << 0;
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
     const originChainID = 1;
@@ -101,10 +102,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('depositProposal should be created with expected values', async () => {
         const expectedDepositProposal = {
-            _resourceID: resourceID,
-            _dataHash: dataHash,
-            _yesVotes: [originChainRelayerAddress],
-            _noVotes: [],
+            _yesVotes: originChainRelayerBit.toString(),
+            _yesVotesTotal: '1',
             _status: '2' // passed
         };
 
@@ -147,7 +146,6 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             return event.originChainID.toNumber() === originChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.status.toNumber() === expectedCreateEventStatus &&
-                event.resourceID === resourceID.toLowerCase() &&
                 event.dataHash === dataHash
         });
     });
@@ -156,6 +154,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 contract('Bridge - [create a deposit proposal (voteProposal) with relayerThreshold > 1]', async (accounts) => {
     // const minterAndRelayer = accounts[0];
     const originChainRelayerAddress = accounts[1];
+    const originChainRelayerBit = 1 << 0;
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
     const originChainID = 1;
@@ -239,10 +238,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('depositProposal should be created with expected values', async () => {
         const expectedDepositProposal = {
-            _resourceID: resourceID,
-            _dataHash: dataHash,
-            _yesVotes: [originChainRelayerAddress],
-            _noVotes: [],
+            _yesVotes: originChainRelayerBit.toString(),
+            _yesVotesTotal: '1',
             _status: '1' // active
         };
 
@@ -285,7 +282,6 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             return event.originChainID.toNumber() === originChainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.status.toNumber() === expectedCreateEventStatus &&
-                event.resourceID === resourceID.toLowerCase() &&
                 event.dataHash === dataHash
         });
     });

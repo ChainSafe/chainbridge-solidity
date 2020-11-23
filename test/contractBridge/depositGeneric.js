@@ -70,17 +70,6 @@ contract('Bridge - [deposit - Generic]', async () => {
         assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
     });
 
-    it('Generic deposit is stored correctly', async () => {
-        await BridgeInstance.deposit(
-            destinationChainID,
-            resourceID,
-            depositData
-        );
-        
-        const depositRecord = await BridgeInstance._depositRecords.call(expectedDepositNonce, destinationChainID);
-        assert.strictEqual(depositRecord, depositData.toLowerCase(), "Stored depositRecord does not match original depositData");
-    });
-
     it('Deposit event is fired with expected value after Generic deposit', async () => {
         const depositTx = await BridgeInstance.deposit(
             destinationChainID,

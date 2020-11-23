@@ -212,6 +212,35 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         });
     });
 
+    it('threeArguments can be called successfully and depositRecord is created with expected values', async () => {
+        const argumentOne = 'soylentGreenIsPeople';
+        const argumentTwo = -42;
+        const argumentThree = true;
+        const encodedMetaData = Helpers.abiEncode(['string','int8','bool'], [argumentOne, argumentTwo, argumentThree]);
+        const expectedDepositRecord = {
+            _destinationChainID: chainID,
+            _resourceID: initialResourceIDs[4],
+            _depositer: depositerAddress,
+            _metaData: encodedMetaData
+        };
+        
+        const depositTx = await BridgeInstance.deposit(
+            chainID,
+            initialResourceIDs[4],
+            Helpers.createGenericDepositData(encodedMetaData),
+            { from: depositerAddress }
+        );
+
+        const retrievedDepositRecord = await GenericHandlerInstance._depositRecords.call(expectedDepositNonce, chainID);
+        Helpers.assertObjectsMatch(expectedDepositRecord, Object.assign({}, retrievedDepositRecord));
+
+        const internalTx = await TruffleAssert.createTransactionResult(ThreeArgumentsInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'ThreeArgumentsCalled', event =>
+            event.argumentOne === argumentOne &&
+            event.argumentTwo.toNumber() === argumentTwo &&
+            event.argumentThree === argumentThree);
+    });
+
     it('withDepositer can be called successfully and depositRecord is created with expected values', async () => {
         const argumentOne = depositerAddress;
         const argumentTwo = 100;
@@ -222,7 +251,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             _depositer: depositerAddress,
             _metaData: encodedMetaData
         };
-        
+
         const depositTx = await BridgeInstance.deposit(
             chainID,
             initialResourceIDs[5],

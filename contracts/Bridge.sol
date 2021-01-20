@@ -50,12 +50,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     );
     event ProposalEvent(
         uint8          originChainID,
+        bytes32        resourceID,
         uint64         depositNonce,
         ProposalStatus status,
         bytes32 dataHash
     );
     event ProposalVote(
         uint8   originChainID,
+        bytes32 resourceID,
         uint64  depositNonce,
         ProposalStatus status,
         bytes32 dataHash
@@ -350,26 +352,26 @@ contract Bridge is Pausable, AccessControl, SafeMath {
                 _proposedBlock : uint40(block.number) // Overflow is desired.
             });
 
-            emit ProposalEvent(chainID, depositNonce, ProposalStatus.Active, dataHash);
+            emit ProposalEvent(chainID, resourceID, depositNonce, ProposalStatus.Active, dataHash);
         } else if (uint40(sub(block.number, proposal._proposedBlock)) > _expiry) {
             // if the number of blocks that has passed since this proposal was
             // submitted exceeds the expiry threshold set, cancel the proposal
             proposal._status = ProposalStatus.Cancelled;
 
-            emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, dataHash);
+            emit ProposalEvent(chainID, resourceID, depositNonce, ProposalStatus.Cancelled, dataHash);
         }
 
         if (proposal._status != ProposalStatus.Cancelled) {
             proposal._yesVotes = (proposal._yesVotes | _relayerBit(msg.sender)).toUint200();
             proposal._yesVotesTotal++; // TODO: check if bit counting is cheaper.
 
-            emit ProposalVote(chainID, depositNonce, proposal._status, dataHash);
+            emit ProposalVote(chainID, resourceID, depositNonce, proposal._status, dataHash);
 
             // Finalize if _relayerThreshold has been reached
             if (proposal._yesVotesTotal >= _relayerThreshold) {
                 proposal._status = ProposalStatus.Passed;
 
-                emit ProposalEvent(chainID, depositNonce, ProposalStatus.Passed, dataHash);
+                emit ProposalEvent(chainID, resourceID, depositNonce, ProposalStatus.Passed, dataHash);
             }
         }
         _proposals[nonceAndID][dataHash] = proposal;
@@ -384,7 +386,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Proposal must be past expiry threshold.
         @notice Emits {ProposalEvent} event with status {Cancelled}.
      */
-    function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 dataHash) public onlyAdminOrRelayer {
+    function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) public onlyAdminOrRelayer {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal memory proposal = _proposals[nonceAndID][dataHash];
         ProposalStatus currentStatus = proposal._status;
@@ -396,7 +398,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         proposal._status = ProposalStatus.Cancelled;
         _proposals[nonceAndID][dataHash] = proposal;
 
-        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Cancelled, dataHash);
+        emit ProposalEvent(chainID, resourceID, depositNonce, ProposalStatus.Cancelled, dataHash);
     }
 
     /**
@@ -423,7 +425,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         IDepositExecute depositHandler = IDepositExecute(handler);
         depositHandler.executeProposal(resourceID, data);
 
-        emit ProposalEvent(chainID, depositNonce, ProposalStatus.Executed, dataHash);
+        emit ProposalEvent(chainID, resourceID, depositNonce, ProposalStatus.Executed, dataHash);
     }
 
     /**

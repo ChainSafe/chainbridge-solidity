@@ -18,6 +18,6 @@ contract('ERC20Custom - [ERC20]', async () => {
     it('Decimals can be modified', async () => {
         const ERC20Instance = await ERC20CustomContract.new("token", "TOK", 10);
         const decimals = await ERC20Instance.decimals.call();
-        assert.isTrue(decimals == 10, "Contract wasn't successfully marked burnable");
+        assert.isTrue(decimals == 10, "Contract didn't get custom decimals");
     });
 });

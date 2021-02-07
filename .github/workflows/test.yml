@@ -1,0 +1,36 @@
+name: Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.15.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        run: make install-deps
+      - name: Ganache Tests
+        run: |
+          SILENT=true make start-ganache
+          make test
+      - name: Run coverage
+        run:
+          ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
+          cat ./coverage/lcov.info | node_modules/.bin/coveralls

@@ -24,9 +24,9 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '12'
-      - name: Install dependencies
-        run: make install-deps
-      - name: Ganache Tests
-        run: |
-          SILENT=true make start-ganache
-          make test
+      - name: NPM Install
+        run: npm i
+      - name: Run coverage
+        run:
+          ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
+          cat ./coverage/lcov.info | node_modules/.bin/coveralls

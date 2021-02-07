@@ -6,6 +6,7 @@ on:
 
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,6 +32,7 @@ jobs:
           make test
 
   coverage:
+    name: Coverage
     runs-on: ubuntu-latest
     strategy:
       matrix:

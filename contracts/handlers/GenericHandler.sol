@@ -12,14 +12,14 @@ contract GenericHandler is IGenericHandler {
     address public _bridgeAddress;
 
     struct DepositRecord {
-        uint8   _destinationChainID;
+        uint32  _destinationChainID;
         address _depositer;
         bytes32 _resourceID;
         bytes   _metaData;
     }
 
     // destId => depositNonce => Deposit Record
-    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
+    mapping (uint32 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
     // resourceID => contract address
     mapping (bytes32 => address) public _resourceIDToContractAddress;
@@ -108,7 +108,7 @@ contract GenericHandler is IGenericHandler {
         - _depositer Address that initially called {deposit} in the Bridge contract.
         - _metaData Data to be passed to method executed in corresponding {resourceID} contract.
     */
-    function getDepositRecord(uint64 depositNonce, uint8 destId) external view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint32 destId) external view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -151,7 +151,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
+    function deposit(bytes32 resourceID, uint32 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external onlyBridge {
         uint256      lenMetadata;
         bytes memory metadata;
 

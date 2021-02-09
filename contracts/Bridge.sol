@@ -19,7 +19,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     // Limit relayers number because proposal can fit only so much votes
     uint256 constant public MAX_RELAYERS = 200;
 
-    uint8   public _chainID;
+    uint32  public _chainID;
     uint8   public _relayerThreshold;
     uint128 public _fee;
     uint40  public _expiry;
@@ -34,7 +34,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     // destinationChainID => number of deposits
-    mapping(uint8 => uint64) public _depositCounts;
+    mapping(uint32 => uint64) public _depositCounts;
     // resourceID => handler address
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
     // destinationChainID + depositNonce => dataHash => Proposal
@@ -44,19 +44,19 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     event RelayerAdded(address relayer);
     event RelayerRemoved(address relayer);
     event Deposit(
-        uint8   destinationChainID,
+        uint32  destinationChainID,
         bytes32 resourceID,
         uint64  depositNonce
     );
     event ProposalEvent(
-        uint8          originChainID,
+        uint32         originChainID,
         bytes32        resourceID,
         uint64         depositNonce,
         ProposalStatus status,
         bytes32 dataHash
     );
     event ProposalVote(
-        uint8   originChainID,
+        uint32  originChainID,
         bytes32 resourceID,
         uint64  depositNonce,
         ProposalStatus status,
@@ -108,7 +108,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param initialRelayers Addresses that should be initially granted the relayer role.
         @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
      */
-    constructor (uint8 chainID, address[] memory initialRelayers, uint256 initialRelayerThreshold, uint256 fee, uint256 expiry) public {
+    constructor (uint32 chainID, address[] memory initialRelayers, uint256 initialRelayerThreshold, uint256 fee, uint256 expiry) public {
         _chainID = chainID;
         _relayerThreshold = initialRelayerThreshold.toUint8();
         _fee = fee.toUint128();
@@ -310,7 +310,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param data Additional data to be passed to specified handler.
         @notice Emits {Deposit} event.
      */
-    function deposit(uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
+    function deposit(uint32 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
 
         address handler = _resourceIDToHandlerAddress[resourceID];
@@ -335,7 +335,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Emits {ProposalEvent} event with status indicating the proposal status.
         @notice Emits {ProposalVote} event.
      */
-    function voteProposal(uint8 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) external onlyRelayers whenNotPaused {
+    function voteProposal(uint32 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) external onlyRelayers whenNotPaused {
 
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal memory proposal = _proposals[nonceAndID][dataHash];
@@ -386,7 +386,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Proposal must be past expiry threshold.
         @notice Emits {ProposalEvent} event with status {Cancelled}.
      */
-    function cancelProposal(uint8 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) public onlyAdminOrRelayer {
+    function cancelProposal(uint32 chainID, uint64 depositNonce, bytes32 resourceID, bytes32 dataHash) public onlyAdminOrRelayer {
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         Proposal memory proposal = _proposals[nonceAndID][dataHash];
         ProposalStatus currentStatus = proposal._status;
@@ -412,7 +412,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Hash of {data} must equal proposal's {dataHash}.
         @notice Emits {ProposalEvent} event with status {Executed}.
      */
-    function executeProposal(uint8 chainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID) external onlyRelayers whenNotPaused {
+    function executeProposal(uint32 chainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID) external onlyRelayers whenNotPaused {
         address handler = _resourceIDToHandlerAddress[resourceID];
         uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
         bytes32 dataHash = keccak256(abi.encodePacked(handler, data));

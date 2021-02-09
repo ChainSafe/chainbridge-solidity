@@ -4,9 +4,7 @@
 
 ChainBridge uses Solidity smart contracts to enable transfers to and from EVM compatible chains. These contracts consist of a core bridge contract (Bridge.sol) and a set of handler contracts (ERC20Handler.sol, ERC721Handler.sol, and GenericHandler.sol). The bridge contract is responsible for initiating, voting on, and executing proposed transfers. The handlers are used by the bridge contract to interact with other existing contracts.
 
-Read more [here](https://www.notion.so/chainsafe/ChainBridge-Solidity-ad0b0e53e5204e7c8e5e850cbd40392b).
-
-The ChainBridge specification can be found [here](https://github.com/ChainSafe/chainbridge-spec).
+Read more [here](https://chainbridge.chainsafe.io/).
 
 A CLI to deploy and interact with these contracts can be found [here](https://github.com/ChainSafe/chainbridge-deploy/tree/master/cb-sol-cli).
 

@@ -20,7 +20,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     struct DepositRecord {
         address _tokenAddress;
-        uint32  _destinationChainID;
+        uint256 _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
         address _depositer;
@@ -29,7 +29,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     }
 
     // destId => depositNonce => Deposit Record
-    mapping (uint32 => mapping (uint64 => DepositRecord)) public _depositRecords;
+    mapping (uint256 => mapping (uint64 => DepositRecord)) public _depositRecords;
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
@@ -75,7 +75,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         - _tokenID ID of ERC721.
         - _metaData Optional ERC721 metadata.
     */
-    function getDepositRecord(uint64 depositNonce, uint32 destId) external view returns (DepositRecord memory) {
+    function getDepositRecord(uint64 depositNonce, uint256 destId) external view returns (DepositRecord memory) {
         return _depositRecords[destId][depositNonce];
     }
 
@@ -96,7 +96,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
     function deposit(bytes32    resourceID,
-                    uint32      destinationChainID,
+                    uint256     destinationChainID,
                     uint64      depositNonce,
                     address     depositer,
                     bytes       calldata data
@@ -126,7 +126,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
-            uint32(destinationChainID),
+            uint256(destinationChainID),
             resourceID,
             destinationRecipientAddress,
             depositer,

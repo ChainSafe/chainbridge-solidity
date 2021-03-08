@@ -31,6 +31,31 @@ jobs:
           SILENT=true make start-ganache
           make test
 
+  test:
+    name: Test OVM
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/cache@v2.1.4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: make install-deps
+      - name: Ganache Tests
+        run: |
+          make test-ovm
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

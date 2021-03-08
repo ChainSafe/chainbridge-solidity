@@ -9,6 +9,10 @@ test:
 	@echo " > \033[32mTesting contracts... \033[0m "
 	npx truffle test
 
+test-ovm:
+	@echo " > \033[32mTesting contracts against OVM... \033[0m "
+	npm run test:ovm
+
 compile:
 	@echo " > \033[32mCompiling contracts... \033[0m "
 	npx truffle compile

@@ -26,6 +26,7 @@
     "@babel/core": "^7.12.3",
     "@codechecks/client": "^0.1.10",
     "@eth-optimism/ganache-cli": "^6.11.1",
+    "@eth-optimism/ovm-toolchain": "0.0.2-alpha.2",
     "@eth-optimism/plugins": "^0.0.18",
     "@eth-optimism/solc": "^0.6.12-alpha.1",
     "@openzeppelin/contracts": "^3.0.0",

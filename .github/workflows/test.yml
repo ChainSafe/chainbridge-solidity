@@ -31,7 +31,7 @@ jobs:
           SILENT=true make start-ganache
           make test
 
-  test:
+  test-ovm:
     name: Test OVM
     runs-on: ubuntu-latest
     strategy:

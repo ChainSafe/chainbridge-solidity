@@ -28,6 +28,17 @@ Requires `nodejs` and `npm`.
 
 `make compile`: Compile contracts.
 
+## Testing with Optimism
+
+These contracts aim to be compatible with Optimistic Ethereum Virtual Machine (OVM)
+This may require making some small modifications to some of the @openzeppelin dependencies until full support is added.
+
+`npm run compile:ovm`: Build contracts using modified OVM Solidity compiler
+
+To test against a local Optimism rollup follow the instructions [here](https://github.com/ethereum-optimism/optimism-integration) to start a local geth L1 and optimistic geth L2.
+
+`npm run test:ovm` 
+
 # ChainSafe Security Policy
 
 ## Reporting a Security Bug

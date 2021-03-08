@@ -7,7 +7,7 @@
  * Truffle config specifically for Optimistic Ethereum (OVM) 
  */
 
-const GAS_LIMIT = 8999999
+const GAS_LIMIT = 9000000-1
 const GAS_PRICE = '0'
 
 module.exports = {

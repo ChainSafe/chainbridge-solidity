@@ -7,8 +7,8 @@
  * Truffle config specifically for Optimistic Ethereum (OVM) 
  */
 
-const GAS_LIMIT = 10000000
-const GAS_PRICE = 0
+const GAS_LIMIT = 8999999
+const GAS_PRICE = '0'
 
 module.exports = {
   contracts_build_directory: './build/contracts/ovm',
@@ -19,6 +19,8 @@ module.exports = {
       host: "127.0.0.1",     // Localhost (default: none)
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "420",       // optimistic-integration default chain ID
+      gas: GAS_LIMIT,
+      gasPrice: GAS_PRICE
      },
     gas: GAS_LIMIT,
     gasPrice: GAS_PRICE

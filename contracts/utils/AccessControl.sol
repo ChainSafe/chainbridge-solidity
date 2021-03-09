@@ -6,7 +6,7 @@ pragma solidity 0.6.12;
 // The only difference is added getRoleMemberIndex(bytes32 role, address account) function.
 
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "./Address.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 
 /**

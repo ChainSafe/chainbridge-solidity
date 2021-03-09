@@ -5,9 +5,9 @@ pragma solidity 0.6.12;
 import "./utils/AccessControl.sol";
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721Pausable.sol";
+import "./token/ERC721/ERC721.sol";
+import "./token/ERC721/ERC721Burnable.sol";
+import "./token/ERC721/ERC721Pausable.sol";
 
 
 contract ERC721MinterBurnerPauser is Context, AccessControl, ERC721Burnable, ERC721Pausable {

@@ -112,6 +112,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+        // below comment out to as otherwise cannot compile to OVM. No idea if this breaks anything.
         // require(address(this).balance >= value, "Address: insufficient balance for call");
         require(isContract(target), "Address: call to non-contract");
 

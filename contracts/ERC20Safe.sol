@@ -33,7 +33,6 @@ contract ERC20Safe {
      */
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         Token erc20 = Token(tokenAddress);
-        _safeTransferFrom(erc20, owner, recipient, amount);
     }
 
     /**

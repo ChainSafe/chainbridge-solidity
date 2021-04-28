@@ -101,12 +101,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            burnERC20(tokenAddress, depositer, amount);
-        } else {
-            lockERC20(tokenAddress, depositer, address(this), amount);
-        }
-
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
             destinationChainID,

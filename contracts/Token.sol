@@ -29,10 +29,6 @@ contract Token is ERC20 {
         }
     }
 
-    function burn(uint256 amount) external {
-        _burn(msg.sender, amount);
-    }
-
     function decimals() public view override returns (uint8) {
         return customDecimals;
     }

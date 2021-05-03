@@ -58,17 +58,7 @@ contract ERC20Safe {
         erc20.mint(recipient, amount);
 
     }
-
-    /**
-        @notice Used to burn ERC20s.
-        @param tokenAddress Address of ERC20 to burn.
-        @param owner Current owner of tokens.
-        @param amount Amount of tokens to burn.
-     */
-    function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
-        ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
-        erc20.burnFrom(owner, amount);
-    }
+    
 
     /**
         @notice used to transfer ERC20s safely

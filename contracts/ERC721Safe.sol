@@ -60,14 +60,4 @@ contract ERC721Safe {
         erc721.mint(recipient, tokenID, string(data));
     }
 
-    /**
-        @notice Used to burn ERC721s.
-        @param tokenAddress Address of ERC721 to burn.
-        @param tokenID ID of token to burn.
-     */
-    function burnERC721(address tokenAddress, uint256 tokenID) internal {
-        ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
-        erc721.burn(tokenID);
-    }
-
 }

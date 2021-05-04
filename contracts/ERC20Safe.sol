@@ -2,8 +2,6 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 
 /**
     @title Manages deposited ERC20s.
@@ -47,28 +45,6 @@ contract ERC20Safe {
         _safeTransfer(erc20, recipient, amount);
     }
 
-    /**
-        @notice Used to create new ERC20s.
-        @param tokenAddress Address of ERC20 to transfer.
-        @param recipient Address to mint token to.
-        @param amount Amount of token to mint.
-     */
-    function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
-        ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
-        erc20.mint(recipient, amount);
-
-    }
-
-    /**
-        @notice Used to burn ERC20s.
-        @param tokenAddress Address of ERC20 to burn.
-        @param owner Current owner of tokens.
-        @param amount Amount of tokens to burn.
-     */
-    function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
-        ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
-        erc20.burnFrom(owner, amount);
-    }
 
     /**
         @notice used to transfer ERC20s safely

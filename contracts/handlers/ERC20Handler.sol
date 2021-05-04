@@ -29,8 +29,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         These are the Resource IDs this contract will initially support.
         @param initialContractAddresses These are the addresses the {initialResourceIDs} will point to, and are the contracts that will be
         called to perform various deposit calls.
-        @param burnableContractAddresses These addresses will be set as burnable and when {deposit} is called, the deposited token will be burned.
-        When {executeProposal} is called, new tokens will be minted.
 
         @dev {initialResourceIDs} and {initialContractAddresses} must have the same length (one resourceID for every address).
         Also, these arrays must be ordered in the way that {initialResourceIDs}[0] is the intended resourceID for {initialContractAddresses}[0].
@@ -38,8 +36,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     constructor(
         address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses,
-        address[] memory burnableContractAddresses
+        address[] memory initialContractAddresses
     ) public {
         require(initialResourceIDs.length == initialContractAddresses.length,
             "initialResourceIDs and initialContractAddresses len mismatch");
@@ -50,9 +47,6 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
             _setResource(initialResourceIDs[i], initialContractAddresses[i]);
         }
 
-        for (uint256 i = 0; i < burnableContractAddresses.length; i++) {
-            _setBurnable(burnableContractAddresses[i]);
-        }
     }
 
     /**
@@ -81,8 +75,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         amount                      uint256     bytes   0 - 32
         recipientAddress length     uint256     bytes  32 - 64
         recipientAddress            bytes       bytes  64 - END
-        @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        @dev Deposited tokens will be locked.
      */
     function deposit(
         bytes32 resourceID,
@@ -101,11 +94,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            burnERC20(tokenAddress, depositer, amount);
-        } else {
-            lockERC20(tokenAddress, depositer, address(this), amount);
-        }
+        lockERC20(tokenAddress, depositer, address(this), amount);
 
         _depositRecords[destinationChainID][depositNonce] = DepositRecord(
             tokenAddress,
@@ -144,11 +133,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
-            mintERC20(tokenAddress, address(recipientAddress), amount);
-        } else {
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
-        }
+        releaseERC20(tokenAddress, address(recipientAddress), amount);
+        
     }
 
     /**

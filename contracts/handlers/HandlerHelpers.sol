@@ -19,9 +19,6 @@ contract HandlerHelpers is IERCHandler {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
-    // token contract address => is burnable
-    mapping (address => bool) public _burnList;
-
     modifier onlyBridge() {
         _onlyBridge();
         _;
@@ -45,14 +42,6 @@ contract HandlerHelpers is IERCHandler {
         _setResource(resourceID, contractAddress);
     }
 
-    /**
-        @notice First verifies {contractAddress} is whitelisted, then sets {_burnList}[{contractAddress}]
-        to true.
-        @param contractAddress Address of contract to be used when making or executing deposits.
-     */
-    function setBurnable(address contractAddress) external override onlyBridge{
-        _setBurnable(contractAddress);
-    }
 
     /**
         @notice Used to manually release funds from ERC safes.
@@ -69,8 +58,4 @@ contract HandlerHelpers is IERCHandler {
         _contractWhitelist[contractAddress] = true;
     }
 
-    function _setBurnable(address contractAddress) internal {
-        require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
-        _burnList[contractAddress] = true;
-    }
 }

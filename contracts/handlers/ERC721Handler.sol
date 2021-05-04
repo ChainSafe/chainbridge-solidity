@@ -86,8 +86,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         destinationRecipientAddress                   bytes    bytes    64 - (64 + len(destinationRecipientAddress))
         @notice If the corresponding {tokenAddress} for the parsed {resourceID} supports {_INTERFACE_ERC721_METADATA},
         then {metaData} will be set according to the {tokenURI} method in the token contract.
-        @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        @dev Deposited tokens will be locked.
      */
     function deposit(bytes32    resourceID,
                     uint8       destinationChainID,

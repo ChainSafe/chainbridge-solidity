@@ -21,7 +21,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
@@ -41,7 +41,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{ matrix.node-version }}
       - name: NPM install

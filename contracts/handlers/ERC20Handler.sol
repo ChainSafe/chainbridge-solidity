@@ -13,7 +13,7 @@ import "../ERC20Safe.sol";
 contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     struct DepositRecord {
         address _tokenAddress;
-        uint8   _destinationChainID;
+        uint256 _destinationChainID;
         bytes32 _resourceID;
         bytes   _destinationRecipientAddress;
         address _depositer;
@@ -21,7 +21,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     }
 
     // destId => depositNonce => Deposit Record
-    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
+    mapping (uint256 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
@@ -86,7 +86,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
      */
     function deposit(
         bytes32 resourceID,
-        uint8   destinationChainID,
+        uint256 destinationChainID,
         uint64  depositNonce,
         address depositer,
         bytes   calldata data

@@ -1,0 +1,11 @@
+.idea/
+.github/
+/build
+/artifacts
+/cache
+.history/
+node_modules/
+gethdata/
+gethdata2/
+coverage/
+coverage.json

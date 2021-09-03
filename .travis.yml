@@ -1,0 +1,34 @@
+# Copyright 2020 ChainSafe Systems
+# SPDX-License-Identifier: LGPL-3.0-only
+
+language: node_js
+node_js: 12
+
+env:
+  global:
+    - GO111MODULE=on
+
+cache: npm
+
+jobs:
+  include:
+    - name: "Run Truffle tests (Ganache)"
+      env: CI=true
+      script:
+        - make install-deps
+        - SILENT=true make start-ganache
+        - make test
+#    - name: "Run Truffle tests (Geth)"
+#      install:
+#        - sudo add-apt-repository -y ppa:ethereum/ethereum
+#        - sudo apt-get update
+#        - sudo apt-get install ethereum
+#      script:
+#        - make install-deps
+#        - QUIET=true make start-geth &
+#        - truffle test --network geth
+    
+    - name: "Run coverage"
+      script:
+        - ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
+        - cat ./coverage/lcov.info | node_modules/.bin/coveralls

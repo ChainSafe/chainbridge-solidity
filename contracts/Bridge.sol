@@ -46,7 +46,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     event Deposit(
         uint8   destinationChainID,
         bytes32 resourceID,
-        uint64  depositNonce
+        uint64  depositNonce,
+        address indexed user,
+        bytes data
     );
     event ProposalEvent(
         uint8          originChainID,
@@ -317,9 +319,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         uint64 depositNonce = ++_depositCounts[destinationChainID];
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        depositHandler.deposit(resourceID, destinationChainID, depositNonce, msg.sender, data);
+        depositHandler.deposit(resourceID, msg.sender, data);
 
-        emit Deposit(destinationChainID, resourceID, depositNonce);
+        emit Deposit(destinationChainID, resourceID, depositNonce, msg.sender, data);
     }
 
     /**

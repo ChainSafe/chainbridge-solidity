@@ -70,7 +70,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     );
 
     event ProposalExecution(
-      bytes data
+      bytes indexed data
     );
 
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");

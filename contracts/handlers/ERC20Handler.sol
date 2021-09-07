@@ -25,6 +25,12 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     // depositNonce => Deposit Record
     mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
+    event ERC20ProposalExecuted(
+      address indexed recipientAddress,
+      bytes32 indexed resourceID,
+      uint256 amount
+    );
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param initialResourceIDs Resource IDs are used to identify a specific contract address.
@@ -142,6 +148,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         amount                                 uint256     bytes  0 - 32
         destinationRecipientAddress length     uint256     bytes  32 - 64
         destinationRecipientAddress            bytes       bytes  64 - END
+        @notice Emits {ERC20ProposalExecuted} event with recipientAddress, resourceId, and amount.
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint256       amount;
@@ -176,6 +183,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), amount);
         }
+
+        emit ERC20ProposalExecuted(address(recipientAddress), resourceID, amount);
     }
 
     /**

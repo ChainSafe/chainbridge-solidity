@@ -69,14 +69,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 resourceID
     );
 
-    event ProposalExecution(
-      uint8   indexed originChainID,
-      uint64  indexed depositNonce,
-      address indexed recipientAddress,
-      bytes32 resourceID,
-      uint256 amount
-    );
-
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
 
     modifier onlyAdmin() {
@@ -404,7 +396,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param data Data originally provided when deposit was made.
         @notice Proposal must have Passed status.
         @notice Hash of {data} must equal proposal's {dataHash}.
-        @notice Emits {ProposalEvent} event with status {Executed} and {ProposalExecution} containing the calldata.
+        @notice Emits {ProposalEvent} event with status {Executed}.
      */
     function executeProposal(uint8 chainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID) external onlyRelayers whenNotPaused {
         address handler = _resourceIDToHandlerAddress[resourceID];
@@ -422,28 +414,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         depositHandler.executeProposal(proposal._resourceID, data);
 
         emit ProposalEvent(chainID, depositNonce, proposal._status, proposal._resourceID, proposal._dataHash);
-
-
-        // extract fields from data field for ERC20 (see ERC20Handler.executeProposal())
-        uint256 amount;
-        bytes memory destinationRecipientAddress;
-        bytes20 recipientAddress;
-
-        assembly {
-            amount := calldataload(0x64)
-            destinationRecipientAddress := mload(0x40)
-            let lenDestinationRecipientAddress := calldataload(0x84)
-            mstore(0x40, add(0x20, add(destinationRecipientAddress, lenDestinationRecipientAddress)))
-            // in the calldata the destinationRecipientAddress is stored at 0xC4 after accounting for the function signature and length declaration
-            calldatacopy(
-                destinationRecipientAddress, // copy to destinationRecipientAddress
-                0x84, // copy from calldata @ 0x84
-                sub(calldatasize(), 0x84) // copy size to the end of calldata
-            )
-            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-        }
-
-        emit ProposalExecution(chainID, depositNonce, address(recipientAddress), proposal._resourceID, amount);
     }
 
     /**

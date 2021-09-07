@@ -10,7 +10,7 @@ interface IDepositExecute {
         @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of additional data needed for a specific deposit.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external;
+    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external returns (bytes memory);
 
     /**
         @notice It is intended that proposals are executed by the Bridge contract.

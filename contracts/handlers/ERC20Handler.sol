@@ -46,12 +46,10 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param depositer Address of account making the deposit in the Bridge contract.
-        @param data Consists of: {resourceID}, {amount}, {lenRecipientAddress}, and {recipientAddress}
+        @param data Consists of: {resourceID} and {amount}
         all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         amount                      uint256     bytes   0 - 32
-        recipientAddress length     uint256     bytes  32 - 64
-        recipientAddress            bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
      */
@@ -59,13 +57,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         bytes32 resourceID,
         address depositer,
         bytes   calldata data
-    ) external override onlyBridge {
-        bytes   memory recipientAddress;
+    ) external override onlyBridge returns (bytes memory metaData) {
         uint256        amount;
-        uint256        lenRecipientAddress;
-
-        (amount, lenRecipientAddress) = abi.decode(data, (uint, uint));
-        recipientAddress = bytes(data[64:64 + lenRecipientAddress]);
+        (amount, ) = abi.decode(data, (uint, uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");

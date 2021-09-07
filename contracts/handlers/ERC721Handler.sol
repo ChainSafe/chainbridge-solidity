@@ -53,12 +53,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param depositer Address of account making the deposit in the Bridge contract.
-        @param data Consists of: {resourceID}, {tokenID}, {lenDestinationRecipientAddress},
-        and {destinationRecipientAddress} all padded to 32 bytes.
+        @param data Consists of: {resourceID} and {tokenID} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         tokenID                                     uint256    bytes    0  - 32
-        destinationRecipientAddress     length      uint256    bytes    32 - 64
-        destinationRecipientAddress                   bytes    bytes    64 - (64 + len(destinationRecipientAddress))
         @notice If the corresponding {tokenAddress} for the parsed {resourceID} supports {_INTERFACE_ERC721_METADATA},
         then {metaData} will be set according to the {tokenURI} method in the token contract.
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
@@ -67,14 +64,10 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     function deposit(bytes32    resourceID,
                     address     depositer,
                     bytes       calldata data
-                    ) external override onlyBridge {
+                    ) external override onlyBridge returns (bytes memory metaData) {
         uint         tokenID;
-        uint         lenDestinationRecipientAddress;
-        bytes memory destinationRecipientAddress;
-        bytes memory metaData;
 
-        (tokenID, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
+        (tokenID, ) = abi.decode(data, (uint, uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");

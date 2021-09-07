@@ -63,7 +63,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         const recipientAddress = accounts[0] + accounts[1].substr(2);
         const lenRecipientAddress = 40;
         
-        let depositTx = await BridgeInstance.deposit(
+        const depositTx = await BridgeInstance.deposit(
             chainID,
             resourceID,
             Helpers.createERCDepositData(
@@ -81,8 +81,8 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 event.data === Helpers.createERCDepositData(
                     tokenAmount,
                     lenRecipientAddress,
-                    recipientAddress),
-                { from: depositerAddress }
+                    recipientAddress).toLowerCase() &&
+                event.metaDataHandlerResponse === null
         });
     });
 
@@ -108,8 +108,8 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 event.data === Helpers.createERCDepositData(
                     tokenAmount,
                     lenRecipientAddress,
-                    recipientAddress),
-                { from: depositerAddress }
+                    recipientAddress).toLowerCase() &&
+                event.metaDataHandlerResponse === null
         });
     });
 });

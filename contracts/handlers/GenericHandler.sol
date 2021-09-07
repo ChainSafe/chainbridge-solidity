@@ -126,7 +126,7 @@ contract GenericHandler is IGenericHandler {
         @notice If {_contractAddressToDepositFunctionSignature}[{contractAddress}] is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external onlyBridge {
+    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external onlyBridge returns (bytes memory) {
         uint256      lenMetadata;
         bytes memory metadata;
 
@@ -151,8 +151,9 @@ contract GenericHandler is IGenericHandler {
         bytes4 sig = _contractAddressToDepositFunctionSignature[contractAddress];
         if (sig != bytes4(0)) {
             bytes memory callData = abi.encodePacked(sig, metadata);
-            (bool success,) = contractAddress.call(callData);
+            (bool success, bytes memory handlerResponse) = contractAddress.call(callData);
             require(success, "call to contractAddress failed");
+            return handlerResponse;
         }
     }
 

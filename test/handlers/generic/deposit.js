@@ -133,7 +133,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[0].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === depositData
+                event.data === depositData &&
+                event.metaDataHandlerResponse === null
         });
     });
 
@@ -150,7 +151,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[1].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === Helpers.createGenericDepositData(null)
+                event.data === Helpers.createGenericDepositData(null) &&
+                event.metaDataHandlerResponse === null
         });
 
         const internalTx = await TruffleAssert.createTransactionResult(NoArgumentInstance, depositTx.tx);
@@ -172,7 +174,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[2].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32))
+                event.data === Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)) &&
+                event.metaDataHandlerResponse === null
         });
 
         const internalTx = await TruffleAssert.createTransactionResult(OneArgumentInstance, depositTx.tx);
@@ -196,7 +199,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[3].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData)
+                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.metaDataHandlerResponse === null
         });
 
         const internalTx = await TruffleAssert.createTransactionResult(TwoArgumentsInstance, depositTx.tx);
@@ -224,7 +228,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[4].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData)
+                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.metaDataHandlerResponse === null
         });
 
         const internalTx = await TruffleAssert.createTransactionResult(ThreeArgumentsInstance, depositTx.tx);
@@ -247,12 +252,12 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            console.log(event.destinationChainID.toNumber());
             return event.destinationChainID.toNumber() === chainID &&
                 event.resourceID === initialResourceIDs[5].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData)
+                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.metaDataHandlerResponse === null
         });
 
         const internalTx = await TruffleAssert.createTransactionResult(WithDepositerInstance, depositTx.tx);

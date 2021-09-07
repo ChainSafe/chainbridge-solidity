@@ -309,7 +309,10 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param destinationChainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID used to find address of handler to be used for deposit.
         @param data Additional data to be passed to specified handler.
-        @notice Emits {Deposit} event.
+        @notice Emits {Deposit} event with all necessary parameters and meta data responsed from handlers.
+        - ERC20Handler: Response with an empty data.
+        - ERC721Handler: Response with the meta data be set according to the tokenURI method in the token contract.
+        - GenericHandler: Response with the meta data is returned by the call the contract according to the {resourceID}.
      */
     function deposit(uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");
@@ -320,9 +323,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         uint64 depositNonce = ++_depositCounts[destinationChainID];
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        bytes memory metaDataHandlerResponse = depositHandler.deposit(resourceID, msg.sender, data);
+        bytes memory handlerResponse = depositHandler.deposit(resourceID, msg.sender, data);
 
-        emit Deposit(destinationChainID, resourceID, depositNonce, msg.sender, data, metaDataHandlerResponse);
+        emit Deposit(destinationChainID, resourceID, depositNonce, msg.sender, data, handlerResponse);
     }
 
     /**

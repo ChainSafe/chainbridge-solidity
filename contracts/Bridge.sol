@@ -70,7 +70,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     );
 
     event ProposalExecution(
-      bytes indexed data
+      uint64  indexed depositNonce,
+      bytes32 indexed resourceID,
+      bytes data
     );
 
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
@@ -418,7 +420,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         depositHandler.executeProposal(proposal._resourceID, data);
 
         emit ProposalEvent(chainID, depositNonce, proposal._status, proposal._resourceID, proposal._dataHash);
-        emit ProposalExecution(data);
+        emit ProposalExecution(depositNonce, proposal._resourceID, data);
     }
 
     /**

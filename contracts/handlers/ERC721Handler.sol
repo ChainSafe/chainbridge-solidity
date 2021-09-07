@@ -67,7 +67,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
                     ) external override onlyBridge returns (bytes memory metaData) {
         uint         tokenID;
 
-        (tokenID, ) = abi.decode(data, (uint, uint));
+        (tokenID) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");

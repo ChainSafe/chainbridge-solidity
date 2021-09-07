@@ -49,7 +49,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         uint64  depositNonce,
         address indexed user,
         bytes data,
-        bytes metaDataHandlerResponse
+        bytes handlerResponse
     );
     event ProposalEvent(
         uint8          originChainID,

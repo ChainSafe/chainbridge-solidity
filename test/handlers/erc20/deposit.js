@@ -82,7 +82,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                     tokenAmount,
                     lenRecipientAddress,
                     recipientAddress).toLowerCase() &&
-                event.metaDataHandlerResponse === null
+                event.handlerResponse === null
         });
     });
 
@@ -109,7 +109,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                     tokenAmount,
                     lenRecipientAddress,
                     recipientAddress).toLowerCase() &&
-                event.metaDataHandlerResponse === null
+                event.handlerResponse === null
         });
     });
 });

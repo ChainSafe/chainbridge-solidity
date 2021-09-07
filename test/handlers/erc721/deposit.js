@@ -74,7 +74,6 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            console.log(event.metaDataHandlerResponse);
             return event.destinationChainID.toNumber() === chainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
@@ -83,7 +82,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
                     tokenID,
                     lenRecipientAddress,
                     recipientAddress).toLowerCase() &&
-                event.metaDataHandlerResponse === null
+                event.handlerResponse === null
         });
     });
 
@@ -110,7 +109,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
                     tokenID,
                     lenRecipientAddress,
                     recipientAddress).toLowerCase() &&
-                event.metaDataHandlerResponse === null
+                event.handlerResponse === null
         });
     });
 });

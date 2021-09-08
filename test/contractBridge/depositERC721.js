@@ -4,7 +4,7 @@
  */
 
 const TruffleAssert = require('truffle-assertions');
-
+const Ethers = require('ethers');
 const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
@@ -128,11 +128,17 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             depositData,
             { from: depositerAddress }
         );
+        
+        let expectedMetaData = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(genericBytes));
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            
             return event.destinationChainID.toNumber() === destinationChainID &&
                 event.resourceID === originResourceID.toLowerCase() &&
-                event.depositNonce.toNumber() === expectedDepositNonce
+                event.depositNonce.toNumber() === expectedDepositNonce && 
+                event.user === depositerAddress &&
+                event.data === depositData.toLowerCase() &&
+                event.handlerResponse === expectedMetaData
         });
     });
 });

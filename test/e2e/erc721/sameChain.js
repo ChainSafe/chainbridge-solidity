@@ -76,15 +76,6 @@ contract('E2E ERC721 - Same Chain', async accounts => {
             { from: depositerAddress }
         ));
 
-        const record = await ERC721HandlerInstance.getDepositRecord(expectedDepositNonce, chainID)
-        assert.strictEqual(record[0], ERC721MintableInstance.address)
-        assert.strictEqual(record[1], chainID.toString())
-        assert.strictEqual(record[2], resourceID.toLowerCase())
-        assert.strictEqual(record[3], recipientAddress.toLowerCase())
-        assert.strictEqual(record[4], depositerAddress)
-        assert.strictEqual(Number(record[5]), tokenID)
-        assert.strictEqual(Ethers.utils.toUtf8String(record[6]), depositMetadata)
-
         // Handler should have a balance of depositAmount
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);

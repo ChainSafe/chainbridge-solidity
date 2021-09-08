@@ -49,3 +49,11 @@ contract SafeCaster {
         return input.toUint200();
     }
 }
+
+contract ReturnData {
+    function returnData(string memory argument) external returns(bytes32 response) {
+        assembly {
+            response := mload(add(argument, 32))
+        }
+    }
+}

@@ -4,7 +4,7 @@
  */
 
 const TruffleAssert = require('truffle-assertions');
-
+const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
@@ -15,7 +15,7 @@ const OneArgumentContract = artifacts.require("OneArgument");
 const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 const WithDepositerContract = artifacts.require("WithDepositer");
-
+const ReturnDataContract = artifacts.require("ReturnData");
 contract('GenericHandler - [deposit]', async (accounts) => {
     const relayerThreshold = 2;
     const chainID = 1;
@@ -30,6 +30,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     let TwoArgumentsInstance;
     let ThreeArgumentsInstance;
     let WithDepositerInstance;
+    let ReturnDataInstance;
 
     let initialResourceIDs;
     let initialContractAddresses;
@@ -48,8 +49,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             TwoArgumentsContract.new().then(instance => TwoArgumentsInstance = instance),
             ThreeArgumentsContract.new().then(instance => ThreeArgumentsInstance = instance),
             WithDepositerContract.new().then(instance => WithDepositerInstance = instance),
+            ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
-
         initialResourceIDs = [
             Helpers.createResourceID(CentrifugeAssetInstance.address, chainID),
             Helpers.createResourceID(NoArgumentInstance.address, chainID),
@@ -57,6 +58,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.createResourceID(TwoArgumentsInstance.address, chainID),
             Helpers.createResourceID(ThreeArgumentsInstance.address, chainID),
             Helpers.createResourceID(WithDepositerInstance.address, chainID),
+            Helpers.createResourceID(ReturnDataInstance.address, chainID),
         ];
         initialContractAddresses = [
             CentrifugeAssetInstance.address,
@@ -65,6 +67,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             TwoArgumentsInstance.address,
             ThreeArgumentsInstance.address,
             WithDepositerInstance.address,
+            ReturnDataInstance.address,
         ];
         initialDepositFunctionSignatures = [
             Helpers.blankFunctionSig,
@@ -73,6 +76,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'),
             Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments'),
             Helpers.getFunctionSignature(WithDepositerInstance, 'withDepositer'),
+            Helpers.getFunctionSignature(ReturnDataInstance, 'returnData'),
         ];
         initialDepositFunctionDepositerOffsets = [
             Helpers.blankFunctionDepositerOffset,
@@ -81,9 +85,11 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.blankFunctionDepositerOffset,
             Helpers.blankFunctionDepositerOffset,
             12,
+            Helpers.blankFunctionDepositerOffset,
         ];
         initialExecuteFunctionSignatures = [
             Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store'),
+            Helpers.blankFunctionSig,
             Helpers.blankFunctionSig,
             Helpers.blankFunctionSig,
             Helpers.blankFunctionSig,
@@ -105,7 +111,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], initialDepositFunctionSignatures[2], initialDepositFunctionDepositerOffsets[2], initialExecuteFunctionSignatures[2]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialDepositFunctionDepositerOffsets[3], initialExecuteFunctionSignatures[3]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialDepositFunctionDepositerOffsets[4], initialExecuteFunctionSignatures[4]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], initialDepositFunctionSignatures[5], initialDepositFunctionDepositerOffsets[5], initialExecuteFunctionSignatures[5])
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], initialDepositFunctionSignatures[5], initialDepositFunctionDepositerOffsets[5], initialExecuteFunctionSignatures[5]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[6], initialContractAddresses[6], initialDepositFunctionSignatures[6], initialDepositFunctionDepositerOffsets[6], initialExecuteFunctionSignatures[6])
         ]);
                 
         depositData = Helpers.createGenericDepositData('0xdeadbeef');
@@ -279,4 +286,28 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             { from: depositerAddress }
         ), 'incorrect depositer in the data');
     });
+
+    it('returnedData can be called successfully and despoti event is emitted with expect values', async () => {
+        const argument = 'soylentGreenIsPeople';
+        const encodedMetaData = Helpers.abiEncode(['string'], [argument]);
+
+        const depositTx = await BridgeInstance.deposit(
+            chainID,
+            initialResourceIDs[6],
+            Helpers.createGenericDepositData(encodedMetaData),
+            { from: depositerAddress }
+        );
+        
+        const expectedMetaData = Ethers.utils.formatBytes32String(argument);
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            
+            return event.destinationChainID.toNumber() === chainID &&
+                event.resourceID === initialResourceIDs[6].toLowerCase() &&
+                event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.user === depositerAddress &&
+                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.handlerResponse === expectedMetaData
+        });
+    })
 });

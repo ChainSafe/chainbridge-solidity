@@ -312,7 +312,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Emits {Deposit} event with all necessary parameters and a handler response.
         - ERC20Handler: responds with an empty data.
         - ERC721Handler: responds with the deposited token metadata acquired by calling a tokenURI method in the token contract.
-        - GenericHandler: responds with the raw bytes returned from the call the contract to the target contract.
+        - GenericHandler: responds with the raw bytes returned from the call to the target contract.
      */
     function deposit(uint8 destinationChainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
         require(msg.value == _fee, "Incorrect fee supplied");

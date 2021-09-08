@@ -287,7 +287,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ), 'incorrect depositer in the data');
     });
 
-    it('returnedData can be called successfully and despoti event is emitted with expect values', async () => {
+    it('returnedData can be called successfully and deposit event is emitted with expect values', async () => {
         const argument = 'soylentGreenIsPeople';
         const encodedMetaData = Helpers.abiEncode(['string'], [argument]);
 
@@ -300,8 +300,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         
         const expectedMetaData = Ethers.utils.formatBytes32String(argument);
 
-        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {  
             return event.destinationChainID.toNumber() === chainID &&
                 event.resourceID === initialResourceIDs[6].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&

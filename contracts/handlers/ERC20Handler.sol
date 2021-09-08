@@ -52,13 +52,13 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         amount                      uint256     bytes   0 - 32
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
-        @return metaData : an empty data.
+        @return an empty data.
      */
     function deposit(
         bytes32 resourceID,
         address depositer,
         bytes   calldata data
-    ) external override onlyBridge returns (bytes memory metaData) {
+    ) external override onlyBridge returns (bytes memory) {
         uint256        amount;
         (amount) = abi.decode(data, (uint));
 

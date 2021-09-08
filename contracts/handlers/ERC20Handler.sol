@@ -45,13 +45,14 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
+        @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositer Address of account making the deposit in the Bridge contract.
-        @param data Consists of: {resourceID} and {amount}
-        all padded to 32 bytes.
+        @param data Consists of {amount} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         amount                      uint256     bytes   0 - 32
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        @return Returns an empty data.
      */
     function deposit(
         bytes32 resourceID,

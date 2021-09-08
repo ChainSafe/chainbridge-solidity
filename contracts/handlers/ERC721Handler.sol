@@ -52,14 +52,16 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
+        @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositer Address of account making the deposit in the Bridge contract.
-        @param data Consists of: {resourceID} and {tokenID} all padded to 32 bytes.
+        @param data Consists of {tokenID} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         tokenID                                     uint256    bytes    0  - 32
         @notice If the corresponding {tokenAddress} for the parsed {resourceID} supports {_INTERFACE_ERC721_METADATA},
         then {metaData} will be set according to the {tokenURI} method in the token contract.
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        @return Returns the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
     function deposit(bytes32    resourceID,
                     address     depositer,

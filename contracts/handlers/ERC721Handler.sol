@@ -61,7 +61,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         then {metaData} will be set according to the {tokenURI} method in the token contract.
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
-        @return Returns the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
+        @return metaData : the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
     function deposit(bytes32    resourceID,
                     address     depositer,

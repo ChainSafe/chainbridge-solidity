@@ -52,7 +52,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         amount                      uint256     bytes   0 - 32
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
-        @return Returns an empty data.
+        @return metaData : an empty data.
      */
     function deposit(
         bytes32 resourceID,

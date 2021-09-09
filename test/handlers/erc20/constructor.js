@@ -12,7 +12,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [constructor]', async () => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
 
     let BridgeInstance;
     let ERC20MintableInstance1;
@@ -24,7 +24,7 @@ contract('ERC20Handler - [constructor]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance3 = instance)
@@ -33,9 +33,9 @@ contract('ERC20Handler - [constructor]', async () => {
         initialResourceIDs = [];
         burnableContractAddresses = [];
 
-        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
-        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
-        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance3.address + Ethers.utils.hexlify(chainID).substr(2)), 32));
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(domainID).substr(2)), 32));
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(domainID).substr(2)), 32));
+        initialResourceIDs.push(Ethers.utils.hexZeroPad((ERC20MintableInstance3.address + Ethers.utils.hexlify(domainID).substr(2)), 32));
 
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address, ERC20MintableInstance3.address];
     });

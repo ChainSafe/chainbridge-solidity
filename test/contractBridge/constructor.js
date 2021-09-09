@@ -7,7 +7,7 @@ const TruffleAssert = require('truffle-assertions');
 const BridgeContract = artifacts.require("Bridge");
 
 contract('Bridge - [constructor]', async accounts => {
-    const chainID = 1;
+    const domainID = 1;
     const initialRelayers = accounts.slice(0, 3);
     const initialRelayerThreshold = 2;
 
@@ -23,20 +23,20 @@ contract('Bridge - [constructor]', async accounts => {
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0, 100);
+        BridgeInstance = await BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 0, 100);
         ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
     });
 
     it('Bridge should not allow to set initialRelayerThreshold above 255', async () => {
-        return TruffleAssert.reverts(BridgeContract.new(chainID, initialRelayers, 256, 0, 100), "value does not fit in 8 bits");
+        return TruffleAssert.reverts(BridgeContract.new(domainID, initialRelayers, 256, 0, 100), "value does not fit in 8 bits");
     });
 
     it('Bridge should not allow to set fee above 2**128 - 1', async () => {
         return TruffleAssert.reverts(BridgeContract.new(
-            chainID, initialRelayers, initialRelayerThreshold, BN(2).pow(BN(128)), 100), "value does not fit in 128 bits");
+            domainID, initialRelayers, initialRelayerThreshold, BN(2).pow(BN(128)), 100), "value does not fit in 128 bits");
     });
 
     it('Bridge should not allow to set expiry above 2**40 - 1', async () => {
-        return TruffleAssert.reverts(BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0, BN(2).pow(BN(40))), "value does not fit in 40 bits");
+        return TruffleAssert.reverts(BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 0, BN(2).pow(BN(40))), "value does not fit in 40 bits");
     });
 });

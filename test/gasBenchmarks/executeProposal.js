@@ -19,7 +19,7 @@ const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 
 contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
-    const chainID = 1;
+    const domainID = 1;
     const relayerThreshold = 1;
     const relayerAddress = accounts[0];
     const depositerAddress = accounts[1];
@@ -50,13 +50,13 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     let twoArgumentsResourceID;
     let threeArgumentsResourceID;
 
-    const deposit = (resourceID, depositData) => BridgeInstance.deposit(chainID, resourceID, depositData, { from: depositerAddress });
-    const vote = (resourceID, depositNonce, depositDataHash) => BridgeInstance.voteProposal(chainID, depositNonce, resourceID, depositDataHash, { from: relayerAddress });
-    const execute = (depositNonce, depositData, resourceID) => BridgeInstance.executeProposal(chainID, depositNonce, depositData, resourceID);
+    const deposit = (resourceID, depositData) => BridgeInstance.deposit(domainID, resourceID, depositData, { from: depositerAddress });
+    const vote = (resourceID, depositNonce, depositDataHash) => BridgeInstance.voteProposal(domainID, depositNonce, resourceID, depositDataHash, { from: relayerAddress });
+    const execute = (depositNonce, depositData, resourceID) => BridgeInstance.executeProposal(domainID, depositNonce, depositData, resourceID);
 
     before(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
@@ -66,13 +66,13 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
             ThreeArgumentsContract.new().then(instance => ThreeArgumentsInstance = instance)
         ]);
 
-        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, chainID);
-        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
-        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, chainID);
-        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, chainID);
-        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, chainID);
-        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, chainID);
+        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
+        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, domainID);
+        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, domainID);
+        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, domainID);
+        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, domainID);
 
         const erc20InitialResourceIDs = [erc20ResourceID];
         const erc20InitialContractAddresses = [ERC20MintableInstance.address];

@@ -11,7 +11,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
-    const chainID = 1;
+    const domainID = 1;
     const relayerThreshold = 2;
     const relayer1Address = accounts[0];
     const relayer2Address = accounts[1]
@@ -30,15 +30,15 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
     let erc20ResourceID;
 
-    const vote = (resourceID, depositNonce, depositDataHash, relayer) => BridgeInstance.voteProposal(chainID, depositNonce, resourceID, depositDataHash, { from: relayer });
+    const vote = (resourceID, depositNonce, depositDataHash, relayer) => BridgeInstance.voteProposal(domainID, depositNonce, resourceID, depositDataHash, { from: relayer });
 
     before(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
         ]);
 
-        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
+        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
 
         const erc20InitialResourceIDs = [erc20ResourceID];
         const erc20InitialContractAddresses = [ERC20MintableInstance.address];

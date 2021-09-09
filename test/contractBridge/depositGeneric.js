@@ -12,8 +12,8 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [deposit - Generic]', async () => {
-    const originChainID = 1;
-    const destinationChainID = 2;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const expectedDepositNonce = 1;
     
     let BridgeInstance;
@@ -28,10 +28,10 @@ contract('Bridge - [deposit - Generic]', async () => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originChainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(originDomainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
         ]);
         
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originChainID)
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
@@ -53,7 +53,7 @@ contract('Bridge - [deposit - Generic]', async () => {
 
     it('Generic deposit can be made', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             resourceID,
             depositData
         ));
@@ -61,24 +61,24 @@ contract('Bridge - [deposit - Generic]', async () => {
 
     it('_depositCounts is incremented correctly after deposit', async () => {
         await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             resourceID,
             depositData
         );
 
-        const depositCount = await BridgeInstance._depositCounts.call(destinationChainID);
+        const depositCount = await BridgeInstance._depositCounts.call(destinationDomainID);
         assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
     });
 
     it('Deposit event is fired with expected value after Generic deposit', async () => {
         const depositTx = await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             resourceID,
             depositData
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationChainID.toNumber() === destinationChainID &&
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce
         });

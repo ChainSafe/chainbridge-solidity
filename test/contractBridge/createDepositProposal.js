@@ -17,8 +17,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     const originChainRelayerBit = 1 << 0;
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
-    const originChainID = 1;
-    const destinationChainID = 2;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 1;
@@ -36,14 +36,14 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance),
-            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeContract.new(originDomainID, [originChainRelayerAddress], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance)
         ]);
 
         initialResourceIDs = [];
         initialContractAddresses = [];
         burnableContractAddresses = [];
 
-        resourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, destinationChainID);
+        resourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, destinationDomainID);
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
@@ -58,7 +58,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('should create depositProposal successfully', async () => {
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -68,7 +68,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('should revert because depositerAddress is not a relayer', async () => {
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -78,7 +78,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it("depositProposal shouldn't be created if it has an Active status", async () => {
         await TruffleAssert.passes(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -86,7 +86,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         ));
 
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -96,7 +96,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it("getProposal should be called successfully", async () => {
         await TruffleAssert.passes(BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce, dataHash
+            destinationDomainID, expectedDepositNonce, dataHash
         ));
     });
 
@@ -108,7 +108,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         };
 
         await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -116,26 +116,26 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         const depositProposal = await BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce, dataHash);
+            destinationDomainID, expectedDepositNonce, dataHash);
         Helpers.assertObjectsMatch(expectedDepositProposal, Object.assign({}, depositProposal));
     });
 
     it('originChainRelayerAddress should be marked as voted for proposal', async () => {
         await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
-            Helpers.nonceAndId(expectedDepositNonce, destinationChainID), dataHash, originChainRelayerAddress);
+            Helpers.nonceAndId(expectedDepositNonce, destinationDomainID), dataHash, originChainRelayerAddress);
         assert.isTrue(hasVoted);
     });
 
     it('DepositProposalCreated event should be emitted with expected values', async () => {
         const proposalTx = await BridgeInstance.voteProposal(
-            originChainID,
+            originDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -143,7 +143,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         TruffleAssert.eventEmitted(proposalTx, 'ProposalEvent', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
+            return event.originDomainID.toNumber() === originDomainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.status.toNumber() === expectedCreateEventStatus &&
                 event.dataHash === dataHash
@@ -157,8 +157,8 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     const originChainRelayerBit = 1 << 0;
     const depositerAddress = accounts[2];
     const destinationRecipientAddress = accounts[3];
-    const originChainID = 1;
-    const destinationChainID = 2;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const relayerThreshold = 2;
@@ -178,14 +178,14 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance),
-            BridgeContract.new(originChainID, [originChainRelayerAddress], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeContract.new(originDomainID, [originChainRelayerAddress], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance)
         ]);
         
         initialResourceIDs = [];
         initialContractAddresses = [];
         burnableContractAddresses = [];
 
-        resourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, destinationChainID);
+        resourceID = Helpers.createResourceID(DestinationERC20MintableInstance.address, destinationDomainID);
 
         DestinationERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
 
@@ -200,7 +200,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('should create depositProposal successfully', async () => {
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -210,7 +210,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it('should revert because depositerAddress is not a relayer', async () => {
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -220,7 +220,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
 
     it("depositProposal shouldn't be created if it has an Active status", async () => {
         await TruffleAssert.passes(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -228,7 +228,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         ));
 
         await TruffleAssert.reverts(BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -244,7 +244,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         };
 
         await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -252,26 +252,26 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         const depositProposal = await BridgeInstance.getProposal(
-            destinationChainID, expectedDepositNonce, dataHash);
+            destinationDomainID, expectedDepositNonce, dataHash);
         Helpers.assertObjectsMatch(expectedDepositProposal, Object.assign({}, depositProposal));
     });
 
     it('originChainRelayerAddress should be marked as voted for proposal', async () => {
         await BridgeInstance.voteProposal(
-            destinationChainID,
+            destinationDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
-            Helpers.nonceAndId(expectedDepositNonce, destinationChainID), dataHash, originChainRelayerAddress);
+            Helpers.nonceAndId(expectedDepositNonce, destinationDomainID), dataHash, originChainRelayerAddress);
         assert.isTrue(hasVoted);
     });
 
     it('DepositProposalCreated event should be emitted with expected values', async () => {
         const proposalTx = await BridgeInstance.voteProposal(
-            originChainID,
+            originDomainID,
             expectedDepositNonce,
             resourceID,
             dataHash,
@@ -279,7 +279,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
         );
 
         TruffleAssert.eventEmitted(proposalTx, 'ProposalEvent', (event) => {
-            return event.originChainID.toNumber() === originChainID &&
+            return event.originDomainID.toNumber() === originDomainID &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.status.toNumber() === expectedCreateEventStatus &&
                 event.dataHash === dataHash

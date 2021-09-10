@@ -56,8 +56,8 @@ const createGenericDepositData = (hexMetaData) => {
         hexMetaData.substr(2)
 };
 
-const createResourceID = (contractAddress, chainID) => {
-    return toHex(contractAddress + toHex(chainID, 0).substr(2), 32)
+const createResourceID = (contractAddress, domainID) => {
+    return toHex(contractAddress + toHex(domainID, 0).substr(2), 32)
 };
 
 const assertObjectsMatch = (expectedObj, actualObj) => {
@@ -92,7 +92,7 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
         assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);    
     }
 };
-//uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(chainID);
+//uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(domainID);
 const nonceAndId = (nonce, id) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
 }

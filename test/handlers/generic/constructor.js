@@ -14,7 +14,7 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
 contract('GenericHandler - [constructor]', async () => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
     const centrifugeAssetMinCount = 1;
     const blankFunctionSig = '0x00000000';
     const blankFunctionDepositerOffset = 0;
@@ -32,16 +32,16 @@ contract('GenericHandler - [constructor]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)
         ]);
 
         initialResourceIDs = [
-            Helpers.createResourceID(CentrifugeAssetInstance1.address, chainID),
-            Helpers.createResourceID(CentrifugeAssetInstance2.address, chainID),
-            Helpers.createResourceID(CentrifugeAssetInstance3.address, chainID)
+            Helpers.createResourceID(CentrifugeAssetInstance1.address, domainID),
+            Helpers.createResourceID(CentrifugeAssetInstance2.address, domainID),
+            Helpers.createResourceID(CentrifugeAssetInstance3.address, domainID)
         ];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
         

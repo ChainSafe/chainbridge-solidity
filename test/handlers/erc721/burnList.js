@@ -14,7 +14,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Burn ERC721]', async () => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
 
     let BridgeInstance;
     let ERC721MintableInstance1;
@@ -27,13 +27,13 @@ contract('ERC721Handler - [Burn ERC721]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
 
-        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, chainID);
-        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, chainID);
+        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, domainID);
+        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, domainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC721MintableInstance1.address, ERC721MintableInstance2.address];
         burnableContractAddresses = [ERC721MintableInstance1.address]

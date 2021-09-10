@@ -13,7 +13,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
     const tokenAmount = 100;
@@ -29,11 +29,11 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
         
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
         burnableContractAddresses = []
@@ -64,7 +64,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         const lenRecipientAddress = 40;
         
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             resourceID,
             Helpers.createERCDepositData(
                 tokenAmount,
@@ -74,7 +74,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationChainID.toNumber() === chainID &&
+            return event.destinationDomainID.toNumber() === domainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
@@ -91,7 +91,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         const lenRecipientAddress = 32;
 
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             resourceID,
             Helpers.createERCDepositData(
                 tokenAmount,
@@ -101,7 +101,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationChainID.toNumber() === chainID &&
+            return event.destinationDomainID.toNumber() === domainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&

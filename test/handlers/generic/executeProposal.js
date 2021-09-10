@@ -14,7 +14,7 @@ const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
     const expectedDepositNonce = 1;
 
     const depositerAddress = accounts[1];
@@ -39,13 +39,13 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, initialRelayers, relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
         ]);
 
         const centrifugeAssetFuncSig = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
@@ -68,7 +68,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     it('deposit can be executed successfully', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
-            chainID,
+            domainID,
             resourceID,
             depositData,
             { from: depositerAddress }
@@ -76,7 +76,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 creates the deposit proposal
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             resourceID,
             depositProposalDataHash,
@@ -87,7 +87,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             resourceID,
             depositProposalDataHash,
@@ -96,7 +96,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 will execute the deposit proposal
         TruffleAssert.passes(await BridgeInstance.executeProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             depositData,
             resourceID,
@@ -109,7 +109,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     it('AssetStored event should be emitted', async () => {
         TruffleAssert.passes(await BridgeInstance.deposit(
-            chainID,
+            domainID,
             resourceID,
             depositData,
             { from: depositerAddress }
@@ -117,7 +117,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 creates the deposit proposal
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             resourceID,
             depositProposalDataHash,
@@ -128,7 +128,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             resourceID,
             depositProposalDataHash,
@@ -137,7 +137,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 will execute the deposit proposal
         const executeProposalTx = await BridgeInstance.executeProposal(
-            chainID,
+            domainID,
             expectedDepositNonce,
             depositData,
             resourceID,

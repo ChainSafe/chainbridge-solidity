@@ -216,4 +216,24 @@ contract('Bridge - [admin]', async accounts => {
     it('Should require admin role to withdraw funds', async () => {
         await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, someAddress, someAddress, 0);
     });
+
+    // Set nonce
+
+    it('Should set nonce', async () => {
+        const nonce = 3;
+        await BridgeInstance.adminSetDepositNonce(domainID, nonce);
+        const nonceAfterSet = await BridgeInstance._depositCounts.call(domainID);
+        assert.equal(nonceAfterSet, nonce);
+    });
+
+    it('Should require admin role to set nonce', async () => {
+        await assertOnlyAdmin(BridgeInstance.adminSetDepositNonce, 1, 3);
+    });
+
+    it('Should not allow for decrements of the nonce', async () => {
+        const currentNonce = 3;
+        await BridgeInstance.adminSetDepositNonce(domainID, currentNonce);
+        const newNonce = 2;
+        await TruffleAssert.reverts(BridgeInstance.adminSetDepositNonce(domainID, newNonce), "Does not allow decrements of the nonce");
+    });
 });

@@ -30,7 +30,7 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
     let erc20ResourceID;
 
-    const vote = (resourceID, depositNonce, depositDataHash, relayer) => BridgeInstance.voteProposal(domainID, depositNonce, resourceID, depositDataHash, { from: relayer });
+    const vote = (resourceID, depositNonce, depositData, relayer) => BridgeInstance.voteProposal(domainID, depositNonce, resourceID, depositData, { from: relayer });
 
     before(async () => {
         await Promise.all([
@@ -57,9 +57,8 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);
-        const depositDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositData.substr(2));
 
-        const voteTx = await vote(erc20ResourceID, depositNonce, depositDataHash, relayer1Address);
+        const voteTx = await vote(erc20ResourceID, depositNonce, depositData, relayer1Address);
 
         gasBenchmarks.push({
             type: 'Vote Proposal - relayerThreshold = 2, Not Finalized',
@@ -72,9 +71,8 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);
-        const depositDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositData.substr(2));
 
-        const voteTx = await vote(erc20ResourceID, depositNonce, depositDataHash, relayer2Address);
+        const voteTx = await vote(erc20ResourceID, depositNonce, depositData, relayer2Address);
 
         gasBenchmarks.push({
             type: 'Vote Proposal - relayerThreshold = 2, Finalized',
@@ -90,8 +88,7 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
             erc20TokenAmount,
             lenRecipientAddress,
             recipientAddress);
-        const depositDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositData.substr(2));
-        const voteTx = await vote(erc20ResourceID, newDepositNonce, depositDataHash, relayer2Address);
+        const voteTx = await vote(erc20ResourceID, newDepositNonce, depositData, relayer2Address);
 
         gasBenchmarks.push({
             type: 'Vote Proposal - relayerThreshold = 1, Finalized',

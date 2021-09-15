@@ -1,13 +1,13 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const Helpers = require('../../helpers');
+const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
-const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const ERC20HandlerContract = artifacts.require("HandlerRevert");
 
-contract('E2E ERC20 - Same Chain', async accounts => {
+contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const relayerThreshold = 2;
     const domainID = 1;
 
@@ -15,6 +15,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
     const relayer2Address = accounts[4];
+    const relayer3Address = accounts[5];
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
@@ -44,7 +45,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         initialContractAddresses = [ERC20MintableInstance.address];
         burnableContractAddresses = [];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
@@ -58,30 +59,9 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
     });
 
-    it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {
-        const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount);
-    });
-
-    it("[sanity] ERC20HandlerInstance.address should have an allowance of depositAmount from depositerAddress", async () => {
-        const handlerAllowance = await ERC20MintableInstance.allowance(depositerAddress, ERC20HandlerInstance.address);
-        assert.strictEqual(handlerAllowance.toNumber(), depositAmount);
-    });
-
-    it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
-        // depositerAddress makes initial deposit of depositAmount
-        TruffleAssert.passes(await BridgeInstance.deposit(
-            domainID,
-            resourceID,
-            depositData,
-            { from: depositerAddress }
-        ));
-
-        // Handler should have a balance of depositAmount
-        const handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
-        assert.strictEqual(handlerBalance.toNumber(), depositAmount);
-
-        // relayer1 creates the deposit proposal
+    it("Should revert if handler execute is reverted", async () => {
+        const revertOnFail = true;
+        
         TruffleAssert.passes(await BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
@@ -90,10 +70,6 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             { from: relayer1Address }
         ));
 
-        // relayer2 votes in favor of the deposit proposal
-        // because the relayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
         TruffleAssert.passes(await BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
@@ -102,12 +78,46 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             { from: relayer2Address }
         ));
 
-        // Assert ERC20 balance was transferred from depositerAddress
-        const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount);
+        await TruffleAssert.reverts(BridgeInstance.executeProposal(
+            domainID,
+            expectedDepositNonce,
+            depositProposalData,
+            resourceID,
+            revertOnFail,
+            { from: relayer2Address }
+        ));
 
-        // // Assert ERC20 balance was transferred to recipientAddress
-        const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
-        assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+        const depositProposalAfterFailedExecute = await BridgeInstance.getProposal(
+            domainID, expectedDepositNonce, depositProposalDataHash);
+        
+        assert.strictEqual(depositProposalAfterFailedExecute._status, '2');
+    });
+
+    it("Should not revert even though handler execute is reverted if the proposal's status is changed to Passed during voting. FailedHandlerExecution event should be emitted with expected values. Proposal status still stays on Passed", async () => {        
+ 
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer1Address }
+        ));
+
+        const voteWithExecuteTx = await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer2Address }
+        );
+
+        TruffleAssert.eventEmitted(voteWithExecuteTx, 'FailedHandlerExecution', (event) => {
+            return event.reason.toString() === "Something bad happened"
+        });
+
+        const depositProposalAfterFailedExecute = await BridgeInstance.getProposal(
+            domainID, expectedDepositNonce, depositProposalDataHash);
+        
+        assert.strictEqual(depositProposalAfterFailedExecute._status, '2');        
     });
 });

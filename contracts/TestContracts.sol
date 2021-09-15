@@ -1,6 +1,7 @@
 pragma solidity 0.6.12;
 
 import "./utils/SafeCast.sol";
+import "./handlers/HandlerHelpers.sol";
 
 contract NoArgument {
     event NoArgumentCalled();
@@ -55,5 +56,17 @@ contract ReturnData {
         assembly {
             response := mload(add(argument, 32))
         }
+    }
+}
+
+contract HandlerRevert is HandlerHelpers {
+    constructor(
+        address          bridgeAddress
+    ) public {
+        _bridgeAddress = bridgeAddress;
+    }
+
+    function executeProposal(bytes32 resourceID, bytes calldata data) external {
+        revert('Something bad happened');
     }
 }

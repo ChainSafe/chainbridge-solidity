@@ -79,27 +79,19 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
+            depositData,
             { from: relayer1Address }
         ));
 
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
+        // and then automatically executes the proposal
         TruffleAssert.passes(await BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
-            { from: relayer2Address }
-        ));
-
-        // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeProposal(
-            domainID,
-            expectedDepositNonce,
             depositData,
-            resourceID,
             { from: relayer2Address }
         ));
         
@@ -120,31 +112,23 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
+            depositData,
             { from: relayer1Address }
         ));
 
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        // and then automatically executes the proposal
+        const voteWithExecuteTx = await BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
-            { from: relayer2Address }
-        ));
-
-        // relayer1 will execute the deposit proposal
-        const executeProposalTx = await BridgeInstance.executeProposal(
-            domainID,
-            expectedDepositNonce,
             depositData,
-            resourceID,
             { from: relayer2Address }
         );
 
-        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeProposalTx.tx);
+        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, voteWithExecuteTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
             return event.asset === hashOfCentrifugeAsset;
         });

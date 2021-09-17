@@ -105,7 +105,7 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
         assert.deepInclude(Object.assign({}, depositProposal), expectedDepositProposal);
     });
 
-    it("depositProposal should be automatically executed after the vote if proposal staus is changed to Passed during the vote", async () => {
+    it("depositProposal should be automatically executed after the vote if proposal status is changed to Passed during the vote", async () => {
         await TruffleAssert.passes(vote(relayer1Address));
 
         await TruffleAssert.passes(vote(relayer2Address));

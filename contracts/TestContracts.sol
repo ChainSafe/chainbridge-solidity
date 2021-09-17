@@ -60,6 +60,8 @@ contract ReturnData {
 }
 
 contract HandlerRevert is HandlerHelpers {
+    uint private _totalAmount;
+
     constructor(
         address          bridgeAddress
     ) public {
@@ -67,6 +69,13 @@ contract HandlerRevert is HandlerHelpers {
     }
 
     function executeProposal(bytes32 resourceID, bytes calldata data) external {
-        revert('Something bad happened');
+        if (_totalAmount == 0) {
+            revert('Something bad happened');
+        }
+        return;
+    }
+
+    function virtualIncreaseBalance(uint amount) external {
+        _totalAmount = amount;
     }
 }

@@ -364,45 +364,45 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         if (proposal._status == ProposalStatus.Passed) {
             executeProposal(domainID, depositNonce, data, resourceID, true);
             return;
-        } else {
-            require(uint(proposal._status) <= 1, "proposal already executed/cancelled");
-            require(!_hasVoted(proposal, msg.sender), "relayer already voted");
+        }
+        
+        require(uint(proposal._status) <= 1, "proposal already executed/cancelled");
+        require(!_hasVoted(proposal, msg.sender), "relayer already voted");
 
-            if (proposal._status == ProposalStatus.Inactive) {
-                proposal = Proposal({
-                    _status : ProposalStatus.Active,
-                    _yesVotes : 0,
-                    _yesVotesTotal : 0,
-                    _proposedBlock : uint40(block.number) // Overflow is desired.
-                });
+        if (proposal._status == ProposalStatus.Inactive) {
+            proposal = Proposal({
+                _status : ProposalStatus.Active,
+                _yesVotes : 0,
+                _yesVotesTotal : 0,
+                _proposedBlock : uint40(block.number) // Overflow is desired.
+            });
 
-                emit ProposalEvent(domainID, depositNonce, ProposalStatus.Active, dataHash);
-            } else if (uint40(sub(block.number, proposal._proposedBlock)) > _expiry) {
-                // if the number of blocks that has passed since this proposal was
-                // submitted exceeds the expiry threshold set, cancel the proposal
-                proposal._status = ProposalStatus.Cancelled;
+            emit ProposalEvent(domainID, depositNonce, ProposalStatus.Active, dataHash);
+        } else if (uint40(sub(block.number, proposal._proposedBlock)) > _expiry) {
+            // if the number of blocks that has passed since this proposal was
+            // submitted exceeds the expiry threshold set, cancel the proposal
+            proposal._status = ProposalStatus.Cancelled;
 
-                emit ProposalEvent(domainID, depositNonce, ProposalStatus.Cancelled, dataHash);
+            emit ProposalEvent(domainID, depositNonce, ProposalStatus.Cancelled, dataHash);
+        }
+
+        if (proposal._status != ProposalStatus.Cancelled) {
+            proposal._yesVotes = (proposal._yesVotes | _relayerBit(msg.sender)).toUint200();
+            proposal._yesVotesTotal++; // TODO: check if bit counting is cheaper.
+
+            emit ProposalVote(domainID, depositNonce, proposal._status, dataHash);
+
+            // Finalize if _relayerThreshold has been reached
+            if (proposal._yesVotesTotal >= _relayerThreshold) {
+                proposal._status = ProposalStatus.Passed;
+                
+                emit ProposalEvent(domainID, depositNonce, ProposalStatus.Passed, dataHash);
             }
+        }
+        _proposals[nonceAndID][dataHash] = proposal;
 
-            if (proposal._status != ProposalStatus.Cancelled) {
-                proposal._yesVotes = (proposal._yesVotes | _relayerBit(msg.sender)).toUint200();
-                proposal._yesVotesTotal++; // TODO: check if bit counting is cheaper.
-
-                emit ProposalVote(domainID, depositNonce, proposal._status, dataHash);
-
-                // Finalize if _relayerThreshold has been reached
-                if (proposal._yesVotesTotal >= _relayerThreshold) {
-                    proposal._status = ProposalStatus.Passed;
-                    
-                    emit ProposalEvent(domainID, depositNonce, ProposalStatus.Passed, dataHash);
-                }
-            }
-            _proposals[nonceAndID][dataHash] = proposal;
-
-            if (proposal._status == ProposalStatus.Passed) {
-                executeProposal(domainID, depositNonce, data, resourceID, false);
-            }
+        if (proposal._status == ProposalStatus.Passed) {
+            executeProposal(domainID, depositNonce, data, resourceID, false);
         }
     }
 

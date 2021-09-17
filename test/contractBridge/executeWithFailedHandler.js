@@ -114,9 +114,9 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         );
 
         TruffleAssert.eventEmitted(voteWithExecuteTx, 'FailedHandlerExecution', (event) => {   
-            return Ethers.utils.parseBytes32String("0x"+event.lowLevelData.slice(-64)) === "Something bad happened"
+            return Ethers.utils.parseBytes32String('0x' + event.lowLevelData.slice(-64)) === 'Something bad happened'
         });
-        
+
         const depositProposalAfterFailedExecute = await BridgeInstance.getProposal(
             domainID, expectedDepositNonce, depositProposalDataHash);
         
@@ -150,4 +150,43 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             { from: relayer2Address }
         ), 'Something bad happened');
     });
+
+    it("Should execute the proposal successfully if the handler has enough amount after the last execution is reverted", async () => {
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer1Address }
+        ));
+
+        // After this vote, automatically executes the proposal but the execution is reverted.
+        // But the whole transaction is not reverted and proposal still be on Passed status.
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer2Address }
+        ));
+
+        // Some virtual operation so that the handler can have enough conditions to be executed.
+        await ERC20HandlerInstance.virtualIncreaseBalance(1);
+
+        // Should execute directly in this vote.
+        const voteWithExecuteTx = await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer2Address }
+        );
+
+        TruffleAssert.eventEmitted(voteWithExecuteTx, 'ProposalEvent', (event) => {
+            return event.originDomainID.toNumber() === domainID &&
+                event.depositNonce.toNumber() === expectedDepositNonce &&
+                event.status.toString() === STATUS.Executed &&
+                event.dataHash === depositProposalDataHash
+        });
+    })
 });

@@ -122,7 +122,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             originDomainID,
             expectedDepositNonce,
             destinationResourceID,
-            originDepositProposalDataHash,
+            originDepositProposalData,
             { from: destinationRelayer1Address }
         ));
 
@@ -130,24 +130,14 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
+        // And then automatically executes the proposal.
         TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
             originDomainID,
             expectedDepositNonce,
             destinationResourceID,
-            originDepositProposalDataHash,
-            { from: destinationRelayer2Address }
-        ));
-
-
-        // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
             originDepositProposalData,
-            destinationResourceID,
             { from: destinationRelayer2Address }
         ));
-
 
         // Assert ERC20 balance was transferred from depositerAddress
         depositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
@@ -182,27 +172,19 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             destinationDomainID,
             expectedDepositNonce,
             originResourceID,
-            destinationDepositProposalDataHash,
+            destinationDepositProposalData,
             { from: originRelayer1Address }
         ));
 
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
+        // and then automatically executes the proposal
         TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
             destinationDomainID,
             expectedDepositNonce,
             originResourceID,
-            destinationDepositProposalDataHash,
-            { from: originRelayer2Address }
-        ));
-
-        // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.executeProposal(
-            destinationDomainID,
-            expectedDepositNonce,
             destinationDepositProposalData,
-            originResourceID,
             { from: originRelayer2Address }
         ));
 

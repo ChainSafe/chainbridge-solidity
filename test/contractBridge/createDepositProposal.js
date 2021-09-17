@@ -53,7 +53,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             depositAmount,
             20,
             destinationRecipientAddress);
-        dataHash = Ethers.utils.keccak256(data);
+        dataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + data.substr(2));
     });
 
     it('should create depositProposal successfully', async () => {
@@ -61,7 +61,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
     });
@@ -71,7 +71,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: depositerAddress }
         ));
     });
@@ -81,7 +81,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
 
@@ -89,7 +89,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
     });
@@ -111,7 +111,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
 
@@ -125,7 +125,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
@@ -138,7 +138,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             originDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
 
@@ -195,7 +195,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             depositAmount,
             20,
             destinationRecipientAddress);
-        dataHash = Ethers.utils.keccak256(data);
+        dataHash = Ethers.utils.keccak256(DestinationERC20HandlerInstance.address + data.substr(2));
     });
 
     it('should create depositProposal successfully', async () => {
@@ -203,7 +203,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
     });
@@ -213,7 +213,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: depositerAddress }
         ));
     });
@@ -223,7 +223,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
 
@@ -231,7 +231,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         ));
     });
@@ -247,7 +247,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
 
@@ -261,7 +261,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
         const hasVoted = await BridgeInstance._hasVotedOnProposal.call(
@@ -274,7 +274,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
             originDomainID,
             expectedDepositNonce,
             resourceID,
-            dataHash,
+            data,
             { from: originChainRelayerAddress }
         );
 

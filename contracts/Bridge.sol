@@ -395,7 +395,6 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             // Finalize if _relayerThreshold has been reached
             if (proposal._yesVotesTotal >= _relayerThreshold) {
                 proposal._status = ProposalStatus.Passed;
-                
                 emit ProposalEvent(domainID, depositNonce, ProposalStatus.Passed, dataHash);
             }
         }

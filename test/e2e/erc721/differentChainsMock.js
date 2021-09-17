@@ -28,7 +28,6 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let OriginERC721HandlerInstance;
     let originDepositData;
     let originDepositProposalData;
-    let originDepositProposalDataHash;
     let originResourceID;
     let originBurnableContractAddresses;
 
@@ -77,7 +76,6 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
         originDepositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
         originDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, 32, 0);
-        originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = Helpers.createERCDepositData(tokenID, 20, depositerAddress);
         destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)

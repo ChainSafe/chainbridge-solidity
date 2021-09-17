@@ -10,12 +10,10 @@ const ERC20HandlerContract = artifacts.require("HandlerRevert");
 contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const relayerThreshold = 2;
     const domainID = 1;
-
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
     const relayer2Address = accounts[4];
-    const relayer3Address = accounts[5];
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
@@ -29,9 +27,14 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     let depositData;
     let depositProposalData;
     let depositProposalDataHash;
-    let initialResourceIDs;
-    let initialContractAddresses;
-    let burnableContractAddresses;
+
+    const STATUS = {
+        Inactive : '0',
+        Active : '1',
+        Passed : '2',
+        Executed : '3',
+        Cancelled : '4'
+    }
 
     beforeEach(async () => {
         await Promise.all([
@@ -41,10 +44,6 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
     
-        initialResourceIDs = [resourceID];
-        initialContractAddresses = [ERC20MintableInstance.address];
-        burnableContractAddresses = [];
-
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
@@ -78,6 +77,9 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             { from: relayer2Address }
         ));
 
+        const depositProposalBeforeFailedExecute = await BridgeInstance.getProposal(
+            domainID, expectedDepositNonce, depositProposalDataHash);
+
         await TruffleAssert.reverts(BridgeInstance.executeProposal(
             domainID,
             expectedDepositNonce,
@@ -89,8 +91,8 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
         const depositProposalAfterFailedExecute = await BridgeInstance.getProposal(
             domainID, expectedDepositNonce, depositProposalDataHash);
-        
-        assert.strictEqual(depositProposalAfterFailedExecute._status, '2');
+
+        assert.deepInclude(Object.assign({}, depositProposalBeforeFailedExecute), depositProposalAfterFailedExecute);
     });
 
     it("Should not revert even though handler execute is reverted if the proposal's status is changed to Passed during voting. FailedHandlerExecution event should be emitted with expected values. Proposal status still stays on Passed", async () => {        
@@ -111,13 +113,41 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             { from: relayer2Address }
         );
 
-        TruffleAssert.eventEmitted(voteWithExecuteTx, 'FailedHandlerExecution', (event) => {
-            return event.reason.toString() === "Something bad happened"
+        TruffleAssert.eventEmitted(voteWithExecuteTx, 'FailedHandlerExecution', (event) => {   
+            return Ethers.utils.parseBytes32String("0x"+event.lowLevelData.slice(-64)) === "Something bad happened"
         });
-
+        
         const depositProposalAfterFailedExecute = await BridgeInstance.getProposal(
             domainID, expectedDepositNonce, depositProposalDataHash);
         
-        assert.strictEqual(depositProposalAfterFailedExecute._status, '2');        
+        assert.strictEqual(depositProposalAfterFailedExecute._status, STATUS.Passed);
+    });
+
+    it("Vote proposal should be reverted if handler execution is reverted and proposal status was on Passed for vote", async () => {
+
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer1Address }
+        ));
+
+        // After this vote, automatically executes the proposqal but handler execute is reverted. So proposal still stays on Passed after this vote.
+        TruffleAssert.passes(await BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer2Address }
+        ));
+
+        await TruffleAssert.reverts(BridgeInstance.voteProposal(
+            domainID,
+            expectedDepositNonce,
+            resourceID,
+            depositProposalData,
+            { from: relayer2Address }
+        ), 'Something bad happened');
     });
 });

@@ -64,7 +64,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 dataHash
     );
     event FailedHandlerExecution(
-        string reason
+        bytes lowLevelData
     );
 
     bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
@@ -363,6 +363,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         if (proposal._status == ProposalStatus.Passed) {
             executeProposal(domainID, depositNonce, data, resourceID, true);
+            return;
         } else {
             require(uint(proposal._status) <= 1, "proposal already executed/cancelled");
             require(!_hasVoted(proposal, msg.sender), "relayer already voted");
@@ -450,16 +451,16 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         require(proposal._status == ProposalStatus.Passed, "Proposal must have Passed status");
 
+        proposal._status = ProposalStatus.Executed;
         IDepositExecute depositHandler = IDepositExecute(handler);
 
-        if (revertOnFail == true) {
-            proposal._status = ProposalStatus.Executed;
+        if (revertOnFail) {
             depositHandler.executeProposal(resourceID, data);
         } else {
             try depositHandler.executeProposal(resourceID, data) {
-                proposal._status = ProposalStatus.Executed;
-            } catch Error(string memory reason) {
-                emit FailedHandlerExecution(reason);
+            } catch (bytes memory lowLevelData) {
+                proposal._status = ProposalStatus.Passed;
+                emit FailedHandlerExecution(lowLevelData);
                 return;
             }
         }

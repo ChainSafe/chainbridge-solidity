@@ -22,8 +22,6 @@ contract('Bridge - [voteProposal with relayerThreshold == 3]', async (accounts) 
     const relayer1Bit = 1 << 0;
     const relayer2Bit = 1 << 1;
     const relayer3Bit = 1 << 2;
-    const relayer4Bit = 1 << 3;
-    const depositerAddress = accounts[4];
     const destinationChainRecipientAddress = accounts[4];
     const depositAmount = 10;
     const expectedDepositNonce = 1;

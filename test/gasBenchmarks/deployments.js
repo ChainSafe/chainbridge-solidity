@@ -27,7 +27,7 @@ contract('Gas Benchmark - [contract deployments]', async () => {
                 ERC721HandlerContract.new(BridgeInstance.address),
                 GenericHandlerContract.new(BridgeInstance.address),
                 CentrifugeAssetContract.new(centrifugeAssetMinCount),
-                HandlerHelpersContract.new(),
+                HandlerHelpersContract.new(BridgeInstance.address),
                 ERC20SafeContract.new(),
                 ERC721SafeContract.new()
         ]));

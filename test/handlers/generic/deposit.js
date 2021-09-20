@@ -98,12 +98,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         ];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
-            BridgeInstance.address,
-            initialResourceIDs,
-            initialContractAddresses,
-            initialDepositFunctionSignatures,
-            initialDepositFunctionDepositerOffsets,
-            initialExecuteFunctionSignatures);
+            BridgeInstance.address);
         
         await Promise.all([
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]),

@@ -39,12 +39,7 @@ contract('Bridge - [deposit - Generic]', async () => {
         initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store')];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
-            BridgeInstance.address,
-            initialResourceIDs,
-            initialContractAddresses,
-            initialDepositFunctionSignatures,
-            initialDepositFunctionDepositerOffsets,
-            initialExecuteFunctionSignatures);
+            BridgeInstance.address);
             
         await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]);
 

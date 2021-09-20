@@ -40,53 +40,11 @@ contract GenericHandler is IGenericHandler {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
-        @param initialResourceIDs Resource IDs used to identify a specific contract address.
-        These are the Resource IDs this contract will initially support.
-        @param initialContractAddresses These are the addresses the {initialResourceIDs} will point to, and are the contracts that will be
-        called to perform deposit and execution calls.
-        @param initialDepositFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
-        and are the function that will be called when executing {deposit}
-        @param initialDepositFunctionDepositerOffsets These are the offsets of depositer positions, inside of metadata used to call
-        {initialContractAddresses} when executing {deposit}
-        @param initialExecuteFunctionSignatures These are the function signatures {initialContractAddresses} will point to,
-        and are the function that will be called when executing {executeProposal}
-
-        @dev {initialResourceIDs}, {initialContractAddresses}, {initialDepositFunctionSignatures},
-        and {initialExecuteFunctionSignatures} must all have the same length. Also,
-        values must be ordered in the way that that index x of any mentioned array
-        must be intended for value x of any other array, e.g. {initialContractAddresses}[0]
-        is the intended address for {initialDepositFunctionSignatures}[0].
      */
     constructor(
-        address          bridgeAddress,
-        bytes32[] memory initialResourceIDs,
-        address[] memory initialContractAddresses,
-        bytes4[]  memory initialDepositFunctionSignatures,
-        uint256[] memory initialDepositFunctionDepositerOffsets,
-        bytes4[]  memory initialExecuteFunctionSignatures
+        address          bridgeAddress
     ) public {
-        require(initialResourceIDs.length == initialContractAddresses.length,
-            "initialResourceIDs and initialContractAddresses len mismatch");
-
-        require(initialContractAddresses.length == initialDepositFunctionSignatures.length,
-            "provided contract addresses and function signatures len mismatch");
-
-        require(initialDepositFunctionSignatures.length == initialExecuteFunctionSignatures.length,
-            "provided deposit and execute function signatures len mismatch");
-
-        require(initialDepositFunctionDepositerOffsets.length == initialExecuteFunctionSignatures.length,
-            "provided depositer offsets and function signatures len mismatch");
-
         _bridgeAddress = bridgeAddress;
-
-        for (uint256 i = 0; i < initialResourceIDs.length; i++) {
-            _setResource(
-                initialResourceIDs[i],
-                initialContractAddresses[i],
-                initialDepositFunctionSignatures[i],
-                initialDepositFunctionDepositerOffsets[i],
-                initialExecuteFunctionSignatures[i]);
-        }
     }
 
     /**

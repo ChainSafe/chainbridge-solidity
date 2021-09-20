@@ -31,7 +31,8 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
         initialContractAddresses = [ERC20MintableInstance1.address];
         burnableContractAddresses = [];
 
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0]);
     });
 
     it("[sanity] ERC20MintableInstance1's resourceID and contract address should be set correctly", async () => {
@@ -73,7 +74,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
 
         const ERC20MintableInstance2 = await ERC20MintableContract.new("token", "TOK");
         const secondERC20ResourceID = [Ethers.utils.hexZeroPad((ERC20MintableInstance2.address + Ethers.utils.hexlify(domainID).substr(2)), 32)];
-        ERC20HandlerInstance2 = await ERC20HandlerContract.new(BridgeInstance.address, secondERC20ResourceID, [ERC20MintableInstance2.address], burnableContractAddresses);
+        ERC20HandlerInstance2 = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await BridgeInstance.adminSetResource(ERC20HandlerInstance2.address, initialResourceIDs[0], ERC20MintableInstance2.address);
 

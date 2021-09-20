@@ -40,11 +40,7 @@ contract('Gas Benchmark - [Vote Proposal]', async (accounts) => {
 
         erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
 
-        const erc20InitialResourceIDs = [erc20ResourceID];
-        const erc20InitialContractAddresses = [ERC20MintableInstance.address];
-        const erc20BurnableContractAddresses = [];
-
-        await ERC20HandlerContract.new(BridgeInstance.address, erc20InitialResourceIDs, erc20InitialContractAddresses, erc20BurnableContractAddresses).then(instance => ERC20HandlerInstance = instance);
+        await ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance);
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),

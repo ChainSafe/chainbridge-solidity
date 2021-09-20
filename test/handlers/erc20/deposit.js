@@ -39,7 +39,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         burnableContractAddresses = []
 
         await Promise.all([
-            ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
             ERC20MintableInstance.mint(depositerAddress, tokenAmount)
         ]);
 

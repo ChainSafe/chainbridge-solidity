@@ -38,11 +38,12 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses));
+        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address));
     });
 
     it('initialContractAddress should be whitelisted', async () => {
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address);
         const isWhitelisted = await ERC20HandlerInstance._contractWhitelist.call(ERC20MintableInstance1.address);
         assert.isTrue(isWhitelisted, "Contract wasn't successfully whitelisted");
     });

@@ -26,13 +26,6 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     let depositData;
 
     let originResourceID;
-    let originInitialResourceIDs;
-    let originInitialContractAddresses;
-    let originBurnableContractAddresses;
-    
-    let destinationInitialResourceIDs;
-    let destinationInitialContractAddresses;
-    let destinationBurnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -41,17 +34,10 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         ]);
         
         originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
-        originInitialResourceIDs = [];
-        originInitialContractAddresses = [];
-        originBurnableContractAddresses =[];
-        
-        destinationInitialResourceIDs = [];
-        destinationInitialContractAddresses = [];
-        destinationBurnableContractAddresses = [];
 
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
         await Promise.all([

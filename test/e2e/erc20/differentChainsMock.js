@@ -65,9 +65,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         destinationBurnableContractAddresses = [DestinationERC20MintableInstance.address];
 
         await Promise.all([
-            ERC20HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses)
+            ERC20HandlerContract.new(OriginBridgeInstance.address)
                 .then(instance => OriginERC20HandlerInstance = instance),
-            ERC20HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses)
+            ERC20HandlerContract.new(DestinationBridgeInstance.address)
                 .then(instance => DestinationERC20HandlerInstance = instance),
         ]);
 
@@ -78,7 +78,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
             DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
             OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
-            DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address)
+            OriginBridgeInstance.adminSetBurnable(OriginERC20HandlerInstance.address, originBurnableContractAddresses[0]),
+            DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address),
+            DestinationBridgeInstance.adminSetBurnable(DestinationERC20HandlerInstance.address, destinationBurnableContractAddresses[0])
         ]);
 
         originDepositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);

@@ -59,9 +59,9 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         destinationBurnableContractAddresses = [DestinationERC721MintableInstance.address];
 
         await Promise.all([
-            ERC721HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses)
+            ERC721HandlerContract.new(OriginBridgeInstance.address)
                 .then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses)
+            ERC721HandlerContract.new(DestinationBridgeInstance.address)
                 .then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
@@ -71,7 +71,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address),
             OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
-            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address)
+            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address),
+            DestinationBridgeInstance.adminSetBurnable(DestinationERC721HandlerInstance.address, destinationBurnableContractAddresses[0])
         ]);
 
         originDepositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);

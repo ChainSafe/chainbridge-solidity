@@ -74,14 +74,6 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, domainID);
         threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, domainID);
 
-        const erc20InitialResourceIDs = [erc20ResourceID];
-        const erc20InitialContractAddresses = [ERC20MintableInstance.address];
-        const erc20BurnableContractAddresses = [];
-
-        const erc721InitialResourceIDs = [erc721ResourceID];
-        const erc721InitialContractAddresses = [ERC721MintableInstance.address];
-        const erc721BurnableContractAddresses = [];
-
         const genericInitialResourceIDs = [
             centrifugeAssetResourceID,
             noArgumentResourceID,
@@ -114,11 +106,11 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
             Helpers.blankFunctionSig];
 
         await Promise.all([
-            ERC20HandlerContract.new(BridgeInstance.address, erc20InitialResourceIDs, erc20InitialContractAddresses, erc20BurnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
             ERC20MintableInstance.mint(depositerAddress, erc20TokenAmount),
-            ERC721HandlerContract.new(BridgeInstance.address, erc721InitialResourceIDs, erc721InitialContractAddresses, erc721BurnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance.mint(depositerAddress, erc721TokenID, ""),
-            GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, genericInitialResourceIDs, genericInitialContractAddresses, genericInitialDepositFunctionSignatures, genericInitialDepositFunctionDepositerOffsets, genericInitialExecuteFunctionSignatures)
+            GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address)
         ]);
 
         await Promise.all([

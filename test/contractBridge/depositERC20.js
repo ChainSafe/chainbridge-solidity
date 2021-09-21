@@ -60,7 +60,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     });
 
     it('ERC20 deposit can be made', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             destinationDomainID,
             resourceID,
             depositData,

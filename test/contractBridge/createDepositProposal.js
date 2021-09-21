@@ -50,7 +50,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     });
 
     it('should create depositProposal successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             destinationDomainID,
             expectedDepositNonce,
             resourceID,
@@ -185,7 +185,7 @@ contract('Bridge - [create a deposit proposal (voteProposal) with relayerThresho
     });
 
     it('should create depositProposal successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             destinationDomainID,
             expectedDepositNonce,
             resourceID,

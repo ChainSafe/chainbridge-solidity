@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 import "./utils/SafeCast.sol";
@@ -52,7 +53,7 @@ contract SafeCaster {
 }
 
 contract ReturnData {
-    function returnData(string memory argument) external returns(bytes32 response) {
+    function returnData(string memory argument) external pure returns(bytes32 response) {
         assembly {
             response := mload(add(argument, 32))
         }
@@ -67,7 +68,7 @@ contract HandlerRevert is HandlerHelpers {
     ) public HandlerHelpers(bridgeAddress) {
     }
 
-    function executeProposal(bytes32 resourceID, bytes calldata data) external {
+    function executeProposal(bytes32, bytes calldata) external view {
         if (_totalAmount == 0) {
             revert('Something bad happened');
         }

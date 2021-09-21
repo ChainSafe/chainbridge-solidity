@@ -70,7 +70,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
     it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
         // depositerAddress makes initial deposit of depositAmount
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
             depositData,
@@ -82,7 +82,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         assert.strictEqual(handlerBalance.toNumber(), depositAmount);
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -94,7 +94,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         // and then automatically executes the proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,

@@ -114,7 +114,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     });
 
     it('deposit can be made successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             initialResourceIDs[0],
             depositData,

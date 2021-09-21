@@ -61,7 +61,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     it("Should revert if handler execute is reverted", async () => {
         const revertOnFail = true;
         
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -69,7 +69,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             { from: relayer1Address }
         ));
 
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -97,7 +97,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("Should not revert even though handler execute is reverted if the proposal's status is changed to Passed during voting. FailedHandlerExecution event should be emitted with expected values. Proposal status still stays on Passed", async () => {        
  
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -125,7 +125,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("Vote proposal should be reverted if handler execution is reverted and proposal status was on Passed for vote", async () => {
 
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -134,7 +134,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ));
 
         // After this vote, automatically executes the proposqal but handler execute is reverted. So proposal still stays on Passed after this vote.
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -152,7 +152,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     });
 
     it("Should execute the proposal successfully if the handler has enough amount after the last execution is reverted", async () => {
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -162,7 +162,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
         // After this vote, automatically executes the proposal but the execution is reverted.
         // But the whole transaction is not reverted and proposal still be on Passed status.
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,

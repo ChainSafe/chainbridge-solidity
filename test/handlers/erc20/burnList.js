@@ -39,7 +39,7 @@ contract('ERC20Handler - [Burn ERC20]', async () => {
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(await ERC20HandlerContract.new(BridgeInstance.address));
+        await TruffleAssert.passes(ERC20HandlerContract.new(BridgeInstance.address));
     });
 
     it('burnableContractAddresses should be marked true in _burnList', async () => {

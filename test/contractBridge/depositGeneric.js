@@ -47,7 +47,7 @@ contract('Bridge - [deposit - Generic]', async () => {
     });
 
     it('Generic deposit can be made', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             destinationDomainID,
             resourceID,
             depositData

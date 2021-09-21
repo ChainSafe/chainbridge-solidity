@@ -73,15 +73,13 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
         await OriginERC20MintableInstance.mint(depositerAddress, initialTokenAmount);
 
-        await Promise.all([
-            OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
-            OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
-            DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
-            OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
-            OriginBridgeInstance.adminSetBurnable(OriginERC20HandlerInstance.address, originBurnableContractAddresses[0]),
-            DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address),
-            DestinationBridgeInstance.adminSetBurnable(DestinationERC20HandlerInstance.address, destinationBurnableContractAddresses[0])
-        ]);
+        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
+        await OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
+        await DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
+        await OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
+        await OriginBridgeInstance.adminSetBurnable(OriginERC20HandlerInstance.address, originBurnableContractAddresses[0]),
+        await DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address),
+        await DestinationBridgeInstance.adminSetBurnable(DestinationERC20HandlerInstance.address, destinationBurnableContractAddresses[0])
 
         originDepositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
         originDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
@@ -112,7 +110,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         let recipientBalance;
 
         // depositerAddress makes initial deposit of depositAmount
-        TruffleAssert.passes(await OriginBridgeInstance.deposit(
+        await TruffleAssert.passes(OriginBridgeInstance.deposit(
             destinationDomainID,
             originResourceID,
             originDepositData,
@@ -120,7 +118,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         ));
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
+        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
             originDomainID,
             expectedDepositNonce,
             destinationResourceID,
@@ -133,7 +131,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         // And then automatically executes the proposal.
-        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
+        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
             originDomainID,
             expectedDepositNonce,
             destinationResourceID,
@@ -158,7 +156,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await DestinationERC20MintableInstance.approve(DestinationERC20HandlerInstance.address, depositAmount, { from: recipientAddress });
 
         // recipientAddress makes a deposit of the received depositAmount
-        TruffleAssert.passes(await DestinationBridgeInstance.deposit(
+        await TruffleAssert.passes(DestinationBridgeInstance.deposit(
             originDomainID,
             destinationResourceID,
             destinationDepositData,
@@ -170,7 +168,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         assert.strictEqual(recipientBalance.toNumber(), 0);
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
+        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
             destinationDomainID,
             expectedDepositNonce,
             originResourceID,
@@ -182,7 +180,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         // and then automatically executes the proposal
-        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
+        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
             destinationDomainID,
             expectedDepositNonce,
             originResourceID,

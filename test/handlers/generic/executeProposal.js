@@ -62,7 +62,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     });
 
     it('deposit can be executed successfully', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
             depositData,
@@ -70,7 +70,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -82,7 +82,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
         // and then automatically executes the proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,
@@ -95,7 +95,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     });
 
     it('AssetStored event should be emitted', async () => {
-        TruffleAssert.passes(await BridgeInstance.deposit(
+        await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
             depositData,
@@ -103,7 +103,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         ));
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
             domainID,
             expectedDepositNonce,
             resourceID,

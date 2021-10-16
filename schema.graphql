@@ -1,0 +1,6 @@
+type BridgeEvent @entity {
+  id: ID!
+  address: Bytes!
+  resourceId: Bytes!
+  amount: BigInt!
+}

@@ -4,5 +4,5 @@ type BridgeEvent @entity {
   resourceId: Bytes!
   amount: BigInt!
   txHash: Bytes!
-  timestamp: Int!
+  timestamp: BigInt!
 }

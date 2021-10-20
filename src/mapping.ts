@@ -7,6 +7,6 @@ export function handleERC20ProposalExecuted(event: ERC20ProposalExecuted): void 
   entity.amount = event.params.amount
   entity.resourceId = event.params.resourceID
   entity.txHash = event.transaction.hash
-  entity.timestamp = Date.now()
+  entity.timestamp = event.block.timestamp
   entity.save()
 }

@@ -3,4 +3,6 @@ type BridgeEvent @entity {
   address: Bytes!
   resourceId: Bytes!
   amount: BigInt!
+  txHash: Bytes!
+  timestamp: Int!
 }

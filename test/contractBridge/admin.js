@@ -174,9 +174,8 @@ contract('Bridge - [admin]', async accounts => {
         await ERC20MintableInstance.mint(tokenOwner, numTokens);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, numTokens);
-            
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, numTokens);
-        await ERC20HandlerInstance.fundERC20(ERC20MintableInstance.address, tokenOwner, numTokens);
+        
+        await ERC20MintableInstance.transfer(ERC20HandlerInstance.address, numTokens);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, 0);
         handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);

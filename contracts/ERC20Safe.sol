@@ -14,17 +14,6 @@ contract ERC20Safe {
     using SafeMath for uint256;
 
     /**
-        @notice Used to transfer tokens into the safe to fund proposals.
-        @param tokenAddress Address of ERC20 to transfer.
-        @param owner Address of current token owner.
-        @param amount Amount of tokens to transfer.
-     */
-    function fundERC20(address tokenAddress, address owner, uint256 amount) public {
-        IERC20 erc20 = IERC20(tokenAddress);
-        _safeTransferFrom(erc20, owner, address(this), amount);
-    }
-
-    /**
         @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.

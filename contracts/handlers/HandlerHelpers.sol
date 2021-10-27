@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 import "../interfaces/IERCHandler.sol";
@@ -8,7 +9,7 @@ import "../interfaces/IERCHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract HandlerHelpers is IERCHandler {
-    address public _bridgeAddress;
+    address public immutable _bridgeAddress;
 
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
@@ -25,6 +26,15 @@ contract HandlerHelpers is IERCHandler {
     modifier onlyBridge() {
         _onlyBridge();
         _;
+    }
+    
+    /**
+        @param bridgeAddress Contract address of previously deployed Bridge.
+     */
+    constructor(
+        address          bridgeAddress
+    ) public {
+        _bridgeAddress = bridgeAddress;
     }
 
     function _onlyBridge() private view {

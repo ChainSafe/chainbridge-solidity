@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 /**
@@ -6,8 +7,8 @@ pragma solidity 0.6.12;
  */
 interface IBridge {
     /**
-        @notice Exposing getter for {_chainID} instead of forcing the use of call.
-        @return uint8 The {_chainID} that is currently set for the Bridge contract.
+        @notice Exposing getter for {_domainID} instead of forcing the use of call.
+        @return uint8 The {_domainID} that is currently set for the Bridge contract.
      */
-    function _chainID() external returns (uint8);
+    function _domainID() external returns (uint8);
 }

@@ -4,7 +4,7 @@
  */
 
 const TruffleAssert = require('truffle-assertions');
-
+const Ethers = require('ethers');
 const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
@@ -12,8 +12,8 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('Bridge - [deposit - ERC721]', async (accounts) => {
-    const originChainID = 1;
-    const destinationChainID = 2;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const originChainTokenID = 42;
@@ -26,32 +26,18 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     let depositData;
 
     let originResourceID;
-    let originInitialResourceIDs;
-    let originInitialContractAddresses;
-    let originBurnableContractAddresses;
-    
-    let destinationInitialResourceIDs;
-    let destinationInitialContractAddresses;
-    let destinationBurnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
-            BridgeContract.new(originChainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeContract.new(originDomainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
         ]);
         
-        originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originChainID);
-        originInitialResourceIDs = [];
-        originInitialContractAddresses = [];
-        originBurnableContractAddresses =[];
-        
-        destinationInitialResourceIDs = [];
-        destinationInitialContractAddresses = [];
-        destinationBurnableContractAddresses = [];
+        originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
 
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses).then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(BridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses).then(instance => DestinationERC721HandlerInstance = instance)
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => OriginERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
         await Promise.all([
@@ -84,7 +70,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
     it('ERC721 deposit can be made', async () => {
         await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             originResourceID,
             depositData,
             { from: depositerAddress }
@@ -93,19 +79,19 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
     it('_depositCounts should be increments from 0 to 1', async () => {
         await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             originResourceID,
             depositData,
             { from: depositerAddress }
         );
 
-        const depositCount = await BridgeInstance._depositCounts.call(destinationChainID);
+        const depositCount = await BridgeInstance._depositCounts.call(destinationDomainID);
         assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
     });
 
     it('ERC721 can be deposited with correct owner and balances', async () => {
         await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             originResourceID,
             depositData,
             { from: depositerAddress }
@@ -123,16 +109,22 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
     it('Deposit event is fired with expected value', async () => {
         const depositTx = await BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             originResourceID,
             depositData,
             { from: depositerAddress }
         );
+        
+        let expectedMetaData = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(genericBytes));
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationChainID.toNumber() === destinationChainID &&
+            
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === originResourceID.toLowerCase() &&
-                event.depositNonce.toNumber() === expectedDepositNonce
+                event.depositNonce.toNumber() === expectedDepositNonce && 
+                event.user === depositerAddress &&
+                event.data === depositData.toLowerCase() &&
+                event.handlerResponse === expectedMetaData
         });
     });
 });

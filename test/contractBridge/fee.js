@@ -13,8 +13,8 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [fee]', async (accounts) => {
-    const originChainID = 1;
-    const destinationChainID = 2;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const blankFunctionSig = '0x00000000';
     const blankFunctionDepositerOffset = 0;
     const relayer = accounts[0];
@@ -32,10 +32,10 @@ contract('Bridge - [fee]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originChainID, [relayer], 0, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(originDomainID, [relayer], 0, 0, 100).then(instance => BridgeInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originChainID)
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [blankFunctionSig];
@@ -43,12 +43,7 @@ contract('Bridge - [fee]', async (accounts) => {
         initialExecuteFunctionSignatures = [blankFunctionSig];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
-            BridgeInstance.address,
-            initialResourceIDs,
-            initialContractAddresses,
-            initialDepositFunctionSignatures,
-            initialDepositFunctionDepositerOffsets,
-            initialExecuteFunctionSignatures);
+            BridgeInstance.address);
 
         await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]);
             
@@ -57,7 +52,7 @@ contract('Bridge - [fee]', async (accounts) => {
 
     it('[sanity] Generic deposit can be made', async () => {
         await TruffleAssert.passes(BridgeInstance.deposit(
-            destinationChainID,
+            destinationDomainID,
             resourceID,
             depositData
         ));
@@ -69,7 +64,7 @@ contract('Bridge - [fee]', async (accounts) => {
         
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
-                destinationChainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 {
@@ -88,7 +83,7 @@ contract('Bridge - [fee]', async (accounts) => {
 
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                destinationChainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 {
@@ -104,7 +99,7 @@ contract('Bridge - [fee]', async (accounts) => {
 
         // check the balance is 0
         assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
-        await BridgeInstance.deposit(destinationChainID, resourceID, depositData, {value: Ethers.utils.parseEther("1")})
+        await BridgeInstance.deposit(destinationDomainID, resourceID, depositData, {value: Ethers.utils.parseEther("1")})
         assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "1");
 
         let b1Before = await web3.eth.getBalance(accounts[1]);

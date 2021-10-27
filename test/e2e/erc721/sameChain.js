@@ -9,7 +9,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Same Chain', async accounts => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -34,16 +34,16 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [relayer1Address, relayer2Address], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [relayer1Address, relayer2Address], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
         
-        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, chainID);
+        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
 
-        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses);
+        ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
             ERC721MintableInstance.mint(depositerAddress, tokenID, depositMetadata),
@@ -69,52 +69,35 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     it("depositAmount of Destination ERC721 should be transferred to recipientAddress", async () => {
         // depositerAddress makes initial deposit of depositAmount
-        TruffleAssert.passes(await BridgeInstance.deposit(
-            chainID,
+        await TruffleAssert.passes(BridgeInstance.deposit(
+            domainID,
             resourceID,
             depositData,
             { from: depositerAddress }
         ));
-
-        const record = await ERC721HandlerInstance.getDepositRecord(expectedDepositNonce, chainID)
-        assert.strictEqual(record[0], ERC721MintableInstance.address)
-        assert.strictEqual(record[1], chainID.toString())
-        assert.strictEqual(record[2], resourceID.toLowerCase())
-        assert.strictEqual(record[3], recipientAddress.toLowerCase())
-        assert.strictEqual(record[4], depositerAddress)
-        assert.strictEqual(Number(record[5]), tokenID)
-        assert.strictEqual(Ethers.utils.toUtf8String(record[6]), depositMetadata)
 
         // Handler should have a balance of depositAmount
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);
 
         // relayer1 creates the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
+            domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
+            proposalData,
             { from: relayer1Address }
         ));
 
         // relayer2 votes in favor of the deposit proposal
         // because the relayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await BridgeInstance.voteProposal(
-            chainID,
+        // and then automatically executes the proposal
+        await TruffleAssert.passes(BridgeInstance.voteProposal(
+            domainID,
             expectedDepositNonce,
             resourceID,
-            depositProposalDataHash,
-            { from: relayer2Address }
-        ));
-        
-        // relayer1 will execute the deposit proposal
-        TruffleAssert.passes(await BridgeInstance.executeProposal(
-            chainID,
-            expectedDepositNonce,
             proposalData,
-            resourceID,
             { from: relayer2Address }
         ));
 

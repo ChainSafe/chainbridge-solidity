@@ -14,7 +14,7 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
 contract('GenericHandler - [constructor]', async () => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
     const centrifugeAssetMinCount = 1;
     const blankFunctionSig = '0x00000000';
     const blankFunctionDepositerOffset = 0;
@@ -32,16 +32,16 @@ contract('GenericHandler - [constructor]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)
         ]);
 
         initialResourceIDs = [
-            Helpers.createResourceID(CentrifugeAssetInstance1.address, chainID),
-            Helpers.createResourceID(CentrifugeAssetInstance2.address, chainID),
-            Helpers.createResourceID(CentrifugeAssetInstance3.address, chainID)
+            Helpers.createResourceID(CentrifugeAssetInstance1.address, domainID),
+            Helpers.createResourceID(CentrifugeAssetInstance2.address, domainID),
+            Helpers.createResourceID(CentrifugeAssetInstance3.address, domainID)
         ];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
         
@@ -55,70 +55,16 @@ contract('GenericHandler - [constructor]', async () => {
     it('[sanity] contract should be deployed successfully', async () => {
         TruffleAssert.passes(
             await GenericHandlerContract.new(
-                BridgeInstance.address,
-                initialResourceIDs,
-                initialContractAddresses,
-                initialDepositFunctionSignatures,
-                initialDepositFunctionDepositerOffsets,
-                initialExecuteFunctionSignatures));
-    });
-
-    it('should revert because initialResourceIDs and initialContractAddresses len mismatch', async () => {
-        await TruffleAssert.reverts(
-            GenericHandlerContract.new(
-                BridgeInstance.address,
-                [],
-                initialContractAddresses,
-                initialDepositFunctionSignatures,
-                initialDepositFunctionDepositerOffsets,
-                initialExecuteFunctionSignatures),
-                "initialResourceIDs and initialContractAddresses len mismatch");
-    });
-
-    it('should revert because provided contract addresses and function signatures len mismatch.', async () => {
-        await TruffleAssert.reverts(
-            GenericHandlerContract.new(
-                BridgeInstance.address,
-                initialResourceIDs,
-                initialContractAddresses,
-                [],
-                initialDepositFunctionDepositerOffsets,
-                initialExecuteFunctionSignatures),
-                "provided contract addresses and function signatures len mismatch");
-    });
-
-    it('should revert because provided contract addresses and function signatures len mismatch.', async () => {
-        await TruffleAssert.reverts(
-            GenericHandlerContract.new(
-                BridgeInstance.address,
-                initialResourceIDs,
-                initialContractAddresses,
-                initialDepositFunctionSignatures,
-                [],
-                initialExecuteFunctionSignatures),
-                "provided depositer offsets and function signatures len mismatch");
-    });
-
-    it('should revert because provided deposit and execute function signatures len mismatch', async () => {
-        await TruffleAssert.reverts(
-            GenericHandlerContract.new(
-                BridgeInstance.address,
-                initialResourceIDs,
-                initialContractAddresses,
-                initialDepositFunctionSignatures,
-                initialDepositFunctionDepositerOffsets,
-                []),
-                "provided deposit and execute function signatures len mismatch");
+                BridgeInstance.address));
     });
 
     it('contract mappings were set with expected values', async () => {
         const GenericHandlerInstance = await GenericHandlerContract.new(
-            BridgeInstance.address,
-            initialResourceIDs,
-            initialContractAddresses,
-            initialDepositFunctionSignatures,
-            initialDepositFunctionDepositerOffsets,
-            initialExecuteFunctionSignatures);
+            BridgeInstance.address);
+
+        for (let i = 0; i < initialResourceIDs.length; i++) {
+            await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], initialDepositFunctionSignatures[i], initialDepositFunctionDepositerOffsets[i], initialExecuteFunctionSignatures[i]);
+        }
         
         for (let i = 0; i < initialResourceIDs.length; i++) {
             const retrievedTokenAddress = await GenericHandlerInstance._resourceIDToContractAddress.call(initialResourceIDs[i]);

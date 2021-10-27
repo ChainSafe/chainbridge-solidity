@@ -16,7 +16,7 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 // This test does NOT include all getter methods, just 
 // getters that should work with only the constructor called
 contract('Bridge - [admin]', async accounts => {
-    const chainID = 1;
+    const domainID = 1;
     const initialRelayers = accounts.slice(0, 3);
     const initialRelayerThreshold = 2;
 
@@ -32,7 +32,7 @@ contract('Bridge - [admin]', async accounts => {
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(chainID, initialRelayers, initialRelayerThreshold, 0, 100);
+        BridgeInstance = await BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 0, 100);
         ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
     });
 
@@ -108,8 +108,8 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should set a Resource ID for handler address', async () => {
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [], [], []);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), Ethers.constants.AddressZero);
 
@@ -121,8 +121,8 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should set a ERC20 Resource ID and contract address', async () => {
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [], [], []);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await TruffleAssert.passes(BridgeInstance.adminSetResource(
             ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
@@ -138,8 +138,8 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should set a Generic Resource ID and contract address', async () => {
         const CentrifugeAssetInstance = await CentrifugeAssetContract.new();
-        const resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
-        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, [], [], [], [], []);
+        const resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
+        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address);
 
         await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, '0x00000000', 0, '0x00000000'));
         assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), CentrifugeAssetInstance.address);
@@ -154,9 +154,10 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should set ERC20MintableInstance.address as burnable', async () => {
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [resourceID], [ERC20MintableInstance.address], []);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
         await TruffleAssert.passes(BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance.address));
         assert.isTrue(await ERC20HandlerInstance._burnList.call(ERC20MintableInstance.address));
     });
@@ -194,15 +195,17 @@ contract('Bridge - [admin]', async accounts => {
         let handlerBalance;
 
         const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, [resourceID], [ERC20MintableInstance.address], []);
+        const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
 
         await ERC20MintableInstance.mint(tokenOwner, numTokens);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, numTokens);
-            
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, numTokens);
-        await ERC20HandlerInstance.fundERC20(ERC20MintableInstance.address, tokenOwner, numTokens);
+        
+        await ERC20MintableInstance.transfer(ERC20HandlerInstance.address, numTokens);
+
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, 0);
         handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
@@ -215,5 +218,25 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should require admin role to withdraw funds', async () => {
         await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, someAddress, someAddress, 0);
+    });
+
+    // Set nonce
+
+    it('Should set nonce', async () => {
+        const nonce = 3;
+        await BridgeInstance.adminSetDepositNonce(domainID, nonce);
+        const nonceAfterSet = await BridgeInstance._depositCounts.call(domainID);
+        assert.equal(nonceAfterSet, nonce);
+    });
+
+    it('Should require admin role to set nonce', async () => {
+        await assertOnlyAdmin(BridgeInstance.adminSetDepositNonce, 1, 3);
+    });
+
+    it('Should not allow for decrements of the nonce', async () => {
+        const currentNonce = 3;
+        await BridgeInstance.adminSetDepositNonce(domainID, currentNonce);
+        const newNonce = 2;
+        await TruffleAssert.reverts(BridgeInstance.adminSetDepositNonce(domainID, newNonce), "Does not allow decrements of the nonce");
     });
 });

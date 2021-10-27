@@ -13,7 +13,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -33,19 +33,19 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
 
-        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, chainID);
-        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, chainID);
+        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, domainID);
+        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, domainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC721MintableInstance1.address, ERC721MintableInstance2.address];
         burnableContractAddresses = [ERC721MintableInstance1.address]
 
         await Promise.all([
-            ERC721HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
         ]);
             
@@ -53,6 +53,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID1, ERC721MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID2, ERC721MintableInstance2.address),
+            BridgeInstance.adminSetBurnable(ERC721HandlerInstance.address, ERC721MintableInstance1.address),
         ]);
 
         depositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
@@ -72,7 +73,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     it('depositAmount of ERC721MintableInstance1 tokens should have been burned', async () => {
         await BridgeInstance.deposit(
-            chainID,
+            domainID,
             resourceID1,
             depositData,
             { from: depositerAddress }

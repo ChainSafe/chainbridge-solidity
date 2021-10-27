@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 import "./utils/SafeCast.sol";
+import "./handlers/HandlerHelpers.sol";
 
 contract NoArgument {
     event NoArgumentCalled();
@@ -47,5 +49,33 @@ contract SafeCaster {
 
     function toUint200(uint input) external pure returns(uint200) {
         return input.toUint200();
+    }
+}
+
+contract ReturnData {
+    function returnData(string memory argument) external pure returns(bytes32 response) {
+        assembly {
+            response := mload(add(argument, 32))
+        }
+    }
+}
+
+contract HandlerRevert is HandlerHelpers {
+    uint private _totalAmount;
+
+    constructor(
+        address          bridgeAddress
+    ) public HandlerHelpers(bridgeAddress) {
+    }
+
+    function executeProposal(bytes32, bytes calldata) external view {
+        if (_totalAmount == 0) {
+            revert('Something bad happened');
+        }
+        return;
+    }
+
+    function virtualIncreaseBalance(uint amount) external {
+        _totalAmount = amount;
     }
 }

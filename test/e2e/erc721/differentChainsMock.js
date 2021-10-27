@@ -9,12 +9,12 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Two EVM Chains', async accounts => {
     const originRelayerThreshold = 2;
-    const originChainID = 1;
+    const originDomainID = 1;
     const originRelayer1Address = accounts[3];
     const originRelayer2Address = accounts[4];
 
     const destinationRelayerThreshold = 2;
-    const destinationChainID = 2;
+    const destinationDomainID = 2;
     const destinationRelayer1Address = accounts[3];
     const destinationRelayer2Address = accounts[4];
 
@@ -28,7 +28,6 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let OriginERC721HandlerInstance;
     let originDepositData;
     let originDepositProposalData;
-    let originDepositProposalDataHash;
     let originResourceID;
     let originBurnableContractAddresses;
 
@@ -43,26 +42,26 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originChainID, [originRelayer1Address, originRelayer2Address], originRelayerThreshold, 0, 100).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationChainID, [destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold, 0, 100).then(instance => DestinationBridgeInstance = instance),
+            BridgeContract.new(originDomainID, [originRelayer1Address, originRelayer2Address], originRelayerThreshold, 0, 100).then(instance => OriginBridgeInstance = instance),
+            BridgeContract.new(destinationDomainID, [destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold, 0, 100).then(instance => DestinationBridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
         ]);
         
-        originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originChainID);
+        originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
         originBurnableContractAddresses = [];
         
-        destinationResourceID = Helpers.createResourceID(DestinationERC721MintableInstance.address, originChainID)
+        destinationResourceID = Helpers.createResourceID(DestinationERC721MintableInstance.address, originDomainID)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
         destinationBurnableContractAddresses = [DestinationERC721MintableInstance.address];
 
         await Promise.all([
-            ERC721HandlerContract.new(OriginBridgeInstance.address, originInitialResourceIDs, originInitialContractAddresses, originBurnableContractAddresses)
+            ERC721HandlerContract.new(OriginBridgeInstance.address)
                 .then(instance => OriginERC721HandlerInstance = instance),
-            ERC721HandlerContract.new(DestinationBridgeInstance.address, destinationInitialResourceIDs, destinationInitialContractAddresses, destinationBurnableContractAddresses)
+            ERC721HandlerContract.new(DestinationBridgeInstance.address)
                 .then(instance => DestinationERC721HandlerInstance = instance)
         ]);
 
@@ -72,12 +71,12 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
             OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address),
             OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
-            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address)
+            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address),
+            DestinationBridgeInstance.adminSetBurnable(DestinationERC721HandlerInstance.address, destinationBurnableContractAddresses[0])
         ]);
 
         originDepositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
         originDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, 32, 0);
-        originDepositProposalDataHash = Ethers.utils.keccak256(DestinationERC721HandlerInstance.address + originDepositProposalData.substr(2));
 
         destinationDepositData = Helpers.createERCDepositData(tokenID, 20, depositerAddress);
         destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
@@ -103,8 +102,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         let tokenOwner;
 
         // depositerAddress makes initial deposit of tokenID
-        TruffleAssert.passes(await OriginBridgeInstance.deposit(
-            destinationChainID,
+        await TruffleAssert.passes(OriginBridgeInstance.deposit(
+            destinationDomainID,
             originResourceID,
             originDepositData,
             { from: depositerAddress }
@@ -115,31 +114,23 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         assert.strictEqual(OriginERC721HandlerInstance.address, tokenOwner, "OriginERC721HandlerInstance.address does not own tokenID");
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
-            originChainID,
+        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
+            originDomainID,
             expectedDepositNonce,
             destinationResourceID,
-            originDepositProposalDataHash,
+            originDepositProposalData,
             { from: destinationRelayer1Address }
         ));
 
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await DestinationBridgeInstance.voteProposal(
-            originChainID,
+        // and then automatically executes the proposal
+        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
+            originDomainID,
             expectedDepositNonce,
             destinationResourceID,
-            originDepositProposalDataHash,
-            { from: destinationRelayer2Address }
-        ));
-
-        // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await DestinationBridgeInstance.executeProposal(
-            originChainID,
-            expectedDepositNonce,
             originDepositProposalData,
-            destinationResourceID,
             { from: destinationRelayer2Address }
         ));
 
@@ -158,8 +149,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await DestinationERC721MintableInstance.approve(DestinationERC721HandlerInstance.address, tokenID, { from: recipientAddress });
 
         // recipientAddress makes a deposit of the received depositAmount
-        TruffleAssert.passes(await DestinationBridgeInstance.deposit(
-            originChainID,
+        await TruffleAssert.passes(DestinationBridgeInstance.deposit(
+            originDomainID,
             destinationResourceID,
             destinationDepositData,
             { from: recipientAddress }
@@ -169,31 +160,23 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         TruffleAssert.reverts(DestinationERC721MintableInstance.ownerOf(tokenID), "ERC721: owner query for nonexistent token")
 
         // destinationRelayer1 creates the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
-            destinationChainID,
+        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
+            destinationDomainID,
             expectedDepositNonce,
             originResourceID,
-            destinationDepositProposalDataHash,
+            destinationDepositProposalData,
             { from: originRelayer1Address }
         ));
 
         // destinationRelayer2 votes in favor of the deposit proposal
         // because the destinationRelayerThreshold is 2, the deposit proposal will go
         // into a finalized state
-        TruffleAssert.passes(await OriginBridgeInstance.voteProposal(
-            destinationChainID,
+        // and then automatically executes the proposal
+        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
+            destinationDomainID,
             expectedDepositNonce,
             originResourceID,
-            destinationDepositProposalDataHash,
-            { from: originRelayer2Address }
-        ));
-
-        // destinationRelayer1 will execute the deposit proposal
-        TruffleAssert.passes(await OriginBridgeInstance.executeProposal(
-            destinationChainID,
-            expectedDepositNonce,
             destinationDepositProposalData,
-            originResourceID,
             { from: originRelayer2Address }
         ));
 

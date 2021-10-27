@@ -13,7 +13,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     const relayerThreshold = 2;
-    const chainID = 1;
+    const domainID = 1;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -34,19 +34,19 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
 
-        resourceID1 = Helpers.createResourceID(ERC20MintableInstance1.address, chainID);
-        resourceID2 = Helpers.createResourceID(ERC20MintableInstance2.address, chainID);
+        resourceID1 = Helpers.createResourceID(ERC20MintableInstance1.address, domainID);
+        resourceID2 = Helpers.createResourceID(ERC20MintableInstance2.address, domainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC20MintableInstance1.address, ERC20MintableInstance2.address];
         burnableContractAddresses = [ERC20MintableInstance1.address];
 
         await Promise.all([
-            ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses, burnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
             ERC20MintableInstance1.mint(depositerAddress, initialTokenAmount)
         ]);
 
@@ -54,6 +54,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
             ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address),
+            BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance1.address)
         ]);
 
         depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);

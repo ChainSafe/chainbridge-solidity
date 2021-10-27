@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -12,17 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
  */
 contract ERC20Safe {
     using SafeMath for uint256;
-
-    /**
-        @notice Used to transfer tokens into the safe to fund proposals.
-        @param tokenAddress Address of ERC20 to transfer.
-        @param owner Address of current token owner.
-        @param amount Amount of tokens to transfer.
-     */
-    function fundERC20(address tokenAddress, address owner, uint256 amount) public {
-        IERC20 erc20 = IERC20(tokenAddress);
-        _safeTransferFrom(erc20, owner, address(this), amount);
-    }
 
     /**
         @notice Used to gain custody of deposited token.

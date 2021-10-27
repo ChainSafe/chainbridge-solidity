@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
 
 /**
@@ -7,12 +8,10 @@ pragma solidity 0.6.12;
 interface IDepositExecute {
     /**
         @notice It is intended that deposit are made using the Bridge contract.
-        @param destinationChainID Chain ID deposit is expected to be bridged to.
-        @param depositNonce This value is generated as an ID by the Bridge contract.
         @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of additional data needed for a specific deposit.
      */
-    function deposit(bytes32 resourceID, uint8 destinationChainID, uint64 depositNonce, address depositer, bytes calldata data) external;
+    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external returns (bytes memory);
 
     /**
         @notice It is intended that proposals are executed by the Bridge contract.

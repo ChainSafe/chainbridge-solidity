@@ -17,7 +17,7 @@ const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 const Helpers = require('../helpers');
 
 contract('Gas Benchmark - [Deposits]', async (accounts) => {
-    const chainID = 1;
+    const domainID = 1;
     const relayerThreshold = 1;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -48,7 +48,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     before(async () => {
         await Promise.all([
-            BridgeContract.new(chainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
@@ -58,21 +58,13 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             ThreeArgumentsContract.new().then(instance => ThreeArgumentsInstance = instance)
         ]);
 
-        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, chainID);
-        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, chainID);
-        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, chainID);
-        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, chainID);
-        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, chainID);
-        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, chainID);
-        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, chainID);
-
-        const erc20InitialResourceIDs = [erc20ResourceID];
-        const erc20InitialContractAddresses = [ERC20MintableInstance.address];
-        const erc20BurnableContractAddresses = [];
-
-        const erc721InitialResourceIDs = [erc721ResourceID];
-        const erc721InitialContractAddresses = [ERC721MintableInstance.address];
-        const erc721BurnableContractAddresses = [];
+        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
+        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, domainID);
+        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, domainID);
+        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, domainID);
+        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, domainID);
         
         const genericInitialResourceIDs = [
             centrifugeAssetResourceID,
@@ -106,11 +98,11 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             Helpers.blankFunctionSig];
 
         await Promise.all([
-            ERC20HandlerContract.new(BridgeInstance.address, erc20InitialResourceIDs, erc20InitialContractAddresses, erc20BurnableContractAddresses).then(instance => ERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
             ERC20MintableInstance.mint(depositerAddress, erc20TokenAmount),
-            ERC721HandlerContract.new(BridgeInstance.address, erc721InitialResourceIDs, erc721InitialContractAddresses, erc721BurnableContractAddresses).then(instance => ERC721HandlerInstance = instance),
+            ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance.mint(depositerAddress, erc721TokenID, ""),
-            GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address, genericInitialResourceIDs, genericInitialContractAddresses, genericInitialDepositFunctionSignatures, genericInitialDepositFunctionDepositerOffsets, genericInitialExecuteFunctionSignatures)
+            GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address)
         ]);
 
         await Promise.all([
@@ -128,7 +120,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     it('Should make ERC20 deposit', async () => {
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             erc20ResourceID,
             Helpers.createERCDepositData(
                 erc20TokenAmount,
@@ -144,7 +136,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     it('Should make ERC721 deposit', async () => {
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             erc721ResourceID,
             Helpers.createERCDepositData(
                 erc721TokenID,
@@ -160,7 +152,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     it('Should make Generic deposit - Centrifuge asset', async () => {
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             centrifugeAssetResourceID,
             Helpers.createGenericDepositData('0xc0ff33'),
             { from: depositerAddress }
@@ -174,7 +166,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     it('Should make Generic deposit - No Argument', async () => {
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             noArgumentResourceID,
             Helpers.createGenericDepositData(null),
             { from: depositerAddress }
@@ -188,7 +180,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     it('Should make Generic deposit - One Argument', async () => {
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             oneArgumentResourceID,
             Helpers.createGenericDepositData(Helpers.toHex(42, 32)),
             { from: depositerAddress }
@@ -205,7 +197,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const argumentTwo = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
         const encodedMetaData = Helpers.abiEncode(['address[]','bytes4'], [argumentOne, argumentTwo]);
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             twoArgumentsResourceID,
             Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }
@@ -223,7 +215,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const argumentThree = true;
         const encodedMetaData = Helpers.abiEncode(['string','int8','bool'], [argumentOne, argumentTwo, argumentThree]);
         const depositTx = await BridgeInstance.deposit(
-            chainID,
+            domainID,
             threeArgumentsResourceID,
             Helpers.createGenericDepositData(encodedMetaData),
             { from: depositerAddress }

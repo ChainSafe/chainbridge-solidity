@@ -318,6 +318,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         handler.withdraw(tokenAddress, recipient, amountOrTokenID);
     }
 
+    function adminGenericWithdraw(
+        address handlerAddress,
+        bytes memory data
+    ) external onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.genericWithdraw(data);
+    }
+
     /**
         @notice Initiates a transfer using a specified handler contract.
         @notice Only callable when Bridge is not paused.

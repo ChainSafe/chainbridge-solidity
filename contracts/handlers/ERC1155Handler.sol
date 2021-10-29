@@ -71,19 +71,13 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
 
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
+        address recipient;
         uint[] memory tokenIDs;
         uint[] memory amounts;
-        bytes memory recipient;
         bytes memory transferData;
 
-        (tokenAddress, tokenIDs, amounts, recipient, transferData) = abi.decode(data, (address, uint[], uint[], bytes, bytes));
+        (tokenAddress, recipient, tokenIDs, amounts, transferData) = abi.decode(data, (address, address, uint[], uint[], bytes));
 
-        bytes20 recipientAddress;
-
-        assembly {
-            recipientAddress := mload(add(recipient, 0x20))
-        }
-
-        releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
+        releaseBatchERC1155(tokenAddress, address(this), recipient, tokenIDs, amounts, transferData);
     }
 }

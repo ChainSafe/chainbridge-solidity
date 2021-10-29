@@ -108,17 +108,11 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
 
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
+        address recipient;
         uint tokenID;
-        bytes memory recipient;
 
-        (tokenAddress, tokenID, recipient) = abi.decode(data, (address, uint, bytes));
+        (tokenAddress, recipient, tokenID) = abi.decode(data, (address, address, uint));
 
-        bytes20 recipientAddress;
-
-        assembly {
-            recipientAddress := mload(add(recipient, 0x20))
-        }
-
-        releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
+        releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 }

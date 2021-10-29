@@ -69,7 +69,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         }
     }
 
-    function genericWithdraw(bytes memory data) external override onlyBridge {
+    function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
         uint[] memory tokenIDs;
         uint[] memory amounts;
@@ -84,6 +84,6 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
             recipientAddress := mload(add(recipient, 0x20))
         }
 
-        releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, data);
+        releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
     }
 }

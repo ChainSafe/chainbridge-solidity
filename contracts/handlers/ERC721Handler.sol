@@ -106,13 +106,19 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         }
     }
 
-    /**
-        @notice Used to manually release ERC721 tokens from ERC721Safe.
-        @param tokenAddress Address of token contract to release.
-        @param recipient Address to release token to.
-        @param tokenID The ERC721 token ID to release.
-     */
-    function withdraw(address tokenAddress, address recipient, uint tokenID) external override onlyBridge {
-        releaseERC721(tokenAddress, address(this), recipient, tokenID);
+    function withdraw(bytes memory data) external override onlyBridge {
+        address tokenAddress;
+        uint tokenID;
+        bytes memory recipient;
+
+        (tokenAddress, tokenID, recipient) = abi.decode(data, (address, uint, bytes));
+
+        bytes20 recipientAddress;
+
+        assembly {
+            recipientAddress := mload(add(recipient, 0x20))
+        }
+
+        releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
     }
 }

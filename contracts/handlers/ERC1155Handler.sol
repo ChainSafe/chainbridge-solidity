@@ -45,6 +45,12 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         }
     }
 
+    /**
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
+        by a relayer on the deposit's destination chain.
+        @param data Consists of {tokenIDs}, {amounts}, {recipient},
+        and {transferData} all padded to 32 bytes.
+     */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint[] memory tokenIDs;
         uint[] memory amounts;
@@ -69,6 +75,10 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         }
     }
 
+    /**
+        @notice Used to manually release ERC1155 tokens from ERC1155Safe.
+        @param data Consists of {tokenAddress}, {recipient}, {tokenIDs}, {amounts}, and {transferData} all padded to 32 bytes.
+     */
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
         address recipient;

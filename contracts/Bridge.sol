@@ -301,6 +301,11 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         _fee = newFee.toUint128();
     }
 
+    /**
+        @notice Used to manually withdraw funds from ERC safes.
+        @param handlerAddress Address of handler to withdraw from.
+        @param data Data originally provided when withdraw was made.
+     */
     function adminWithdraw(
         address handlerAddress,
         bytes memory data

@@ -20,7 +20,7 @@ interface IERCHandler {
 
     /**
         @notice Withdraw funds from ERC safes.
-        @param data ABI-encoded withdrawal params relevant to the specified handler.
+        @param data ABI-encoded withdrawal params relevant to the handler.
      */
     function withdraw(bytes memory data) external;
 }

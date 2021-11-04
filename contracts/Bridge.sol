@@ -304,7 +304,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     /**
         @notice Used to manually withdraw funds from ERC safes.
         @param handlerAddress Address of handler to withdraw from.
-        @param data Data originally provided when withdraw was made.
+        @param data ABI-encoded withdrawal params relevant to the specified handler.
      */
     function adminWithdraw(
         address handlerAddress,

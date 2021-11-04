@@ -18,5 +18,9 @@ interface IERCHandler {
      */
     function setBurnable(address contractAddress) external;
 
+    /**
+        @notice Withdraw funds from ERC safes.
+        @param data ABI-encoded withdrawal params relevant to the specified handler.
+     */
     function withdraw(bytes memory data) external;
 }

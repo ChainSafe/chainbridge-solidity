@@ -89,7 +89,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @notice Data passed into the function should be constructed as follows:
         tokenAddress                           address     bytes  0 - 32
         recipient                              address     bytes  32 - 64
-        amount                                 uint        bytes  64 - END
+        amount                                 uint        bytes  64 - 96
      */
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;

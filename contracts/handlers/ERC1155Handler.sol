@@ -36,7 +36,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         (tokenIDs, amounts) = abi.decode(data, (uint[], uint[]));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
+        require(tokenAddress != address(0), "provided resourceID does not exist");
 
         if (_burnList[tokenAddress]) {
             burnBatchERC1155(tokenAddress, depositer, tokenIDs, amounts);

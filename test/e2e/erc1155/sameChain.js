@@ -99,7 +99,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
         const depositerBalance = await ERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
         assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount - depositAmount);
 
-        // // Assert ERC1155 balance was transferred to recipientAddress
+        // Assert ERC1155 balance was transferred to recipientAddress
         const recipientBalance = await ERC1155MintableInstance.balanceOf(recipientAddress, tokenID);
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
     });

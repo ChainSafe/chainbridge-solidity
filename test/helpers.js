@@ -28,6 +28,21 @@
         recipientAddress.substr(2);               // recipientAddress               (?? bytes)
 };
 
+const createERCWithdrawData = (tokenAddress, recipientAddress, tokenAmountOrID) => {
+    return '0x' +
+        toHex(tokenAddress, 32).substr(2) +
+        toHex(recipientAddress, 32).substr(2) +
+        toHex(tokenAmountOrID, 32).substr(2);
+}
+
+const createERC1155DepositData = (tokenIDs, amounts) => {
+    return abiEncode(["uint[]", "uint[]"], [tokenIDs, amounts]);
+}
+
+const createERC1155DepositProposalData = (tokenIDs, amounts, recipient, transferData) => {
+    return abiEncode(["uint[]", "uint[]", "bytes", "bytes"], [tokenIDs, amounts, recipient, transferData])
+}
+
 const createERC721DepositProposalData = (
     tokenAmountOrID, lenRecipientAddress,
     recipientAddress, lenMetaData, metaData) => {
@@ -105,6 +120,9 @@ module.exports = {
     abiEncode,
     getFunctionSignature,
     createERCDepositData,
+    createERCWithdrawData,
+    createERC1155DepositData,
+    createERC1155DepositProposalData,
     createGenericDepositData,
     createERC721DepositProposalData,
     createResourceID,

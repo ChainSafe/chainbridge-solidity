@@ -304,18 +304,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     /**
         @notice Used to manually withdraw funds from ERC safes.
         @param handlerAddress Address of handler to withdraw from.
-        @param tokenAddress Address of token to withdraw.
-        @param recipient Address to withdraw tokens to.
-        @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to withdraw.
+        @param data ABI-encoded withdrawal params relevant to the specified handler.
      */
     function adminWithdraw(
         address handlerAddress,
-        address tokenAddress,
-        address recipient,
-        uint256 amountOrTokenID
+        bytes memory data
     ) external onlyAdmin {
         IERCHandler handler = IERCHandler(handlerAddress);
-        handler.withdraw(tokenAddress, recipient, amountOrTokenID);
+        handler.withdraw(data);
     }
 
     /**

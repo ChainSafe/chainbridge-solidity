@@ -85,11 +85,19 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
     /**
         @notice Used to manually release ERC20 tokens from ERC20Safe.
-        @param tokenAddress Address of token contract to release.
-        @param recipient Address to release tokens to.
-        @param amount The amount of ERC20 tokens to release.
+        @param data Consists of {tokenAddress}, {recipient}, and {amount} all padded to 32 bytes.
+        @notice Data passed into the function should be constructed as follows:
+        tokenAddress                           address     bytes  0 - 32
+        recipient                              address     bytes  32 - 64
+        amount                                 uint        bytes  64 - 96
      */
-    function withdraw(address tokenAddress, address recipient, uint amount) external override onlyBridge {
+    function withdraw(bytes memory data) external override onlyBridge {
+        address tokenAddress;
+        address recipient;
+        uint amount;
+
+        (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
+
         releaseERC20(tokenAddress, recipient, amount);
     }
 }

@@ -27,6 +27,8 @@ contract('Bridge - [admin]', async accounts => {
     
     let BridgeInstance;
 
+    let withdrawData = '';
+
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: initialRelayers[1]}), "sender doesn't have admin role");
     };
@@ -211,13 +213,15 @@ contract('Bridge - [admin]', async accounts => {
         handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
         assert.equal(handlerBalance, numTokens);
 
-        await BridgeInstance.adminWithdraw(ERC20HandlerInstance.address, ERC20MintableInstance.address, tokenOwner, numTokens);
+        withdrawData = Helpers.createERCWithdrawData(ERC20MintableInstance.address, tokenOwner, numTokens);
+        
+        await BridgeInstance.adminWithdraw(ERC20HandlerInstance.address, withdrawData);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, numTokens);
     });
 
     it('Should require admin role to withdraw funds', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, someAddress, someAddress, 0);
+        await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, "0x0");
     });
 
     // Set nonce

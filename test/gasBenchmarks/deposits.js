@@ -7,6 +7,8 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
+const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
+const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const NoArgumentContract = artifacts.require("NoArgument");
@@ -26,12 +28,16 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     const erc20TokenAmount = 100;
     const erc721TokenID = 1;
+    const erc1155TokenID = 1;
+    const erc1155TokenAmount = 100;
 
     let BridgeInstance;
     let ERC20MintableInstance;
     let ERC20HandlerInstance;
     let ERC721MintableInstance;
     let ERC721HandlerInstance;
+    let ERC1155MintableInstance;
+    let ERC1155HandlerInstance;
     let CentrifugeAssetInstance;
     let NoArgumentInstance;
     let OneArgumentInstance;
@@ -40,6 +46,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     let erc20ResourceID;
     let erc721ResourceID;
+    let erc1155ResourceID;
     let centrifugeAssetResourceID;
     let noArgumentResourceID;
     let oneArgumentResourceID;
@@ -51,6 +58,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
+            ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
             NoArgumentContract.new().then(instance => NoArgumentInstance = instance),
             OneArgumentContract.new().then(instance => OneArgumentInstance = instance),
@@ -60,6 +68,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
         erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
         erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+        erc1155ResourceID = Helpers.createResourceID(ERC1155MintableInstance.address, domainID);
         centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
         noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, domainID);
         oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, domainID);
@@ -102,14 +111,18 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             ERC20MintableInstance.mint(depositerAddress, erc20TokenAmount),
             ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance.mint(depositerAddress, erc721TokenID, ""),
+            ERC1155HandlerContract.new(BridgeInstance.address).then(instance => ERC1155HandlerInstance = instance),
+            ERC1155MintableInstance.mintBatch(depositerAddress, [erc1155TokenID], [erc1155TokenAmount], "0x0"),
             GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address)
         ]);
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositerAddress }),
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositerAddress }),
+            ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, centrifugeAssetResourceID, genericInitialContractAddresses[0], genericInitialDepositFunctionSignatures[0], genericInitialDepositFunctionDepositerOffsets[0], genericInitialExecuteFunctionSignatures[0]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], genericInitialDepositFunctionSignatures[1], genericInitialDepositFunctionDepositerOffsets[1], genericInitialExecuteFunctionSignatures[1]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], genericInitialDepositFunctionSignatures[2], genericInitialDepositFunctionDepositerOffsets[2], genericInitialExecuteFunctionSignatures[2]),
@@ -146,6 +159,21 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
         gasBenchmarks.push({
             type: 'ERC721',
+            gasUsed: depositTx.receipt.gasUsed
+        });
+    });
+
+    it('Should make ERC1155 deposit', async () => {
+        const depositTx = await BridgeInstance.deposit(
+            domainID,
+            erc1155ResourceID,
+            Helpers.createERC1155DepositData(
+                [erc1155TokenID],
+                [erc1155TokenAmount]),
+            { from: depositerAddress });
+
+        gasBenchmarks.push({
+            type: 'ERC1155',
             gasUsed: depositTx.receipt.gasUsed
         });
     });

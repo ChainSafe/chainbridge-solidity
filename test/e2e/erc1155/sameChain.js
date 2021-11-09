@@ -103,4 +103,43 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
         const recipientBalance = await ERC1155MintableInstance.balanceOf(recipientAddress, tokenID);
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
     });
+
+    it("Handler's deposit function can be called by only bridge", async () => {
+        await TruffleAssert.reverts(ERC1155HandlerInstance.deposit(resourceID, depositerAddress, depositData, { from: depositerAddress }), "sender must be bridge contract");
+    });
+
+    it("Handler's executeProposal function can be called by only bridge", async () => {
+        await TruffleAssert.reverts(ERC1155HandlerInstance.executeProposal(resourceID, proposalData, { from: depositerAddress }), "sender must be bridge contract");
+    });
+
+    it("Handler's withdraw function can be called by only bridge", async () => {
+        let withdrawData;
+        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x0");
+
+        await TruffleAssert.reverts(ERC1155HandlerInstance.withdraw(withdrawData, { from: depositerAddress }), "sender must be bridge contract");
+    });
+
+    it("Should withdraw funds", async () => {        
+        let depositerBalance;
+        let handlerBalance;
+        let withdrawData;
+
+        depositerBalance = await ERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
+        assert.equal(depositerBalance, initialTokenAmount);
+
+        await ERC1155MintableInstance.safeTransferFrom(depositerAddress, ERC1155HandlerInstance.address, tokenID, depositAmount, "0x0", { from: depositerAddress });
+
+        depositerBalance = await ERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
+        assert.equal(depositerBalance.toNumber(), initialTokenAmount - depositAmount);
+
+        handlerBalance = await ERC1155MintableInstance.balanceOf(ERC1155HandlerInstance.address, tokenID);
+        assert.equal(handlerBalance, depositAmount);
+
+        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x0");
+
+        await BridgeInstance.adminWithdraw(ERC1155HandlerInstance.address, withdrawData);
+
+        depositerBalance = await ERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
+        assert.equal(depositerBalance, initialTokenAmount);
+    });
 });

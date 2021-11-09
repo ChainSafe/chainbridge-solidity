@@ -43,6 +43,10 @@ const createERC1155DepositProposalData = (tokenIDs, amounts, recipient, transfer
     return abiEncode(["uint[]", "uint[]", "bytes", "bytes"], [tokenIDs, amounts, recipient, transferData])
 }
 
+const createERC1155WithdrawData = (tokenAddress, recipient, tokenIDs, amounts, transferData) => {
+    return abiEncode(["address", "address", "uint[]", "uint[]", "bytes"], [tokenAddress, recipient, tokenIDs, amounts, transferData])
+}
+
 const createERC721DepositProposalData = (
     tokenAmountOrID, lenRecipientAddress,
     recipientAddress, lenMetaData, metaData) => {
@@ -123,6 +127,7 @@ module.exports = {
     createERCWithdrawData,
     createERC1155DepositData,
     createERC1155DepositProposalData,
+    createERC1155WithdrawData,
     createGenericDepositData,
     createERC721DepositProposalData,
     createResourceID,

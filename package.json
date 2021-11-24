@@ -12,9 +12,9 @@
     "create-local": "graph create --node http://localhost:8020/ erc20Handler",
     "remove-local": "graph remove --node http://localhost:8020/ erc20Handler",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 erc20Handler",
-    "create": "graph create --node http://54.224.186.126:8020/ erc20Handler",
-    "remove": "graph remove --node http://54.224.186.126:8020/ erc20Handler",
-    "deploy": "graph deploy --node http://54.224.186.126:8020/ --ipfs http://34.239.244.191:5001 erc20Handler"
+    "create": "graph create --node http://3.95.121.167:8020/ erc20Handler",
+    "remove": "graph remove --node http://3.95.121.167:8020/ erc20Handler",
+    "deploy": "graph deploy --node http://3.95.121.167:8020/ --ipfs http://34.239.244.191:5001 erc20Handler"
   },
   "author": "",
   "license": "ISC",

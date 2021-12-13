@@ -72,6 +72,7 @@ contract Pausable {
 
     /**
      * @dev Triggers stopped state.
+     * @param sender Address which executes pause.
      *
      * Requirements:
      *
@@ -84,6 +85,7 @@ contract Pausable {
 
     /**
      * @dev Returns to normal state.
+     * @param sender Address which executes unpause.
      *
      * Requirements:
      *

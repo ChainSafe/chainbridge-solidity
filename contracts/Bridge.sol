@@ -38,10 +38,10 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     mapping(uint8 => uint64) public _depositCounts;
     // resourceID => handler address
     mapping(bytes32 => address) public _resourceIDToHandlerAddress;
+    // forwarder address => is Valid
+    mapping(address => bool) public isValidForwarder;
     // destinationDomainID + depositNonce => dataHash => Proposal
     mapping(uint72 => mapping(bytes32 => Proposal)) private _proposals;
-    // forwarder address => is Valid
-    mapping(address => bool) private isValidForwarder;
 
     event RelayerThresholdChanged(uint256 newThreshold);
     event RelayerAdded(address relayer);
@@ -108,15 +108,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         return (_relayerBit(relayer) & uint(proposal._yesVotes)) > 0;
     }
 
-    function _msgSender() internal override view returns (address payable signer) {
-        signer = msg.sender;
-        if (isValidForwarder[signer]) {
-            bytes memory data = msg.data;
-            uint256 length = msg.data.length;
+    function _msgSender() internal override view returns (address payable) {
+        address payable signer = msg.sender;
+        if (msg.data.length >= 20 && isValidForwarder[signer]) {
             assembly {
-                signer := mload(add(data, length))
+                signer := shr(96, calldataload(sub(calldatasize(), 20)))
             }
         }
+        return signer;
     }
 
     /**
@@ -164,9 +163,10 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param newAdmin Address that admin role will be granted to.
      */
     function renounceAdmin(address newAdmin) external onlyAdmin {
-        require(_msgSender() != newAdmin, 'Cannot renounce oneself');
+        address sender = _msgSender();
+        require(sender != newAdmin, 'Cannot renounce oneself');
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-        renounceRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        renounceRole(DEFAULT_ADMIN_ROLE, sender);
     }
 
     /**
@@ -281,12 +281,12 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     /**
-        @notice Add a forwarder to be used.
+        @notice Set a forwarder to be used.
         @notice Only callable by an address that currently has the admin role.
         @param forwarder Forwarder address to be added.
         @param valid Decision for the specific forwarder.
      */
-    function adminAddForwarder(address forwarder, bool valid) external onlyAdmin {
+    function adminSetForwarder(address forwarder, bool valid) external onlyAdmin {
         isValidForwarder[forwarder] = valid;
     }
 

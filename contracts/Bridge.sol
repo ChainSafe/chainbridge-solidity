@@ -88,7 +88,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     function _onlyAdminOrRelayer() private view {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) || hasRole(RELAYER_ROLE, _msgSender()),
+        address sender = _msgSender();
+        require(hasRole(DEFAULT_ADMIN_ROLE, sender) || hasRole(RELAYER_ROLE, sender),
             "sender is not relayer or admin");
     }
 
@@ -174,7 +175,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by an address that currently has the admin role.
      */
     function adminPauseTransfers() external onlyAdmin {
-        _pause();
+        _pause(_msgSender());
     }
 
     /**
@@ -182,7 +183,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by an address that currently has the admin role.
      */
     function adminUnpauseTransfers() external onlyAdmin {
-        _unpause();
+        _unpause(_msgSender());
     }
 
     /**
@@ -355,11 +356,12 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         require(handler != address(0), "resourceID not mapped to handler");
 
         uint64 depositNonce = ++_depositCounts[destinationDomainID];
+        address sender = _msgSender();
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        bytes memory handlerResponse = depositHandler.deposit(resourceID, _msgSender(), data);
+        bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, data);
 
-        emit Deposit(destinationDomainID, resourceID, depositNonce, _msgSender(), data, handlerResponse);
+        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, data, handlerResponse);
     }
 
     /**
@@ -385,9 +387,11 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             executeProposal(domainID, depositNonce, data, resourceID, true);
             return;
         }
+
+        address sender = _msgSender();
         
         require(uint(proposal._status) <= 1, "proposal already executed/cancelled");
-        require(!_hasVoted(proposal, _msgSender()), "relayer already voted");
+        require(!_hasVoted(proposal, sender), "relayer already voted");
 
         if (proposal._status == ProposalStatus.Inactive) {
             proposal = Proposal({
@@ -407,7 +411,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         }
 
         if (proposal._status != ProposalStatus.Cancelled) {
-            proposal._yesVotes = (proposal._yesVotes | _relayerBit(_msgSender())).toUint200();
+            proposal._yesVotes = (proposal._yesVotes | _relayerBit(sender)).toUint200();
             proposal._yesVotesTotal++; // TODO: check if bit counting is cheaper.
 
             emit ProposalVote(domainID, depositNonce, proposal._status, dataHash);

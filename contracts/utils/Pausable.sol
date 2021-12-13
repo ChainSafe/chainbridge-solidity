@@ -77,9 +77,9 @@ contract Pausable {
      *
      * - The contract must not be paused.
      */
-    function _pause() internal virtual whenNotPaused {
+    function _pause(address sender) internal virtual whenNotPaused {
         _paused = true;
-        emit Paused(msg.sender);
+        emit Paused(sender);
     }
 
     /**
@@ -89,8 +89,8 @@ contract Pausable {
      *
      * - The contract must be paused.
      */
-    function _unpause() internal virtual whenPaused {
+    function _unpause(address sender) internal virtual whenPaused {
         _paused = false;
-        emit Unpaused(msg.sender);
+        emit Unpaused(sender);
     }
 }

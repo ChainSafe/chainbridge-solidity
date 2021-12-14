@@ -21,6 +21,12 @@
     return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
  };
 
+ const createCallData = (contractInstance, functionName, valueTypes, values) => {
+    let signature = getFunctionSignature(contractInstance, functionName);
+    let encodedABI = abiEncode(valueTypes, values);
+    return signature + encodedABI.substr(2);
+ };
+
  const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
     return '0x' +
         toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
@@ -123,6 +129,7 @@ module.exports = {
     toHex,
     abiEncode,
     getFunctionSignature,
+    createCallData,
     createERCDepositData,
     createERCWithdrawData,
     createERC1155DepositData,

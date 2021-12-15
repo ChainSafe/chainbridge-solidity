@@ -79,3 +79,11 @@ contract HandlerRevert is HandlerHelpers {
         _totalAmount = amount;
     }
 }
+
+contract Forwarder {
+    function execute(bytes memory data, address to, address sender) external {
+        bytes memory callData = abi.encodePacked(data, sender);
+        (bool success, ) = to.call(callData);
+        require(success, "Relay call failed");
+    }
+}

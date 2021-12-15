@@ -5,6 +5,5 @@ type BridgeEvent @entity {
   amount: BigInt!
   txHash: Bytes!
   timestamp: BigInt!
-  direction: String!
   status: String!
 }

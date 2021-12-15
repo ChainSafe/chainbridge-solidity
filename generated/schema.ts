@@ -22,7 +22,6 @@ export class BridgeEvent extends Entity {
     this.set("amount", Value.fromBigInt(BigInt.zero()));
     this.set("txHash", Value.fromBytes(Bytes.empty()));
     this.set("timestamp", Value.fromBigInt(BigInt.zero()));
-    this.set("direction", Value.fromString(""));
     this.set("status", Value.fromString(""));
   }
 
@@ -95,15 +94,6 @@ export class BridgeEvent extends Entity {
 
   set timestamp(value: BigInt) {
     this.set("timestamp", Value.fromBigInt(value));
-  }
-
-  get direction(): string {
-    let value = this.get("direction");
-    return value!.toString();
-  }
-
-  set direction(value: string) {
-    this.set("direction", Value.fromString(value));
   }
 
   get status(): string {

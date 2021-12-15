@@ -8,9 +8,9 @@ dataSources:
     name: Contract
     network: sx
     source:
-      address: '0xaBBbbe96080c67088c5D12fA01211442E95B95B3'
+      address: '0x4112Ec937970Bc70CfC7cC6B1Fba05b6DE94D457'
       abi: ERC20Handler
-      startBlock: 208125
+      startBlock: 949042
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5

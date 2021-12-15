@@ -8,7 +8,6 @@ export function handleERC20InitiateBridge(event: ERC20InitiateBridge): void {
   entity.resourceId = event.params.resourceID
   entity.txHash = event.transaction.hash
   entity.timestamp = event.block.timestamp
-  entity.direction = 'outbound'
   entity.status = 'pending'
   entity.save()
 }
@@ -20,7 +19,6 @@ export function handleERC20ProposalExecuted(event: ERC20ProposalExecuted): void 
   entity.resourceId = event.params.resourceID
   entity.txHash = event.transaction.hash
   entity.timestamp = event.block.timestamp
-  entity.direction = 'inbound'
   entity.status = 'success'
   entity.save()
 }

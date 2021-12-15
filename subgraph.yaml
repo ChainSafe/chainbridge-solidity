@@ -21,6 +21,8 @@ dataSources:
         - name: ERC20Handler
           file: ./build/contracts/ERC20Handler.json
       eventHandlers:
+        - event: ERC20InitiateBridge(indexed address,indexed bytes32,uint256)
+          handler: handleERC20InitiateBridge
         - event: ERC20ProposalExecuted(indexed address,indexed bytes32,uint256)
           handler: handleERC20ProposalExecuted
       file: ./src/mapping.ts

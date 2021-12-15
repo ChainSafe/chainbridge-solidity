@@ -10,6 +10,32 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class ERC20InitiateBridge extends ethereum.Event {
+  get params(): ERC20InitiateBridge__Params {
+    return new ERC20InitiateBridge__Params(this);
+  }
+}
+
+export class ERC20InitiateBridge__Params {
+  _event: ERC20InitiateBridge;
+
+  constructor(event: ERC20InitiateBridge) {
+    this._event = event;
+  }
+
+  get recipientAddress(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get resourceID(): Bytes {
+    return this._event.parameters[1].value.toBytes();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class ERC20ProposalExecuted extends ethereum.Event {
   get params(): ERC20ProposalExecuted__Params {
     return new ERC20ProposalExecuted__Params(this);

@@ -45,5 +45,9 @@
   },
   "peerDependencies": {
     "ethers": ">= 5.0.0"
+  },
+  "dependencies": {
+    "eth-sig-util": "^3.0.1",
+    "ethereumjs-wallet": "^1.0.2"
   }
 }

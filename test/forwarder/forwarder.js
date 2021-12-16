@@ -8,7 +8,7 @@ const Wallet = require('ethereumjs-wallet').default;
 const ethSigUtil = require('eth-sig-util');
 const ForwarderContract = artifacts.require("Forwarder");
 
-contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
+contract('Forwarder', async (accounts) => {
     const relayer1 = Wallet.generate();
     const relayer2 = Wallet.generate();
     const relayer1Address = relayer1.getAddressString();

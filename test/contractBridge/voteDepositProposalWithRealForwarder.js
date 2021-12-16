@@ -147,7 +147,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer1Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: 0,
             data: voteCallData
         }
@@ -182,7 +182,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer1Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: 0,
             data: voteCallData
         }
@@ -203,7 +203,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer2Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: 0,
             data: voteCallData
         }
@@ -224,7 +224,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer3Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: 0,
             data: voteCallData
         }
@@ -252,7 +252,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: depositerAddress,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: 0,
             data: voteCallData
         }
@@ -287,7 +287,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer1Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: relayer1_forwarder_nonce,
             data: voteCallData
         }
@@ -315,7 +315,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer1Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: relayer1_forwarder_nonce,
             data: voteCallData
         }
@@ -337,7 +337,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer2Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: relayer2_forwarder_nonce,
             data: voteCallData
         }
@@ -359,7 +359,7 @@ contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
             from: relayer3Address,
             to: BridgeInstance.address,
             value: '0',
-            gas: '100000',
+            gas: '300000',
             nonce: relayer3_forwarder_nonce,
             data: voteCallData
         }

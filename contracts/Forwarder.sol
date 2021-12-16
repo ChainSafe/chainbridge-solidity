@@ -5,6 +5,9 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/drafts/EIP712.sol";
 
+/**
+    @notice This contract refers to Openzeppelin's MinimalForwarder contract.
+ */
 contract Forwarder is EIP712 {
     using ECDSA for bytes32;
 

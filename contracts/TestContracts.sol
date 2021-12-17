@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "./utils/SafeCast.sol";
 import "./handlers/HandlerHelpers.sol";
+import "./Forwarder.sol";
 
 contract NoArgument {
     event NoArgumentCalled();
@@ -86,5 +87,24 @@ contract TestForwarder {
         bytes memory callData = abi.encodePacked(data, sender);
         (bool success, ) = to.call(callData);
         require(success, "Relay call failed");
+    }
+}
+
+contract TestTarget {
+    uint public calls = 0;
+    uint public gasLeft;
+    bytes public data;
+    fallback() external payable {
+        calls++;
+        data = msg.data;
+        gasLeft = gasleft();
+    }
+}
+
+contract ResponseForwarder is Forwarder {
+    bool public status;
+
+    function response(ForwardRequest calldata req, bytes calldata signature) external {
+        (status, ) = execute(req, signature);
     }
 }

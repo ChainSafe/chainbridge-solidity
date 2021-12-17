@@ -8,7 +8,6 @@ const Wallet = require('ethereumjs-wallet').default;
 const ethSigUtil = require('eth-sig-util');
 const ForwarderContract = artifacts.require("Forwarder");
 const TestTargetContract = artifacts.require("TestTarget");
-const ResponseForwarderContract = artifacts.require("ResponseForwarder");
 
 contract('Forwarder', async (accounts) => {
     const relayer1 = Wallet.generate();
@@ -45,7 +44,6 @@ contract('Forwarder', async (accounts) => {
 
     let ForwarderInstance;
     let TestTargetInstance;
-    let ResponseForwarderInstance;
 
     let sign;
     let request;
@@ -53,7 +51,6 @@ contract('Forwarder', async (accounts) => {
     beforeEach(async () => {
         ForwarderInstance = await ForwarderContract.new();
         TestTargetInstance = await TestTargetContract.new();
-        ResponseForwarderInstance = await ResponseForwarderContract.new();
         
         const signer = provider.getSigner();
 

@@ -175,17 +175,20 @@ contract('Forwarder', async (accounts) => {
     });
 
     it ('If signature is valid, but req.from != signer, it should be reverted and should not be verified', async () => {
-        const request_other =  {
-            from: relayer2Address,
-            to: TestTargetInstance.address,
-            value: '0',
-            gas: '300000',
-            nonce: 0,
-            data: '0x'
-        }
+        const sign_other = ethSigUtil.signTypedMessage(
+            relayer2.getPrivateKey(),
+            {
+                data: {
+                    types: types,
+                    domain: domain,
+                    primaryType: 'ForwardRequest',
+                    message: request
+                }
+            }
+        )
 
-        assert.equal((await ForwarderInstance.verify(request_other, sign)), false);
-        return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
+        assert.equal((await ForwarderInstance.verify(request, sign_other)), false);
+        return TruffleAssert.reverts(ForwarderInstance.execute(request, sign_other), "MinimalForwarder: signature does not match request");
     });
 
     it ('If signature is valid, but req.nonce != nonce[signer], it should be reverted and should not be verified', async () => {
@@ -198,18 +201,23 @@ contract('Forwarder', async (accounts) => {
             data: '0x'
         }
 
-        assert.equal((await ForwarderInstance.verify(request_other, sign)), false);
-        return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
+        const sign_other = ethSigUtil.signTypedMessage(
+            relayer1.getPrivateKey(),
+            {
+                data: {
+                    types: types,
+                    domain: domain,
+                    primaryType: 'ForwardRequest',
+                    message: request_other
+                }
+            }
+        )
+
+        assert.equal((await ForwarderInstance.verify(request_other, sign_other)), false);
+        return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign_other), "MinimalForwarder: signature does not match request");
     });
 
     it ('Execute should succeed even if the call to the target failed', async () => {
-        const new_domain = {
-            name,
-            version,
-            chainId: 1,
-            verifyingContract: ResponseForwarderInstance.address,
-        };
-
         const new_request = {
             from: relayer1Address,
             to: ForwarderInstance.address,
@@ -224,16 +232,15 @@ contract('Forwarder', async (accounts) => {
             {
                 data: {
                     types: types,
-                    domain: new_domain,
+                    domain: domain,
                     primaryType: 'ForwardRequest',
                     message: new_request
                 }
             }
         )
 
-        await ResponseForwarderInstance.response(new_request, new_sign);
-        const status = await ResponseForwarderInstance.status();
-        assert.equal(status, false);
+        const result = await ForwarderInstance.execute.call(new_request, new_sign);
+        assert.equal(result[0], false);
     });
 
     it ('Should be failed in case of execute is called with less gas than req.gas', async () => {
@@ -257,8 +264,9 @@ contract('Forwarder', async (accounts) => {
                 }
             }
         )
-        const accountBalance = await provider.getBalance(accounts[0]);
-        await TruffleAssert.fails(ForwarderInstance.execute(new_request, new_sign, {value: accountBalance.toString()}));
+
+        await TestTargetInstance.setBurnAllGas();
+        await TruffleAssert.fails(ForwarderInstance.execute(new_request, new_sign, {gas: 100000}));
     });
 
     it ('req.gas should be passed to the target contract', async () => {
@@ -284,9 +292,10 @@ contract('Forwarder', async (accounts) => {
             }
         )
 
-        await ForwarderInstance.execute(new_request, new_sign);
+        await ForwarderInstance.execute(new_request, new_sign, {gas: 200000});
         const availableGas = await TestTargetInstance.gasLeft();
-        assert(availableGas > 40000);
+        assert(availableGas > 96000);
+        assert(availableGas < requestGas);
     });
 
     it ('req.data should be passed to the target contract along with the req.from at the end', async () => {
@@ -317,7 +326,7 @@ contract('Forwarder', async (accounts) => {
         assert.equal(callData, expectedData);
     });
 
-    it('req.value should be passed to the target contract', async () => {
+    it ('req.value should be passed to the target contract', async () => {
         const request_value = Ethers.utils.parseEther('0.1');
         const new_request = {
             from: relayer3Address,
@@ -344,12 +353,12 @@ contract('Forwarder', async (accounts) => {
         assert.equal((await targetContract_balance).toString(), request_value.toString());
     });
 
-    it('The successful execute can not be replayed again', async () => {
+    it ('The successful execute can not be replayed again', async () => {
         await ForwarderInstance.execute(request, sign);
         return TruffleAssert.reverts(ForwarderInstance.execute(request, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it('Only a single call to the target is performed during the execution', async () => {
+    it ('Only a single call to the target is performed during the execution', async () => {
         await ForwarderInstance.execute(request, sign);
         const calls = await TestTargetInstance.calls();
         assert.equal(calls.toNumber(), 1);

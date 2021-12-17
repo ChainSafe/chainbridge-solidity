@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import "./utils/SafeCast.sol";
 import "./handlers/HandlerHelpers.sol";
-import "./Forwarder.sol";
 
 contract NoArgument {
     event NoArgumentCalled();
@@ -94,17 +93,17 @@ contract TestTarget {
     uint public calls = 0;
     uint public gasLeft;
     bytes public data;
+    bool public burnAllGas;
     fallback() external payable {
+        gasLeft = gasleft();
         calls++;
         data = msg.data;
-        gasLeft = gasleft();
+        if (burnAllGas) {
+            assert(false);
+        }
     }
-}
 
-contract ResponseForwarder is Forwarder {
-    bool public status;
-
-    function response(ForwardRequest calldata req, bytes calldata signature) external {
-        (status, ) = execute(req, signature);
+    function setBurnAllGas() public {
+        burnAllGas = true;
     }
 }

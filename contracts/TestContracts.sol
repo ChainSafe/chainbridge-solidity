@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import "./utils/SafeCast.sol";
 import "./handlers/HandlerHelpers.sol";
@@ -80,10 +81,29 @@ contract HandlerRevert is HandlerHelpers {
     }
 }
 
-contract Forwarder {
+contract TestForwarder {
     function execute(bytes memory data, address to, address sender) external {
         bytes memory callData = abi.encodePacked(data, sender);
         (bool success, ) = to.call(callData);
         require(success, "Relay call failed");
+    }
+}
+
+contract TestTarget {
+    uint public calls = 0;
+    uint public gasLeft;
+    bytes public data;
+    bool public burnAllGas;
+    fallback() external payable {
+        gasLeft = gasleft();
+        calls++;
+        data = msg.data;
+        if (burnAllGas) {
+            assert(false);
+        }
+    }
+
+    function setBurnAllGas() public {
+        burnAllGas = true;
     }
 }

@@ -11,7 +11,7 @@ const Helpers = require('../helpers');
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const ForwarderContract = artifacts.require("Forwarder");
+const ForwarderContract = artifacts.require("TestForwarder");
 
 contract('Bridge - [voteProposal through forwarder]', async (accounts) => {
     const originDomainID = 1;

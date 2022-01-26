@@ -411,9 +411,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         proposal._status = ProposalStatus.Executed;
 
-        //TODO: 1. try with this commented out, if still fails then try #2
-        //IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
-        //depositHandler.executeProposal(proposal._resourceID, data);
+        IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
+        depositHandler.executeProposal(proposal._resourceID, data);
 
         emit ProposalEvent(chainID, depositNonce, proposal._status, proposal._resourceID, proposal._dataHash);
     }

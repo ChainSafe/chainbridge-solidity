@@ -404,14 +404,16 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         bytes32 dataHash = keccak256(abi.encodePacked(handler, data));
         Proposal storage proposal = _proposals[nonceAndID][dataHash];
 
+        //TODO: 2. try with all the below requires commented out, if still fails then hardhat fork and run local relayer and test sx-wallet bridge
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
         require(proposal._status == ProposalStatus.Passed, "proposal already transferred");
         require(dataHash == proposal._dataHash, "data doesn't match datahash");
 
         proposal._status = ProposalStatus.Executed;
 
-        IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
-        depositHandler.executeProposal(proposal._resourceID, data);
+        //TODO: 1. try with this commented out, if still fails then try #2
+        //IDepositExecute depositHandler = IDepositExecute(_resourceIDToHandlerAddress[proposal._resourceID]);
+        //depositHandler.executeProposal(proposal._resourceID, data);
 
         emit ProposalEvent(chainID, depositNonce, proposal._status, proposal._resourceID, proposal._dataHash);
     }

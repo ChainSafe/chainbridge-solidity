@@ -43,7 +43,7 @@ contract SXVault {
     @notice Allows for withdrawal 
     @notice Only callable by an address that has the owner role (is the contract deployer).
   */
-  function withdraw(uint256 amount) public onlyOwner {
+  function withdraw(uint256 amount) external onlyOwner {
     require(address(this).balance >= amount, 'Insufficient balance.');
 
     // transfer sender SX
@@ -55,23 +55,21 @@ contract SXVault {
 
   /**
     @notice NOT USED YET - we don't support native SX->Polygon bridge transfers yet.
-    @notice Locks specified amount of SX when bridging SX out of SXN. Called by deposit() of ChainBridge GenericHandler.
+    @notice Locks specified amount of SX when bridging SX out of SXN. Called by deposit() of ERC20SXHandler.
   */
-  function deposit(address depositor, uint256 amount) public onlyHandler {
+  function deposit(address depositor, uint256 amount) external onlyHandler {
     emit Deposit(depositor, amount);
   }
 
   /**
-    @notice Unlocks specified amount of SX to the specified recipient. Called by executeProposal() of ChainBridge GenericHandler.
+    @notice Unlocks specified amount of SX to the specified recipient. Called by executeProposal() of ERC20SXHandler.
   */
-  function execute(address recipient, uint256 amount) public onlyHandler {
-    //require(address(this).balance >= amount, 'Insufficient balance.');
-
-    //deposits[msg.sender] += msg.value;
+  function execute(address recipient, uint256 amount) external onlyHandler {
+    require(address(this).balance >= amount, 'Insufficient balance.');
 
     // transfer recipient SX
-    //(bool success, ) = payable(recipient).call{ value: amount }('');
-    //require(success, 'Transfer failed.');
+    (bool success, ) = payable(recipient).call{ value: amount }('');
+    require(success, 'Transfer failed.');
 
     //TODO: emit event
     emit Execute(recipient, amount);

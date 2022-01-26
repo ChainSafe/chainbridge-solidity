@@ -2,6 +2,7 @@ pragma solidity 0.6.4;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IDepositExecute.sol';
+import '../interfaces/ISXVault.sol';
 import './HandlerHelpers.sol';
 import '../ERC20Safe.sol';
 import '@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol';
@@ -196,8 +197,11 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
     if (resourceID == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) {
       require(_sxVaultContract != address(0), "SXVault address not set!");
 
-      (bool success,) = _sxVaultContract.call(abi.encodePacked(bytes4(keccak256("execute(address,uint256)")), address(recipientAddress), amount));
-      require(success, "call to sxVault failed");
+      ISXVault sxVault = ISXVault(_sxVaultContract);
+      sxVault.execute(address(recipientAddress), amount);
+
+      //(bool success,) = _sxVaultContract.call(abi.encodePacked(bytes4(keccak256("execute(address,uint256)")), address(recipientAddress), amount));
+      //require(success, "call to sxVault failed");
     } else {
       require(_contractWhitelist[tokenAddress], 'provided tokenAddress is not whitelisted');
 

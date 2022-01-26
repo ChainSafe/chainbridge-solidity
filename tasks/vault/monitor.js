@@ -3,7 +3,7 @@ const { task } = require('hardhat/config')
 /**
  * Monitors SXVault contract for deposit and execute events
  *
- * npx hardhat sx-vault:monitor --network toronto --vaultaddress 0x050964EECB3824A8B75729e7388f810eb8acCd56
+ * npx hardhat sx-vault:monitor --network toronto --vaultaddress 0xD43C150576e2423e4a4F54cdefDC7595886E96A2
  */
 task('sx-vault:monitor', 'Monitor SXVault contract')
   .addParam('vaultaddress', 'Address of SXVault')
@@ -11,9 +11,6 @@ task('sx-vault:monitor', 'Monitor SXVault contract')
     const SXVault = await ethers.getContractFactory('SXVault')
 
     const vault = SXVault.attach(vaultaddress)
-
-    console.log('Deposit signature: ' + vault.interface.getSighash('deposit'))
-    console.log('Execute signature: ' + vault.interface.getSighash('execute'))
 
     //eventSignature: "Deposit(address,uint256)" 0x47e7ef24
     vault.on('Deposit', async (deposit) => {
@@ -35,8 +32,11 @@ task('sx-vault:monitor', 'Monitor SXVault contract')
     } catch (err) {
       console.error(err)
     }
-    const execute = await vault.execute('0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B', 4)
     */
+    //const execute = await vault.execute('0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B', 4)
+    //const receipt = await execute.wait()
+    //console.log(receipt.transactionHash)
+    
 
     await new Promise((res) => setTimeout(() => res(null), 60000))
   })

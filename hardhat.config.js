@@ -1,4 +1,5 @@
 require('@nomiclabs/hardhat-waffle')
+require('./tasks/handler/setsxvault')
 require('./tasks/vault/deploy')
 require('./tasks/vault/monitor')
 require('dotenv').config()

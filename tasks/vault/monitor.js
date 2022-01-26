@@ -22,21 +22,5 @@ task('sx-vault:monitor', 'Monitor SXVault contract')
       console.log('Executed!')
     })
 
-    /*
-    try {
-      const deposit = await vault.deposit('0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B', 4)
-      const receipt = await deposit.wait()
-      for (const event of receipt.events) {
-        console.log(JSON.stringify(event))
-      }
-    } catch (err) {
-      console.error(err)
-    }
-    */
-    //const execute = await vault.execute('0x62877dDCd49aD22f5eDfc6ac108e9a4b5D2bD88B', 4)
-    //const receipt = await execute.wait()
-    //console.log(receipt.transactionHash)
-    
-
     await new Promise((res) => setTimeout(() => res(null), 60000))
   })

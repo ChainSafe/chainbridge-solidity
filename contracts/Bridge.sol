@@ -406,11 +406,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         require(proposal._status != ProposalStatus.Inactive, "proposal is not active");
         require(proposal._status == ProposalStatus.Passed, "proposal already transferred");
-
-        // when transfering ERC20 to native SX, dataHash of proposal will not match that of GenericHandler
-        if (resourceID != 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) {
-          require(dataHash == proposal._dataHash, "data doesn't match datahash");
-        }
+        require(dataHash == proposal._dataHash, "data doesn't match datahash");
 
         proposal._status = ProposalStatus.Executed;
 

@@ -11,7 +11,7 @@ import '@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol';
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
+contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
   struct DepositRecord {
     address _tokenAddress;
     uint8 _lenDestinationRecipientAddress;

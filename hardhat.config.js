@@ -16,6 +16,18 @@ module.exports = {
       chainId: 5,
       accounts: [process.env.PK_CHAINBRIDGE_LOCAL],
     },
+    hardhat: {
+      mining: {
+        auto: true, // so remaining vesting time actually decreases
+        interval: 5000,
+      },
+      accounts: [
+        {
+          privateKey: process.env.PK_TORONTO_DEPLOYER,
+          balance: "10000000000000000000000",
+        }
+      ],
+    },
     toronto: {
       url: 'https://rpc.toronto.sx.technology',
       chainId: 647,
@@ -25,8 +37,8 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: '0.6.4',
-      },
+        version: '0.6.4', // chainbridge
+      }
     ],
   },
 }

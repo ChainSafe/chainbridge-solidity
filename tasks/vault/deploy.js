@@ -3,7 +3,8 @@ const { task } = require('hardhat/config')
 /**
  * Deploys the SXVault contract
  *
- * TORONTO: npx hardhat sx-vault:deploy --network toronto --handleraddress 0x3305BF417B92bd1E726B4B076B2495b49CA7b172
+ * TORONTO: npx hardhat sx-vault:deploy --network toronto --handleraddress 0xa64CB0eE892a2C84D72e2c2cB8fFdEef1cb7bfD5
+ * npx hardhat sx-vault:deploy --network localhost --handleraddress 0xa64CB0eE892a2C84D72e2c2cB8fFdEef1cb7bfD5
  */
 task('sx-vault:deploy', 'Deploys the SXVault contract')
   .addParam('handleraddress', 'Address of ChainBridge GenericHandler')

@@ -170,6 +170,7 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
   function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
     uint256 amount;
     bytes memory destinationRecipientAddress;
+    bytes32 sxResourceID = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
     assembly {
       amount := calldataload(0x64)
@@ -194,14 +195,10 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
     }
 
     // if we are dealing with Polygon ERC20 SX bridged over, call SXVault contract to send native SX
-    if (resourceID == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) {
+    if (resourceID == sxResourceID) {
       require(_sxVaultContract != address(0), "SXVault address not set!");
-
       ISXVault sxVault = ISXVault(_sxVaultContract);
-      sxVault.execute(address(recipientAddress), amount);
-
-      //(bool success,) = _sxVaultContract.call(abi.encodePacked(bytes4(keccak256("execute(address,uint256)")), address(recipientAddress), amount));
-      //require(success, "call to sxVault failed");
+      sxVault.bridgeExit(address(recipientAddress), amount);
     } else {
       require(_contractWhitelist[tokenAddress], 'provided tokenAddress is not whitelisted');
 

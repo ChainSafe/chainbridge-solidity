@@ -1,30 +1,48 @@
 pragma solidity 0.6.4;
 
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
 /**
-    @title Manages deposited native SX.
-    @notice This contract is intended to be used with GenericHandler contract.
+    @title Manages deposited native SX to be paid out to bridge arrivals.
+    @notice This contract is currently used by our bridging ERC20SXHandler contract, which is permissioned to
+    call {bridgeExit()} - the final/exit function used to support ChainBridge transfers from ERC-20 tokens 
+    on the origin chain to native tokens on our own chain.
+    @notice This contract requires periodic top ups of native tokens.
  */
-contract SXVault {
-  address public _owner;
+contract SXVault is AccessControl {
+
   address public _handlerAddress;
 
   event Fund(address indexed addr, uint256 amount);
   event Withdraw(address indexed addr, uint256 amount);
-  event Deposit(address indexed addr, uint256 amount);
-  event Execute(address indexed addr, uint256 amount);
+  event BridgeExit(address indexed addr, uint256 amount);
 
-  modifier onlyOwner() {
-    require(msg.sender == _owner, 'Ownable: You are not the owner.');
+  modifier onlyAdmin() {
+    require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), 'Sender must be an admin.');
     _;
   }
 
   modifier onlyHandler() {
-    require(msg.sender == _handlerAddress, 'sender must be handler contract');
+    require(_handlerAddress == msg.sender, 'Sender must be handler contract.');
     _;
   }
 
+  /**
+      @notice Initializes SXVault, assigns {msg.sender} as the admin (referenced by onlyAdmin),
+      assigns {handlerAddress} used by onlyHandler.
+      @param handlerAddress Address of the ERC20SXHandler contract, permissioned to call bridgeExit().
+  */
   constructor(address handlerAddress) public {
-    _owner = msg.sender;
+    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _handlerAddress = handlerAddress;
+  }
+
+  /**
+      @notice Assigns {handlerAddress} used by ownlyHandler.
+      @notice Only callable by admin.
+      @param handlerAddress Address of the ERC20SXHandler contract, permissioned to call bridgeExit().
+  */
+  function setHandler(address handlerAddress) external onlyAdmin {
     _handlerAddress = handlerAddress;
   }
 
@@ -33,20 +51,21 @@ contract SXVault {
   }
 
   /**
-    @notice Payable function used to fund contract.
+      @notice Fund the contract with {msg.value} from {msg.sender}.
+      @notice Emits {Fund} event.
   */
   function fund() public payable {
     emit Fund(msg.sender, msg.value);
   }
 
   /**
-    @notice Allows for withdrawal 
-    @notice Only callable by an address that has the owner role (is the contract deployer).
+      @notice Withdraw {amount} from the contract.
+      @notice Only callable by admin.
+      @notice Emits {Withdraw} event.
   */
-  function withdraw(uint256 amount) external onlyOwner {
+  function withdraw(uint256 amount) external onlyAdmin {
     require(address(this).balance >= amount, 'Insufficient balance.');
 
-    // transfer sender SX
     (bool success, ) = payable(msg.sender).call{ value: amount }('');
     require(success, 'Transfer failed.');
 
@@ -54,24 +73,16 @@ contract SXVault {
   }
 
   /**
-    @notice NOT USED YET - we don't support native SX->Polygon bridge transfers yet.
-    @notice Locks specified amount of SX when bridging SX out of SXN. Called by deposit() of ERC20SXHandler.
+      @notice Sends the specified {recipient} native SX specified by {amount}.
+      @notice Only callable by handler.
+      @notice Emits {BridgeExit} event.
   */
-  function deposit(address depositor, uint256 amount) external onlyHandler {
-    emit Deposit(depositor, amount);
-  }
-
-  /**
-    @notice Unlocks specified amount of SX to the specified recipient. Called by executeProposal() of ERC20SXHandler.
-  */
-  function execute(address recipient, uint256 amount) external onlyHandler {
+  function bridgeExit(address recipient, uint256 amount) external onlyHandler {
     require(address(this).balance >= amount, 'Insufficient balance.');
 
-    // transfer recipient SX
     (bool success, ) = payable(recipient).call{ value: amount }('');
     require(success, 'Transfer failed.');
 
-    //TODO: emit event
-    emit Execute(recipient, amount);
+    emit BridgeExit(recipient, amount);
   }
 }

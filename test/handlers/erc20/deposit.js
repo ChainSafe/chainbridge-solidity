@@ -113,7 +113,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         });
     });
 
-    it("When non-contract addresses are whitelisted in the handler, deposits will be failed", async () => {
+    it("When non-contract addresses are whitelisted in the handler, deposits which the addresses are set as a token address will be failed", async () => {
         const ZERO_Address = "0x0000000000000000000000000000000000000000";
         const EOA_Address = accounts[1];
         const resourceID_ZERO_Address = Helpers.createResourceID(ZERO_Address, domainID);
@@ -132,7 +132,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             { from: depositerAddress }
-        ), "The token address is not a contract");
+        ), "ERC20: not a contract");
 
         await TruffleAssert.reverts(BridgeInstance.deposit(
             domainID,
@@ -142,7 +142,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             { from: depositerAddress }
-        ), "The token address is not a contract");
+        ), "ERC20: not a contract");
     });
 });
 

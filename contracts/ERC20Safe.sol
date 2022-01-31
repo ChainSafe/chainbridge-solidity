@@ -92,7 +92,7 @@ contract ERC20Safe {
         assembly {
             tokenSize := extcodesize(token)
         }         
-        require(tokenSize > 0, "The token address is not a contract");
+        require(tokenSize > 0, "ERC20: not a contract");
 
         (bool success, bytes memory returndata) = address(token).call(data);
         require(success, "ERC20: call failed");

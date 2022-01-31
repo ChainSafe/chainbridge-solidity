@@ -87,7 +87,13 @@ contract ERC20Safe {
         @param token Token instance call targets
         @param data encoded call data
      */
-    function _safeCall(IERC20 token, bytes memory data) private {        
+    function _safeCall(IERC20 token, bytes memory data) private {
+        uint256 tokenSize;
+        assembly {
+            tokenSize := extcodesize(token)
+        }         
+        require(tokenSize > 0, "ERC20: not a contract");
+
         (bool success, bytes memory returndata) = address(token).call(data);
         require(success, "ERC20: call failed");
 

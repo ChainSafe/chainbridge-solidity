@@ -77,10 +77,10 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
         ]);
         
         originDepositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
-        originDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x0");
+        originDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x");
 
         destinationDepositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
-        destinationDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], depositerAddress, "0x0");
+        destinationDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], depositerAddress, "0x");
     });
 
     it("[sanity] depositerAddress' balance of tokenID should be equal to initialTokenAmount", async () => {

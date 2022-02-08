@@ -53,7 +53,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
         await ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress });
 
         depositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
-        proposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x0");
+        proposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x");
     });
 
     it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {
@@ -114,7 +114,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
     it("Handler's withdraw function can be called by only bridge", async () => {
         let withdrawData;
-        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x0");
+        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x");
 
         await TruffleAssert.reverts(ERC1155HandlerInstance.withdraw(withdrawData, { from: depositerAddress }), "sender must be bridge contract");
     });
@@ -135,7 +135,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
         handlerBalance = await ERC1155MintableInstance.balanceOf(ERC1155HandlerInstance.address, tokenID);
         assert.equal(handlerBalance, depositAmount);
 
-        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x0");
+        withdrawData = Helpers.createERC1155WithdrawData(ERC1155MintableInstance.address, depositerAddress, [tokenID], [depositAmount], "0x");
 
         await BridgeInstance.adminWithdraw(ERC1155HandlerInstance.address, withdrawData);
 

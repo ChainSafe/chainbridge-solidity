@@ -82,7 +82,7 @@ const createGenericDepositData = (hexMetaData) => {
 };
 
 const createResourceID = (contractAddress, domainID) => {
-    return toHex(contractAddress + toHex(domainID, 0).substr(2), 32)
+    return toHex(contractAddress + toHex(domainID, 1).substr(2), 32)
 };
 
 const assertObjectsMatch = (expectedObj, actualObj) => {

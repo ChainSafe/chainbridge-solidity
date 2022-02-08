@@ -14,7 +14,7 @@
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 erc20Handler",
     "create": "graph create --node https://graph.toronto.sx.technology/ erc20Handler",
     "remove": "graph remove --node https://graph.toronto.sx.technology/ erc20Handler",
-    "deploy": "graph deploy --node https://graph.toronto.sx.technology/ --ipfs http://34.239.244.191:5001 erc20Handler"
+    "deploy": "graph deploy --node https://graph.toronto.sx.technology/ --ipfs http://18.233.93.165:5001 erc20Handler"
   },
   "author": "",
   "license": "ISC",

@@ -3,7 +3,7 @@ const { task } = require('hardhat/config')
 /**
  * Sets the SXVault contract address on ERC20SXHandler
  *
- * TORONTO: npx hardhat handler:set-sxvault --network toronto --handleraddress 0xa64CB0eE892a2C84D72e2c2cB8fFdEef1cb7bfD5 --sxvaultaddress 0x4090CC97A2A8fC6A3f7721558Ea8b9650DEbD708
+ * TORONTO: npx hardhat handler:set-sxvault --network toronto --handleraddress 0x057C1202cb39c949ed7cce74fBbc8DaB4E3A5A69 --sxvaultaddress 0xa3DA53832f9BC740a95F39C9283C095E5548A9Ce
  */
 task('handler:set-sxvault', 'Sets the SXVault contract address on ERC20SXHandler')
   .addParam('handleraddress', 'Address of ERC20SXHandler contract')  

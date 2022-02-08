@@ -8,18 +8,18 @@ dataSources:
     name: Contract
     network: sx
     source:
-      address: '0x4112Ec937970Bc70CfC7cC6B1Fba05b6DE94D457'
-      abi: ERC20Handler
-      startBlock: 949042
+      address: '0xef5c6CcabB4595A3988dB30ff707C711AE7F402A'
+      abi: ERC20SXHandler
+      startBlock: 135396
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - ERC20Handler
+        - ERC20SXHandler
       abis:
-        - name: ERC20Handler
-          file: ./build/contracts/ERC20Handler.json
+        - name: ERC20SXHandler
+          file: ./artifacts/contracts/handlers/ERC20SXHandler.sol/ERC20SXHandler.json
       eventHandlers:
         - event: ERC20InitiateBridge(indexed address,indexed bytes32,uint256)
           handler: handleERC20InitiateBridge

@@ -157,7 +157,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     it('Should execute ERC721 deposit proposal', async () => {
         const depositNonce = 2;
         const lenMetaData = 0;
-        const metaData = 0;
+        const metaData = "0x";
         const depositData = Helpers.createERC721DepositProposalData(
             erc721TokenID,
             lenRecipientAddress,

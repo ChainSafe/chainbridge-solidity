@@ -13,15 +13,15 @@ jobs:
         node-version: [12.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2.3.4
-      - uses: actions/cache@v2.1.6
+        uses: actions/checkout@v2.4.0
+      - uses: actions/cache@v2.1.7
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
@@ -39,9 +39,9 @@ jobs:
         node-version: [12.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
       - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
       - name: NPM install

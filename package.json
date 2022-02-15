@@ -23,7 +23,7 @@
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@codechecks/client": "^0.1.10",
-    "@openzeppelin/contracts": "^3.4.2",
+    "@openzeppelin/contracts": "^4.5.0",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-node-resolve": "^11.1.1",

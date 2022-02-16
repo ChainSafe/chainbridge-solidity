@@ -5,6 +5,7 @@ import '../interfaces/IDepositExecute.sol';
 import './HandlerHelpers.sol';
 import '../ERC20Safe.sol';
 import '@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol';
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
     @title Handles ERC20 deposits and deposit executions.
@@ -120,7 +121,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     require(_contractWhitelist[tokenAddress], 'provided tokenAddress is not whitelisted');
 
     if (_burnList[tokenAddress]) {
-      burnERC20(tokenAddress, depositer, amount);
+      // effectively 'burn' ERC20 that does not implement ERC20Burnable 'burnFrom()'
+      IERC20 erc20 = IERC20(tokenAddress);
+      erc20.transferFrom(depositer, address(0x000000000000000000000000000000000000dEaD), amount);
     } else {
       lockERC20(tokenAddress, depositer, address(this), amount);
     }

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
 import "./HandlerHelpers.sol";
 import "../ERC1155Safe.sol";
-import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155MetadataURI.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
 contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155Holder {
     using ERC165Checker for address;

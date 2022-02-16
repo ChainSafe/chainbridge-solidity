@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/presets/ERC1155PresetMinterPauser.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
 
 /**
     @title Manages deposited ERC1155s.

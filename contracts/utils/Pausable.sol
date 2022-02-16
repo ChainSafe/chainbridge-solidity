@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 
 
 /**
@@ -27,7 +27,7 @@ contract Pausable {
     /**
      * @dev Initializes the contract in unpaused state.
      */
-    constructor () internal {
+    constructor () {
         _paused = false;
     }
 

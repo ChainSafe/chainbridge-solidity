@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/drafts/EIP712.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 /**
     @notice This contract refers to Openzeppelin's MinimalForwarder contract.

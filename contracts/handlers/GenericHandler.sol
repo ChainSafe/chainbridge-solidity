@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/IGenericHandler.sol";
@@ -104,7 +104,7 @@ contract GenericHandler is IGenericHandler {
             }
             // metadataDepositer contains 0xdepositerAddressdepositerAddressdeposite************************
             // Shift it 12 bytes right:   0x000000000000000000000000depositerAddressdepositerAddressdeposite
-            require(depositer == address(metadataDepositer >> 96), 'incorrect depositer in the data');
+            require(depositer == address(uint160(metadataDepositer >> 96)), 'incorrect depositer in the data');
         }
 
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");

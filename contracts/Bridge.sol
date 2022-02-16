@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.6.12;
+pragma solidity 0.8.11;
 pragma experimental ABIEncoderV2;
 
 import "./utils/AccessControl.sol";
@@ -109,8 +109,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         return (_relayerBit(relayer) & uint(proposal._yesVotes)) > 0;
     }
 
-    function _msgSender() internal override view returns (address payable) {
-        address payable signer = msg.sender;
+    function _msgSender() internal override view returns (address) {
+        address signer = msg.sender;
         if (msg.data.length >= 20 && isValidForwarder[signer]) {
             assembly {
                 signer := shr(96, calldataload(sub(calldatasize(), 20)))

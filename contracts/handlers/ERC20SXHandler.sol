@@ -25,6 +25,7 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
   address public _owner;
   address public _sxVaultContract;
+  bytes32 sxResourceID = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
   // depositNonce => Deposit Record
   mapping(uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
@@ -112,6 +113,9 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
     address depositer,
     bytes calldata data
   ) external override onlyBridge {
+
+    require(resourceID != sxResourceID, 'SX outbound transfers currently not supported.');
+
     bytes memory recipientAddress;
     uint256 amount;
     uint256 lenRecipientAddress;
@@ -170,7 +174,6 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
   function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
     uint256 amount;
     bytes memory destinationRecipientAddress;
-    bytes32 sxResourceID = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
     assembly {
       amount := calldataload(0x64)

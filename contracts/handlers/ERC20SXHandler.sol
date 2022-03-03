@@ -20,7 +20,7 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
         bytes32 _resourceID;
         bytes _destinationRecipientAddress;
         address _depositer;
-        uint256 _amount;
+        uint64 _amount;
     }
 
     address public _owner;
@@ -223,7 +223,7 @@ contract ERC20SXHandler is IDepositExecute, HandlerHelpers, ERC20Safe {
     function withdraw(
         address tokenAddress,
         address recipient,
-        uint256 amount
+        uint amount
     ) external override onlyBridge {
         releaseERC20(tokenAddress, recipient, amount);
     }

@@ -14,16 +14,16 @@ import "@openzeppelin/contracts/presets/ERC20PresetMinterPauser.sol";
 contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     struct DepositRecord {
         address _tokenAddress;
-        uint8 _lenDestinationRecipientAddress;
-        uint8 _destinationChainID;
+        uint8    _lenDestinationRecipientAddress;
+        uint8   _destinationChainID;
         bytes32 _resourceID;
-        bytes _destinationRecipientAddress;
+        bytes   _destinationRecipientAddress;
         address _depositer;
-        uint256 _amount;
+        uint    _amount;
     }
 
     // depositNonce => Deposit Record
-    mapping(uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
+    mapping (uint8 => mapping(uint64 => DepositRecord)) public _depositRecords;
 
     event ERC20InitiateBridge(address indexed recipientAddress, bytes32 indexed resourceID, uint256 amount);
 
@@ -42,7 +42,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         Also, these arrays must be ordered in the way that {initialResourceIDs}[0] is the intended resourceID for {initialContractAddresses}[0].
      */
     constructor(
-        address bridgeAddress,
+        address          bridgeAddress,
         bytes32[] memory initialResourceIDs,
         address[] memory initialContractAddresses,
         address[] memory burnableContractAddresses
@@ -93,15 +93,15 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @notice Emits {ERC20InitiateBridge} event with recipientAddress, resourceId, and amount.
      */
     function deposit(
-        bytes32 resourceID,
-        uint8 destinationChainID,
+        bytes32   resourceID,
+        uint8  destinationChainID,
         uint64 depositNonce,
         address depositer,
-        bytes calldata data
+        bytes   calldata data
     ) external override onlyBridge {
-        bytes memory recipientAddress;
-        uint256 amount;
-        uint256 lenRecipientAddress;
+        bytes   memory recipientAddress;
+        uint256        amount;
+        uint256        lenRecipientAddress;
 
         assembly {
 
@@ -157,8 +157,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @notice Emits {ERC20ProposalExecuted} event with recipientAddress, resourceId, and amount.
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
-        uint256 amount;
-        bytes memory destinationRecipientAddress;
+        uint256       amount;
+        bytes memory  destinationRecipientAddress;
 
         assembly {
             amount := calldataload(0x64)
@@ -199,7 +199,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         @param recipient Address to release tokens to.
         @param amount The amount of ERC20 tokens to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint256 amount) external override onlyBridge {
+    function withdraw(address tokenAddress, address recipient, uint amount) external override onlyBridge {
         releaseERC20(tokenAddress, recipient, amount);
     }
 }

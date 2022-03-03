@@ -19,7 +19,11 @@ contract ERC20Safe {
         @param owner Address of current token owner.
         @param amount Amount of tokens to transfer.
      */
-    function fundERC20(address tokenAddress, address owner, uint256 amount) public {
+    function fundERC20(
+        address tokenAddress,
+        address owner,
+        uint256 amount
+    ) public {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransferFrom(erc20, owner, address(this), amount);
     }
@@ -31,9 +35,29 @@ contract ERC20Safe {
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
      */
-    function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
+    function lockERC20(
+        address tokenAddress,
+        address owner,
+        address recipient,
+        uint256 amount
+    ) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransferFrom(erc20, owner, recipient, amount);
+    }
+
+    /**
+        @notice Manually 'burn' ERC20 that does not implement ERC20Burnable 'burnFrom()' by sending to dead address.
+        @param tokenAddress Address of ERC20 to manually burn.
+        @param owner Address of current token owner.
+        @param amount Amount of tokens to transfer.
+     */
+    function manualBurnERC20(
+        address tokenAddress,
+        address owner,
+        uint256 amount
+    ) internal {
+        IERC20 erc20 = IERC20(tokenAddress);
+        _safeTransferFrom(erc20, owner, address(0x000000000000000000000000000000000000dEaD), amount);
     }
 
     /**
@@ -42,7 +66,11 @@ contract ERC20Safe {
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
      */
-    function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
+    function releaseERC20(
+        address tokenAddress,
+        address recipient,
+        uint256 amount
+    ) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransfer(erc20, recipient, amount);
     }
@@ -53,10 +81,13 @@ contract ERC20Safe {
         @param recipient Address to mint token to.
         @param amount Amount of token to mint.
      */
-    function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
+    function mintERC20(
+        address tokenAddress,
+        address recipient,
+        uint256 amount
+    ) internal {
         ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
         erc20.mint(recipient, amount);
-
     }
 
     /**
@@ -65,7 +96,11 @@ contract ERC20Safe {
         @param owner Current owner of tokens.
         @param amount Amount of tokens to burn.
      */
-    function burnERC20(address tokenAddress, address owner, uint256 amount) internal {
+    function burnERC20(
+        address tokenAddress,
+        address owner,
+        uint256 amount
+    ) internal {
         ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
         erc20.burnFrom(owner, amount);
     }
@@ -76,10 +111,13 @@ contract ERC20Safe {
         @param to Address to transfer token to
         @param value Amount of token to transfer
      */
-    function _safeTransfer(IERC20 token, address to, uint256 value) private {
+    function _safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 value
+    ) private {
         _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
-
 
     /**
         @notice used to transfer ERC20s safely
@@ -88,7 +126,12 @@ contract ERC20Safe {
         @param to Address to transfer token to
         @param value Amount of token to transfer
      */
-    function _safeTransferFrom(IERC20 token, address from, address to, uint256 value) private {
+    function _safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 value
+    ) private {
         _safeCall(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
@@ -97,14 +140,12 @@ contract ERC20Safe {
         @param token Token instance call targets
         @param data encoded call data
      */
-    function _safeCall(IERC20 token, bytes memory data) private {        
+    function _safeCall(IERC20 token, bytes memory data) private {
         (bool success, bytes memory returndata) = address(token).call(data);
         require(success, "ERC20: call failed");
 
         if (returndata.length > 0) {
-
             require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
     }
-
 }

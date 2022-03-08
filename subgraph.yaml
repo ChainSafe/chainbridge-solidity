@@ -1,0 +1,28 @@
+specVersion: 0.0.2
+description: ChainBridge Contracts
+repository: https://gitlab.com/nextgenbt/sx-network/chainbridge-contracts
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Contract
+    network: sx
+    source:
+      address: '0xef5c6CcabB4595A3988dB30ff707C711AE7F402A'
+      abi: ERC20SXHandler
+      startBlock: 135396
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - ERC20SXHandler
+      abis:
+        - name: ERC20SXHandler
+          file: ./artifacts/contracts/handlers/ERC20SXHandler.sol/ERC20SXHandler.json
+      eventHandlers:
+        - event: ERC20InitiateBridge(indexed address,indexed bytes32,uint256)
+          handler: handleERC20InitiateBridge
+        - event: ERC20ProposalExecuted(indexed address,indexed bytes32,uint256)
+          handler: handleERC20ProposalExecuted
+      file: ./src/mapping.ts

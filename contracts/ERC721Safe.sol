@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.4;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -18,7 +19,11 @@ contract ERC721Safe {
         @param owner Address of current token owner.
         @param tokenID ID of token to transfer.
      */
-    function fundERC721(address tokenAddress, address owner, uint tokenID) public {
+    function fundERC721(
+        address tokenAddress,
+        address owner,
+        uint256 tokenID
+    ) public {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, address(this), tokenID);
     }
@@ -30,10 +35,14 @@ contract ERC721Safe {
         @param recipient Address to transfer token to.
         @param tokenID ID of token to transfer.
      */
-    function lockERC721(address tokenAddress, address owner, address recipient, uint tokenID) internal {
+    function lockERC721(
+        address tokenAddress,
+        address owner,
+        address recipient,
+        uint256 tokenID
+    ) internal {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, recipient, tokenID);
-
     }
 
     /**
@@ -43,7 +52,12 @@ contract ERC721Safe {
         @param recipient Address to transfer token to.
         @param tokenID ID of token to transfer.
      */
-    function releaseERC721(address tokenAddress, address owner, address recipient, uint256 tokenID) internal {
+    function releaseERC721(
+        address tokenAddress,
+        address owner,
+        address recipient,
+        uint256 tokenID
+    ) internal {
         IERC721 erc721 = IERC721(tokenAddress);
         erc721.transferFrom(owner, recipient, tokenID);
     }
@@ -55,7 +69,12 @@ contract ERC721Safe {
         @param tokenID ID of token to mint.
         @param data Optional data to send along with mint call.
      */
-    function mintERC721(address tokenAddress, address recipient, uint256 tokenID, bytes memory data) internal {
+    function mintERC721(
+        address tokenAddress,
+        address recipient,
+        uint256 tokenID,
+        bytes memory data
+    ) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.mint(recipient, tokenID, string(data));
     }
@@ -69,5 +88,4 @@ contract ERC721Safe {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
         erc721.burn(tokenID);
     }
-
 }

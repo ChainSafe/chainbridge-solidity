@@ -1,4 +1,5 @@
-pragma solidity 0.6.4;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,17 +15,6 @@ contract ERC20Safe {
     using SafeMath for uint256;
 
     /**
-        @notice Used to transfer tokens into the safe to fund proposals.
-        @param tokenAddress Address of ERC20 to transfer.
-        @param owner Address of current token owner.
-        @param amount Amount of tokens to transfer.
-     */
-    function fundERC20(address tokenAddress, address owner, uint256 amount) public {
-        IERC20 erc20 = IERC20(tokenAddress);
-        _safeTransferFrom(erc20, owner, address(this), amount);
-    }
-
-    /**
         @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
         @param owner Address of current token owner.
@@ -34,6 +24,17 @@ contract ERC20Safe {
     function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransferFrom(erc20, owner, recipient, amount);
+    }
+
+    /**
+        @notice Manually 'burn' ERC20 that does not implement ERC20Burnable 'burnFrom()' by sending to dead address.
+        @param tokenAddress Address of ERC20 to manually burn.
+        @param owner Address of current token owner.
+        @param amount Amount of tokens to transfer.
+     */
+    function manualBurnERC20(address tokenAddress, address owner, uint256 amount) internal {
+        IERC20 erc20 = IERC20(tokenAddress);
+        _safeTransferFrom(erc20, owner, address(0x000000000000000000000000000000000000dEaD), amount);
     }
 
     /**
@@ -56,7 +57,6 @@ contract ERC20Safe {
     function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
         ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
         erc20.mint(recipient, amount);
-
     }
 
     /**

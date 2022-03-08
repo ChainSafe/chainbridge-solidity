@@ -1,5 +1,15 @@
 # chainbridge-solidity
 
+## SX Network Info
+
+This repo is based off `v1.0.0` of upstream repo https://github.com/ChainSafe/chainbridge-solidity.git.
+
+It is referenced by https://gitlab.com/nextgenbt/sx-network/chainbridge-deploy which maintains our version of the cb-sol-cli tool.
+
+Updates to ChainBridge-related contracts should be merged into the `master` branch here prior to cloning/pulling from the repo above.
+
+## ChainBridge
+
 [![Coverage Status](https://coveralls.io/repos/github/ChainSafe/chainbridge-solidity/badge.svg?branch=master)](https://coveralls.io/github/ChainSafe/chainbridge-solidity?branch=master)
 
 ChainBridge uses Solidity smart contracts to enable transfers to and from EVM compatible chains. These contracts consist of a core bridge contract (Bridge.sol) and a set of handler contracts (ERC20Handler.sol, ERC721Handler.sol, and GenericHandler.sol). The bridge contract is responsible for initiating, voting on, and executing proposed transfers. The handlers are used by the bridge contract to interact with other existing contracts.
@@ -29,5 +39,3 @@ Requires `nodejs` and `npm`.
 `make test`: Runs truffle tests.
 
 `make compile`: Compile contracts.
-
-

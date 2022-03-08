@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.4;
 
 /**
@@ -12,5 +13,10 @@ interface IGenericHandler {
         @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
         @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
      */
-    function setResource(bytes32 resourceID, address contractAddress, bytes4 depositFunctionSig, bytes4 executeFunctionSig) external;
+    function setResource(
+        bytes32 resourceID,
+        address contractAddress,
+        bytes4 depositFunctionSig,
+        bytes4 executeFunctionSig
+    ) external;
 }

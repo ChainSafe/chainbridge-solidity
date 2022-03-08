@@ -2,7 +2,6 @@
 
 pragma solidity ^0.6.0;
 
-
 /**
  * @dev Contract module which allows children to implement an emergency stop
  * mechanism that can be triggered by an authorized account.
@@ -27,7 +26,7 @@ contract Pausable {
     /**
      * @dev Initializes the contract in unpaused state.
      */
-    constructor () internal {
+    constructor() internal {
         _paused = false;
     }
 

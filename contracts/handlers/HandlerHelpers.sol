@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.4;
 
 import "../interfaces/IERCHandler.sol";
@@ -11,16 +12,16 @@ contract HandlerHelpers is IERCHandler {
     address public _bridgeAddress;
 
     // resourceID => token contract address
-    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
+    mapping(bytes32 => address) public _resourceIDToTokenContractAddress;
 
     // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
+    mapping(address => bytes32) public _tokenContractAddressToResourceID;
 
     // token contract address => is whitelisted
-    mapping (address => bool) public _contractWhitelist;
+    mapping(address => bool) public _contractWhitelist;
 
     // token contract address => is burnable
-    mapping (address => bool) public _burnList;
+    mapping(address => bool) public _burnList;
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -41,7 +42,6 @@ contract HandlerHelpers is IERCHandler {
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
     function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
-
         _setResource(resourceID, contractAddress);
     }
 
@@ -50,7 +50,7 @@ contract HandlerHelpers is IERCHandler {
         to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
-    function setBurnable(address contractAddress) external override onlyBridge{
+    function setBurnable(address contractAddress) external override onlyBridge {
         _setBurnable(contractAddress);
     }
 
@@ -60,7 +60,11 @@ contract HandlerHelpers is IERCHandler {
         @param recipient Address to release tokens to.
         @param amountOrTokenID Either the amount of ERC20 tokens or the ERC721 token ID to release.
      */
-    function withdraw(address tokenAddress, address recipient, uint256 amountOrTokenID) external virtual override {}
+    function withdraw(
+        address tokenAddress,
+        address recipient,
+        uint256 amountOrTokenID
+    ) external virtual override {}
 
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;

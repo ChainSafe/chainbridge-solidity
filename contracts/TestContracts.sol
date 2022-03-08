@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.6.4;
 
 contract NoArgument {
@@ -27,7 +28,11 @@ contract TwoArguments {
 contract ThreeArguments {
     event ThreeArgumentsCalled(string argumentOne, int8 argumentTwo, bool argumentThree);
 
-    function threeArguments(string calldata argumentOne, int8 argumentTwo, bool argumentThree) external {
+    function threeArguments(
+        string calldata argumentOne,
+        int8 argumentTwo,
+        bool argumentThree
+    ) external {
         emit ThreeArgumentsCalled(argumentOne, argumentTwo, argumentThree);
     }
 }

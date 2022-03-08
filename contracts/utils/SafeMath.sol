@@ -11,7 +11,6 @@ pragma solidity ^0.6.0;
  */
 
 contract SafeMath {
-
     /**
      * @dev Returns the subtraction of two unsigned integers, reverting on
      * overflow (when the result is negative).
@@ -34,11 +33,14 @@ contract SafeMath {
      * Requirements:
      * - Subtraction cannot overflow.
      */
-    function _sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function _sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
 
         return c;
     }
-
 }

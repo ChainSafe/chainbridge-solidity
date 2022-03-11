@@ -78,7 +78,8 @@ contract('BasicFeeHandler - [collectFee]', async (accounts) => {
                 {
                     value: Ethers.utils.parseEther("1.0")
                 }
-            )
+            ),
+            "Incorrect fee supplied"
         )
     });
 
@@ -113,7 +114,8 @@ contract('BasicFeeHandler - [collectFee]', async (accounts) => {
                 {
                     value: Ethers.utils.parseEther("1.0")
                 }
-            )
+            ),
+            "no FeeHandler, msg.value != 0"
         )
     });
 

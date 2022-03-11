@@ -38,6 +38,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
 
     /**
         @notice Collects fee for deposit.
+        @param sender Sender of the deposit.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.

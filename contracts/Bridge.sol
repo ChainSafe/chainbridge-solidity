@@ -354,7 +354,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
      */
     function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external payable whenNotPaused {
         if (address(_feeHandler) == address(0)) {
-            require(msg.value == 0, "Fee: msg.value != 0");
+            require(msg.value == 0, "no FeeHandler, msg.value != 0");
         } else {
             require(_feeHandler.collectFee{value: msg.value}(msg.sender, destinationDomainID, resourceID, depositData, feeData), "Fee collection failed");
         }

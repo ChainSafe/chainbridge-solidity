@@ -36,7 +36,10 @@ contract('BasicFeeHandlerContract - [changeFee]', async accounts => {
     it('Should set fee', async () => {
         const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
         const fee = Ethers.utils.parseEther("0.05");
-        await BasicFeeHandlerInstance.changeFee(fee);
+        const tx = await BasicFeeHandlerInstance.changeFee(fee);
+        TruffleAssert.eventEmitted(tx, 'FeeChanged', (event) => 
+            web3.utils.fromWei(event.newFee, "ether") === "0.05"
+        );
         const newFee = await BasicFeeHandlerInstance._fee.call();
         assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05");
     });

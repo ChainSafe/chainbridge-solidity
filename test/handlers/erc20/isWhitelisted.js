@@ -25,7 +25,7 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])

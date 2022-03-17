@@ -5,7 +5,11 @@
   "main": "dist/index.js",
   "repository": "https://github.com/ChainSafe/chainbridge-solidity.git",
   "files": [
-    "dist"
+    "dist",
+    "build/contracts/Bridge.json",
+    "build/contracts/ERC20Handler.json",
+    "build/contracts/ERC721Handler.json",
+    "build/contracts/GenericHandler.json"
   ],
   "directories": {
     "test": "test"
@@ -13,9 +17,9 @@
   "scripts": {
     "compile": "truffle compile",
     "build": "rollup -c",
-    "publish-package": "npm run generate-types && npm run build && npm publish",
+    "publish-package": "npm run compile && npm run generate-types && npm run build && npm publish",
     "generate-types": "npm run generate-types:ethers",
-    "generate-types:ethers": "npx typechain \"build/contracts/Bridge.json\" --target=ethers-v5 --out-dir src/ethers",
+    "generate-types:ethers": "npx typechain \"build/contracts/Bridge.json\" \"build/contracts/ERC20Handler.json\" \"build/contracts/ERC721Handler.json\" \"build/contracts/GenericHandler.json\" --target=ethers-v5 --out-dir src/ethers",
     "test": "echo \\\\\\\"Error: no test specified\\\\\\\" && exit 1"
   },
   "author": "Chainsafe Systems",

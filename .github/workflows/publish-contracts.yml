@@ -1,0 +1,73 @@
+name: Release Contracts
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  tag:
+    name: Check and Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create tag
+        id: tag
+        uses: butlerlogic/action-autotag@1.1.1
+        with:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          strategy: package # Optional, since "package" is the default strategy
+          tag_prefix: "v"
+    outputs:
+      tag: ${{ steps.tag.outputs.tagname }}
+
+  release-contracts:
+    name: Release Contracts
+    runs-on: ubuntu-latest
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+          always-auth: true
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@chainsafe'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --non-interactive --ignore-optional
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compile contracts
+        run: yarn run compile
+
+      - name: Generate types
+        run: yarn run generate-types
+
+      - name: Build packages
+        run: yarn run build
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.tag.outputs.tag }}
+          release_name: ${{ needs.tag.outputs.tag }}
+      #in case of failure
+      - name: Rollback on failure
+        if: failure()
+        uses: author/action-rollback@9ec72a6af74774e00343c6de3e946b0901c23013
+        with:
+          id: ${{ steps.create_release.outputs.id }}
+          tag: ${{ needs.tag.outputs.tag }}
+          delete_orphan_tag: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

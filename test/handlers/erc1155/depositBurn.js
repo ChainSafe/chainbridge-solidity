@@ -2,7 +2,7 @@
  * Copyright 2021 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
- 
+
 const TruffleAssert = require('truffle-assertions');
 
 const Helpers = require('../../helpers');
@@ -27,7 +27,6 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
 
     let resourceID1;
     let resourceID2;
-    let initialResourceIDs;
     let initialContractAddresses;
     let burnableContractAddresses;
 
@@ -40,24 +39,22 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
 
         resourceID1 = Helpers.createResourceID(ERC1155MintableInstance1.address, domainID);
         resourceID2 = Helpers.createResourceID(ERC1155MintableInstance2.address, domainID);
-        initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC1155MintableInstance1.address, ERC1155MintableInstance2.address];
         burnableContractAddresses = [ERC1155MintableInstance1.address]
 
         await Promise.all([
             ERC1155HandlerContract.new(BridgeInstance.address).then(instance => ERC1155HandlerInstance = instance),
-            ERC1155MintableInstance1.mintBatch(depositerAddress, [tokenID], [tokenAmount], "0x0")
+            ERC1155MintableInstance1.mint(depositerAddress, tokenID, tokenAmount, "0x0")
         ]);
-           
+
         await Promise.all([
             ERC1155MintableInstance1.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID1, ERC1155MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID2, ERC1155MintableInstance2.address),
-            BridgeInstance.adminSetBurnable(ERC1155HandlerInstance.address, ERC1155MintableInstance1.address),
         ]);
+        await BridgeInstance.adminSetBurnable(ERC1155HandlerInstance.address, ERC1155MintableInstance1.address);
 
-        depositData = Helpers.createERC1155DepositData([tokenID], [tokenAmount]);
-   });
+    });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {
         for (const burnableAddress of burnableContractAddresses) {
@@ -67,10 +64,13 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
     });
 
     it('depositAmount of ERC1155MintableInstance1 tokens should have been burned', async () => {
+        const recipientAddress = accounts[0] + accounts[1].substr(2);
+        const lenRecipientAddress = 40;
+
         await BridgeInstance.deposit(
             domainID,
             resourceID1,
-            depositData,
+            Helpers.createERC1155DepositData(tokenID, tokenAmount, lenRecipientAddress, recipientAddress),
             { from: depositerAddress }
         );
 

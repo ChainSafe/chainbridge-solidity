@@ -23,4 +23,11 @@ interface IERCHandler {
         @param data ABI-encoded withdrawal params relevant to the handler.
      */
     function withdraw(bytes memory data) external;
+
+    /**
+        @notice Exposing getter for {_resourceIDToTokenContractAddress}.
+        @param resourceID ResourceID to be used.
+        @return address The {tokenContractAddress} that is currently set for the resourceID.
+     */
+    function _resourceIDToTokenContractAddress(bytes32 resourceID) external view returns (address);
 }

@@ -3,66 +3,69 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const TruffleAssert = require('truffle-assertions');
- const Ethers = require('ethers');
+ const TruffleAssert = require("truffle-assertions");
+ const Ethers = require("ethers");
  
- const Helpers = require('../../../helpers');
+ const Helpers = require("../../../helpers");
  
  const BridgeContract = artifacts.require("Bridge");
- const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
- const GenericHandlerContract = artifacts.require("GenericHandler");
- const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+
+contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
+    
+    const relayerThreshold = 1;
+    const domainID = 1;
+
+    const depositerAddress = accounts[1];
+    const recipientAddress = accounts[2];
+
+    const depositAmount = 10;
+    const feeData = "0x0";
+
+    const assertOnlyAdmin = (method, ...params) => {
+        return TruffleAssert.reverts(method(...params, {from: accounts[1]}), "sender doesn't have admin role");
+    };
+
+    let BridgeInstance;
+    let ERC20MintableInstance;
+    let ERC20HandlerInstance;
+    let BasicFeeHandlerInstance;
+
+    let resourceID;
+    let depositData;
+
+    beforeEach(async () => {
+        await Promise.all([
+            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
+        ]);
+        
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+
+        await Promise.all([
+            ERC20MintableInstance.mint(depositerAddress, depositAmount),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
+        ]);
+        
+        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
+
+        depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
+
+        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+    });
  
- contract('Bridge - [fee]', async (accounts) => {
-     const originDomainID = 1;
-     const destinationDomainID = 2;
-     const blankFunctionSig = '0x00000000';
-     const blankFunctionDepositerOffset = 0;
-     const relayer = accounts[0];
-     const feeData = '0x0';
- 
-     let BridgeInstance;
-     let BasicFeeHandlerInstance;
-     let GenericHandlerInstance;
-     let resourceID;
-     let depositData;
-     let initialResourceIDs;
-     let initialContractAddresses;
-     let initialDepositFunctionSignatures;
-     let initialDepositFunctionDepositerOffsets;
-     let initialExecuteFunctionSignatures;
- 
-     beforeEach(async () => {
-         await Promise.all([
-             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-             BridgeInstance = BridgeContract.new(originDomainID, [relayer], 0, 100).then(instance => BridgeInstance = instance)
-         ]);
- 
-         resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
-         initialResourceIDs = [resourceID];
-         initialContractAddresses = [CentrifugeAssetInstance.address];
-         initialDepositFunctionSignatures = [blankFunctionSig];
-         initialDepositFunctionDepositerOffsets = [blankFunctionDepositerOffset];
-         initialExecuteFunctionSignatures = [blankFunctionSig];
- 
-         GenericHandlerInstance = await GenericHandlerContract.new(
-             BridgeInstance.address);
-         BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(
-             BridgeInstance.address);
- 
-         await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]);
-             
-         depositData = Helpers.createGenericDepositData('0xdeadbeef');
-     });
- 
-     it('distribute fees', async () => {
+     it("should distribute fees", async () => {
          await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
          await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
          assert.equal(web3.utils.fromWei((await BasicFeeHandlerInstance._fee.call()), "ether"), "1");
  
          // check the balance is 0
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
-         await BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, {value: Ethers.utils.parseEther("1")})
+         await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")})
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
  
@@ -81,5 +84,17 @@
          b2 = await web3.eth.getBalance(accounts[2]);
          assert.equal(b1, Ethers.BigNumber.from(b1Before).add(payout));
          assert.equal(b2, Ethers.BigNumber.from(b2Before).add(payout));
-     })
+     });
+
+     it("should require admin role to distribute fee", async () => {
+        await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
+        await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
+
+        await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
+
+        assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
+
+        let payout = Ethers.utils.parseEther("0.5");
+        await assertOnlyAdmin(BasicFeeHandlerInstance.transferFee, [accounts[3], accounts[4]], [payout, payout]);
+     });
  });

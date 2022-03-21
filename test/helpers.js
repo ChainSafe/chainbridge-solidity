@@ -4,6 +4,7 @@
  */
 
  const Ethers = require('ethers');
+ const EthCrypto = require('eth-crypto');
 
  const blankFunctionSig = '0x00000000';
  const blankFunctionDepositerOffset = 0;
@@ -70,6 +71,12 @@ const advanceBlock = () => {
     return provider.send("evm_mine", [time]);
 }
 
+const advanceTime = (seconds) => {
+    let provider = new Ethers.providers.JsonRpcProvider();
+    const time = Math.floor(Date.now() / 1000) + seconds;
+    return provider.send("evm_mine", [time]);
+}
+
 const createGenericDepositData = (hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
@@ -122,8 +129,45 @@ const nonceAndId = (nonce, id) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
 }
 
+const createOracleFeeData = (oracleResponse, privateKey, amount) => {
+    /*
+        feeData structure:
+            ber*10^18: uint256
+            ter*10^18: uint256
+            dstGasPrice: uint256
+            timestamp: uint256
+            fromDomainID: uint8 encoded as uint256
+            toDomainID: uint8 encoded as uint256
+            resourceID: bytes32
+            sig: bytes(65 bytes)
+
+        total in bytes:
+        message:
+            32 * 7  = 224
+        message + sig:
+            224 + 65 = 289
+
+            amount: uint256
+        total feeData length: 321
+    */
+
+    const oracleMessage = '0x' +
+        toHex(oracleResponse.ber, 32).substr(2) +                 // ber*10^18: uint256 (32 bytes)
+        toHex(oracleResponse.ter, 32).substr(2) +                 // ter*10^18: uint256 (32 bytes)
+        toHex(oracleResponse.dstGasPrice, 32).substr(2) +         // dstGasPrice: uint256 (32 bytes)
+        toHex(oracleResponse.timestamp, 32).substr(2) +           // timestamp: uint256
+        toHex(oracleResponse.fromDomainID, 32).substr(2) +         // fromDomainID: uint256
+        toHex(oracleResponse.toDomainID, 32).substr(2) +           // toDomainID: uint256
+        oracleResponse.resourceID.substr(2);                                // resourceID: bytes32
+
+    const messageHash = EthCrypto.hash.keccak256([{type: "bytes",value: oracleMessage}]);
+    const signature = EthCrypto.sign(privateKey, messageHash);
+    return oracleMessage + signature.substr(2) + toHex(amount, 32).substr(2);
+}
+
 module.exports = {
     advanceBlock,
+    advanceTime,
     blankFunctionSig,
     blankFunctionDepositerOffset,
     toHex,
@@ -139,5 +183,6 @@ module.exports = {
     createERC721DepositProposalData,
     createResourceID,
     assertObjectsMatch,
-    nonceAndId
+    nonceAndId,
+    createOracleFeeData
 };

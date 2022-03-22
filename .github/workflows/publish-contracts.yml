@@ -53,6 +53,11 @@ jobs:
       - name: Build packages
         run: yarn run build
 
+      - name: Publish to github package registry
+        run: yarn publish --ignore-scripts --no-git-tag-version --no-commit-hooks --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1

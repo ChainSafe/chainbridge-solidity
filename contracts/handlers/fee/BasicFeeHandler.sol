@@ -81,8 +81,10 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param amounts Array of amonuts to transfer to {addrs}.
      */
     function transferFee(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
+        require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         for (uint256 i = 0; i < addrs.length; i++) {
-            addrs[i].transfer(amounts[i]);
+            (bool success,) = addrs[i].call{value: amounts[i]}("");
+            require(success, "Fee ether transfer failed");
         }
     }
 

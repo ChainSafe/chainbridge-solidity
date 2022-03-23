@@ -97,4 +97,17 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
         let payout = Ethers.utils.parseEther("0.5");
         await assertOnlyAdmin(BasicFeeHandlerInstance.transferFee, [accounts[3], accounts[4]], [payout, payout]);
      });
+
+     it("should revert if addrs and amounts arrays have different length", async () => {
+        await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
+        await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
+
+        await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
+
+        assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
+
+        let payout = Ethers.utils.parseEther("0.5");
+        await TruffleAssert.reverts(BasicFeeHandlerInstance.transferFee([accounts[3], accounts[4]], [payout, payout, payout]),
+            "addrs[], amounts[]: diff length");
+     });
  });

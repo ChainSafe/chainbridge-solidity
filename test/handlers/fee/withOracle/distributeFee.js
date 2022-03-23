@@ -153,4 +153,24 @@
         let payout = Ethers.utils.parseEther("0.5");
         await assertOnlyAdmin(FeeHandlerWithOracleInstance.transferFee, resourceID, [accounts[3], accounts[4]], [payout, payout]);
      });
+
+     it("should revert if addrs and amounts arrays have different length", async () => {
+        await TruffleAssert.passes(
+            BridgeInstance.deposit(
+                domainID,
+                resourceID,
+                depositData,
+                feeData,
+                {
+                    from: depositerAddress
+                }
+            )
+        );
+        const balance = await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address);
+        assert.equal(web3.utils.fromWei(balance, "ether"), "1");
+
+        let payout = Ethers.utils.parseEther("0.5");
+        await TruffleAssert.reverts(FeeHandlerWithOracleInstance.transferFee(resourceID, [accounts[3], accounts[4]], [payout, payout, payout]),
+            "addrs[], amounts[]: diff length");
+     });
  });

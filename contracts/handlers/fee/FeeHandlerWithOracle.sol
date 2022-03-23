@@ -73,6 +73,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
@@ -80,7 +81,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @return Returns the bool result.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge returns (bool) {
-        require(msg.value == 0, "msg.value != 0");
+        require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         lockERC20(tokenAddress, sender, address(this), fee);
         return true;
@@ -89,6 +90,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
      /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
@@ -123,13 +125,6 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         */  
 
         require(feeData.length == 321, "Incorrect feeData length");
-
-        uint256 messageLength = 224;
-        uint256 sigLength = 65;
-
-        // Message length: 224
-        // Signature length: 65
-        // Message + signature: 289
 
         FeeDataType memory feeDataDecoded;
 
@@ -173,12 +168,14 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
 
     /**
-        @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
-        This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
+        @notice Transfers tokens from the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+        This means that the address at index 0 for addrs will receive the amount of tokens from amounts at index 0.
+        @param resourceID ResourceID of the token.
         @param addrs Array of addresses to transfer {amounts} to.
         @param amounts Array of amounts to transfer to {addrs}.
      */
     function transferFee(bytes32 resourceID, address[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
+        require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
         for (uint256 i = 0; i < addrs.length; i++) {

@@ -35,10 +35,10 @@ jobs:
         with:
           node-version: '12.x'
           always-auth: true
-          registry-url: 'https://npm.pkg.github.com'
+          registry-url: 'https://registry.npmjs.org'
           scope: '@chainsafe'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       - name: Install dependencies
         run: yarn install --frozen-lockfile --non-interactive --ignore-optional
         env:
@@ -53,10 +53,10 @@ jobs:
       - name: Build packages
         run: yarn run build
 
-      - name: Publish to github package registry
+      - name: Publish to npm registry
         run: yarn publish --ignore-scripts --no-git-tag-version --no-commit-hooks --non-interactive
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Create Release
         id: create_release

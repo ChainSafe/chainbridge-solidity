@@ -137,7 +137,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount) + "1";
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount) + "11";
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, domainID, resourceID, depositData, feeData), "Incorrect feeData length");
     });
 

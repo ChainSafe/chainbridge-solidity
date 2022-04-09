@@ -19,13 +19,15 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     address public immutable _bridgeAddress;
 
     address public _oracleAddress;
-    uint256 public _maxOracleTime;
 
-    uint256 public _gasUsed;
-    uint256 public _feePercent; // multiplied by 100 to avoid precision loss
+    uint64 public _gasUsed;
+    uint64 public _feePercent; // multiplied by 100 to avoid precision loss
+    uint128 public _maxOracleTime;
 
     struct OracleMessageType {
-        uint256 ber;
+        // Base Effective Rate - effective rate between base currencies of source and dest networks (eg. MATIC/ETH)
+        uint256 ber; 
+        // Token Effective Rate - rate between base currency of destination network and token that is being trasferred (eg. MATIC/USDT)
         uint256 ter;
         uint256 dstGasPrice;
         uint256 timestamp;
@@ -64,7 +66,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param feePercent Added to fee amount. total fee = fee + fee * feePercent
         @param maxOracleTime Maximum time when fee oracle data are valid
      */
-    function setFeeProperties(uint256 gasUsed, uint256 feePercent, uint256 maxOracleTime) external onlyAdmin {
+    function setFeeProperties(uint64 gasUsed, uint64 feePercent, uint128 maxOracleTime) external onlyAdmin {
         _gasUsed = gasUsed;
         _feePercent = feePercent;
         _maxOracleTime = maxOracleTime;
@@ -78,13 +80,11 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
-        @return Returns the bool result.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge returns (bool) {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
         require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         lockERC20(tokenAddress, sender, address(this), fee);
-        return true;
     }
 
      /**
@@ -155,7 +155,8 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
-
+        
+        // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
         uint256 txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
 
         fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
@@ -183,7 +184,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         }
     }
 
-    function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal view returns(bool) {
+    function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal view {
         address signerAddressRecovered = ECDSA.recover(message, signature);
         require(signerAddressRecovered == signerAddress, 'Invalid signature');
     }

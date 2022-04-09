@@ -43,11 +43,9 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
-        @return Returns the bool result.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge returns (bool) {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
         require(msg.value == _fee, "Incorrect fee supplied");
-        return true;
     }
 
      /**

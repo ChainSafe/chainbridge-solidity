@@ -17,7 +17,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
     const tokenID = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC721MintableInstance;

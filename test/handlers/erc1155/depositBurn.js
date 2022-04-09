@@ -20,7 +20,7 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
     const tokenID = 1;
     const tokenAmount = 100;
 
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC1155MintableInstance1;

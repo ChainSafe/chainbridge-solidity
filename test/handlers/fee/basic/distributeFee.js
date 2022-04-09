@@ -74,8 +74,8 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
  
          let payout = Ethers.utils.parseEther("0.5")
          // Transfer the funds
-         TruffleAssert.passes(
-             await BasicFeeHandlerInstance.transferFee(
+         await TruffleAssert.passes(
+              BasicFeeHandlerInstance.transferFee(
                  [accounts[1], accounts[2]], 
                  [payout, payout]
              )

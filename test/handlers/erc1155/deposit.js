@@ -18,7 +18,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
     const depositerAddress = accounts[1];
     const tokenID = 1;
     const tokenAmount = 100;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC1155MintableInstance;

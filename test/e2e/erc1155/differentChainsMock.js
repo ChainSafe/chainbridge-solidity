@@ -24,7 +24,7 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
     const initialTokenAmount = 100;
     const depositAmount = 10; 
     const expectedDepositNonce = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let OriginBridgeInstance;
     let OriginERC1155MintableInstance;

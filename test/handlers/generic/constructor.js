@@ -53,8 +53,8 @@ contract('GenericHandler - [constructor]', async () => {
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
-        TruffleAssert.passes(
-            await GenericHandlerContract.new(
+        await TruffleAssert.passes(
+            GenericHandlerContract.new(
                 BridgeInstance.address));
     });
 

@@ -23,7 +23,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     const depositerAddress = accounts[1];
 
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let CentrifugeAssetInstance;

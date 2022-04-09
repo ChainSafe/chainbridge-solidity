@@ -22,7 +22,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     const recipientAddress = accounts[2];
     const tokenID = 1;
     const expectedDepositNonce = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let OriginBridgeInstance;
     let OriginERC721MintableInstance;

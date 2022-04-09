@@ -19,7 +19,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;

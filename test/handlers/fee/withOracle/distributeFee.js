@@ -92,8 +92,8 @@
         let payout = Ethers.utils.parseEther("0.5");
 
         // Transfer the funds
-        TruffleAssert.passes(
-            await FeeHandlerWithOracleInstance.transferFee(
+        await TruffleAssert.passes(
+            FeeHandlerWithOracleInstance.transferFee(
                 resourceID,
                 [accounts[3], accounts[4]], 
                 [payout, payout]

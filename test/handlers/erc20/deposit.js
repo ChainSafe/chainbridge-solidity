@@ -17,7 +17,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
     const tokenAmount = 100;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;

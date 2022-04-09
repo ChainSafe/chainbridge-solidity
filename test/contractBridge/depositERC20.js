@@ -20,7 +20,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
     
     let BridgeInstance;
     let OriginERC20MintableInstance;

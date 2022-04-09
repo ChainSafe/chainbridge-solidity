@@ -20,7 +20,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;

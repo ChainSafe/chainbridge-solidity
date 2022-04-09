@@ -357,7 +357,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         if (address(_feeHandler) == address(0)) {
             require(msg.value == 0, "no FeeHandler, msg.value != 0");
         } else {
-            require(_feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData), "Fee collection failed");
+            // Reverts on failure
+            _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
         }
 
         address handler = _resourceIDToHandlerAddress[resourceID];

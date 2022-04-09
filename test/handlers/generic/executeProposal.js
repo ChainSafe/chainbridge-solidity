@@ -25,7 +25,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     const centrifugeAssetMinCount = 10;
     const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
-    const feeData = '0x0';
+    const feeData = '0x';
 
     let BridgeInstance;
     let CentrifugeAssetInstance;

@@ -15,7 +15,7 @@ contract('Bridge - [deposit - Generic]', async () => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
-    const feeData = '0x0';
+    const feeData = '0x';
     
     let BridgeInstance;
     let GenericHandlerInstance;

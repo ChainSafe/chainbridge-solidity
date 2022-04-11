@@ -9,7 +9,8 @@
     "build/contracts/Bridge.json",
     "build/contracts/ERC20Handler.json",
     "build/contracts/ERC721Handler.json",
-    "build/contracts/GenericHandler.json"
+    "build/contracts/GenericHandler.json",
+    "build/contracts/HandlerHelpers.json"
   ],
   "directories": {
     "test": "test"

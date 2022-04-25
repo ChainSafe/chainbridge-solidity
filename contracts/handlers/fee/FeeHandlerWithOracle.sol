@@ -132,16 +132,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         feeDataDecoded.sig = bytes(feeData[224: 289]);
         feeDataDecoded.amount = abi.decode(feeData[289:], (uint256));
 
-        OracleMessageType memory oracleMessage;
-
-        (oracleMessage.ber,
-            oracleMessage.ter,
-            oracleMessage.dstGasPrice,
-            oracleMessage.timestamp, 
-            oracleMessage.fromDomainID, 
-            oracleMessage.toDomainID, 
-            oracleMessage.resourceID
-        ) = abi.decode(feeDataDecoded.message, (uint256, uint256, uint256, uint256, uint8, uint8, bytes32));
+        OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
         require(block.timestamp <= oracleMessage.timestamp + _maxOracleTime, "Obsolete oracle data");
         require((oracleMessage.fromDomainID == fromDomainID) 
             && (oracleMessage.toDomainID == destinationDomainID) 
@@ -166,7 +157,6 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         }
         return (fee, tokenAddress);
     }
-
 
     /**
         @notice Transfers tokens from the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.

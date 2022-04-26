@@ -152,13 +152,13 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
     */
 
     const oracleMessage = '0x' +
-        toHex(oracleResponse.ber, 32).substr(2) +                 // ber*10^18: uint256 (32 bytes)
-        toHex(oracleResponse.ter, 32).substr(2) +                 // ter*10^18: uint256 (32 bytes)
-        toHex(oracleResponse.dstGasPrice, 32).substr(2) +         // dstGasPrice: uint256 (32 bytes)
-        toHex(oracleResponse.timestamp, 32).substr(2) +           // timestamp: uint256
-        toHex(oracleResponse.fromDomainID, 32).substr(2) +         // fromDomainID: uint256
-        toHex(oracleResponse.toDomainID, 32).substr(2) +           // toDomainID: uint256
-        oracleResponse.resourceID.substr(2);                                // resourceID: bytes32
+        toHex(oracleResponse.ber, 32).substr(2) +                 // ber*10^18:     uint256 (32 bytes)
+        toHex(oracleResponse.ter, 32).substr(2) +                 // ter*10^18:     uint256 (32 bytes)
+        toHex(oracleResponse.dstGasPrice, 32).substr(2) +         // dstGasPrice:   uint256 (32 bytes)
+        toHex(oracleResponse.expiresAt, 32).substr(2) +           // expiresAt:     uint256
+        toHex(oracleResponse.fromDomainID, 32).substr(2) +        // fromDomainID:  uint256
+        toHex(oracleResponse.toDomainID, 32).substr(2) +          // toDomainID:    uint256
+        oracleResponse.resourceID.substr(2);                      // resourceID:    bytes32
 
     const messageHash = EthCrypto.hash.keccak256([{type: "bytes",value: oracleMessage}]);
     const signature = EthCrypto.sign(privateKey, messageHash);

@@ -29,14 +29,14 @@
 
     /*
         feeData structure:
-            ber*10^18: uint256
-            ter*10^18: uint256
-            dstGasPrice: uint256
-            timestamp: uint256
-            fromDomainID: uint8 encoded as uint256
-            toDomainID: uint8 encoded as uint256
-            resourceID: bytes32
-            sig: bytes(65 bytes)
+            ber*10^18:      uint256
+            ter*10^18:      uint256
+            dstGasPrice:    uint256
+            expiresAt:      uint256
+            fromDomainID:   uint8 encoded as uint256
+            toDomainID:     uint8 encoded as uint256
+            resourceID:     bytes32
+            sig:            bytes(65 bytes)
 
         total in bytes:
         message:
@@ -55,8 +55,7 @@
 
         const gasUsed = 100000;
         const feePercent = 500;
-        const maxOracleTime = 500;
-        await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent, maxOracleTime);
+        await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
 
         ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
@@ -78,7 +77,7 @@
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
             dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-            timestamp: Math.floor(new Date().valueOf() / 1000),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
             fromDomainID: domainID,
             toDomainID: domainID,
             resourceID
@@ -106,7 +105,7 @@
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
             dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-            timestamp: Math.floor(new Date().valueOf() / 1000),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
             fromDomainID: domainID,
             toDomainID: domainID,
             resourceID
@@ -134,7 +133,7 @@
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
             dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-            timestamp: Math.floor(new Date().valueOf() / 1000),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
             fromDomainID: domainID,
             toDomainID: domainID,
             resourceID
@@ -162,7 +161,7 @@
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
             dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-            timestamp: Math.floor(new Date().valueOf() / 1000),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
             fromDomainID: domainID,
             toDomainID: domainID,
             resourceID

@@ -20,9 +20,8 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
     address public _oracleAddress;
 
-    uint64 public _gasUsed;
-    uint64 public _feePercent; // multiplied by 100 to avoid precision loss
-    uint128 public _maxOracleTime;
+    uint32 public _gasUsed;
+    uint16 public _feePercent; // multiplied by 100 to avoid precision loss
 
     struct OracleMessageType {
         // Base Effective Rate - effective rate between base currencies of source and dest networks (eg. MATIC/ETH)
@@ -30,7 +29,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         // Token Effective Rate - rate between base currency of destination network and token that is being trasferred (eg. MATIC/USDT)
         uint256 ter;
         uint256 dstGasPrice;
-        uint256 timestamp;
+        uint256 expiresAt;
         uint8 fromDomainID;
         uint8 toDomainID;
         bytes32 resourceID;
@@ -64,12 +63,10 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @notice Sets the fee properties.
         @param gasUsed Gas used for transfer.
         @param feePercent Added to fee amount. total fee = fee + fee * feePercent
-        @param maxOracleTime Maximum time when fee oracle data are valid
      */
-    function setFeeProperties(uint64 gasUsed, uint64 feePercent, uint128 maxOracleTime) external onlyAdmin {
+    function setFeeProperties(uint32 gasUsed, uint16 feePercent) external onlyAdmin {
         _gasUsed = gasUsed;
         _feePercent = feePercent;
-        _maxOracleTime = maxOracleTime;
     }
 
     /**
@@ -108,7 +105,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
             ber * 10^18:  uint256
             ter * 10^18:  uint256
             dstGasPrice:  uint256
-            timestamp:    uint256
+            expiresAt:    uint256
             fromDomainID: uint8 encoded as uint256
             toDomainID:   uint8 encoded as uint256
             resourceID:   bytes32
@@ -133,7 +130,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         feeDataDecoded.amount = abi.decode(feeData[289:], (uint256));
 
         OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
-        require(block.timestamp <= oracleMessage.timestamp + _maxOracleTime, "Obsolete oracle data");
+        require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
         require((oracleMessage.fromDomainID == fromDomainID) 
             && (oracleMessage.toDomainID == destinationDomainID) 
             && (oracleMessage.resourceID == resourceID), 

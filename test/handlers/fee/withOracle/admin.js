@@ -43,21 +43,17 @@
      it("should set fee properties", async () => {
          const gasUsed = 100000;
          const feePercent = 5;
-         const maxOracleTime = 2000;
          assert.equal(await FeeHandlerWithOracleInstance._gasUsed.call(), "0");
          assert.equal(await FeeHandlerWithOracleInstance._feePercent.call(), "0");
-         assert.equal(await FeeHandlerWithOracleInstance._maxOracleTime.call(), "0");
-         await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent, maxOracleTime);
+         await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
          assert.equal(await FeeHandlerWithOracleInstance._gasUsed.call(), gasUsed);
          assert.equal(await FeeHandlerWithOracleInstance._feePercent.call(), feePercent);
-         assert.equal(await FeeHandlerWithOracleInstance._maxOracleTime.call(), maxOracleTime);
     });
 
     it("should require admin role to change fee properties", async () => {
         const gasUsed = 100000;
         const feePercent = 5;
-        const maxOracleTime = 2000;
-        await assertOnlyAdmin(FeeHandlerWithOracleInstance.setFeeProperties, gasUsed, feePercent, maxOracleTime);
+        await assertOnlyAdmin(FeeHandlerWithOracleInstance.setFeeProperties, gasUsed, feePercent);
      });
  });
  

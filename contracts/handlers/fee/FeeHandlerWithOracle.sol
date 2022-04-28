@@ -172,7 +172,8 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     }
 
     function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal view {
-        address signerAddressRecovered = ECDSA.recover(message, signature);
+        bytes32 messageHash = ECDSA.toEthSignedMessageHash(message);
+        address signerAddressRecovered = ECDSA.recover(messageHash, signature);
         require(signerAddressRecovered == signerAddress, 'Invalid signature');
     }
 

@@ -5,7 +5,6 @@
 
  const TruffleAssert = require("truffle-assertions");
  const Ethers = require("ethers");
- const EthCrypto = require("eth-crypto");
  
  const Helpers = require("../../../helpers");
  
@@ -17,7 +16,7 @@
  contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     const relayerThreshold = 0;
     const domainID = 1;
-    const oracle = EthCrypto.createIdentity();
+    const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const tokenAmount = Ethers.utils.parseEther("1");
     const feeAmount =Ethers.utils.parseEther("0.05");
@@ -83,7 +82,7 @@
             resourceID
         };
 
-        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
         await TruffleAssert.passes(
             BridgeInstance.deposit(
                 domainID,
@@ -111,7 +110,7 @@
             resourceID
         };
 
-        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
                 domainID,
@@ -139,7 +138,7 @@
             resourceID
         };
 
-        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
         await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
@@ -167,7 +166,7 @@
             resourceID
         };
 
-        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
         await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
         await TruffleAssert.reverts(
             FeeHandlerWithOracleInstance.collectFee(

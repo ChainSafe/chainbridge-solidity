@@ -5,7 +5,6 @@
 
  const TruffleAssert = require("truffle-assertions");
  const Ethers = require("ethers");
- const EthCrypto = require("eth-crypto");
 
  const Helpers = require("../../../helpers");
  
@@ -17,7 +16,7 @@
  contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
     const relayerThreshold = 0;
     const domainID = 1;
-    const oracle = EthCrypto.createIdentity();
+    const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const depositerAddress = accounts[1];
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
@@ -66,7 +65,7 @@
             resourceID
         };
 
-        feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
     });
  
     it("should distribute fees", async () => {

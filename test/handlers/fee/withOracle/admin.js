@@ -4,8 +4,6 @@
  */
 
  const TruffleAssert = require("truffle-assertions");
- const Ethers = require("ethers");
- const EthCrypto = require("eth-crypto");
  
  const BridgeContract = artifacts.require("Bridge");
  const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");

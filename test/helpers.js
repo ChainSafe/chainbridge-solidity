@@ -4,7 +4,6 @@
  */
 
  const Ethers = require('ethers');
- const EthCrypto = require('eth-crypto');
 
  const blankFunctionSig = '0x00000000';
  const blankFunctionDepositerOffset = 0;
@@ -129,7 +128,7 @@ const nonceAndId = (nonce, id) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
 }
 
-const createOracleFeeData = (oracleResponse, privateKey, amount) => {
+const createOracleFeeData = async (oracleResponse, signer, amount) => {
     /*
         feeData structure:
             ber*10^18: uint256
@@ -160,8 +159,9 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
         toHex(oracleResponse.toDomainID, 32).substr(2) +          // toDomainID:    uint256
         oracleResponse.resourceID.substr(2);                      // resourceID:    bytes32
 
-    const messageHash = EthCrypto.hash.keccak256([{type: "bytes",value: oracleMessage}]);
-    const signature = EthCrypto.sign(privateKey, messageHash);
+    const messageHash = Ethers.utils.keccak256(oracleMessage);
+    const messageHashBytes = Ethers.utils.arrayify(messageHash);
+    const signature = await signer.signMessage(messageHashBytes);
     return oracleMessage + signature.substr(2) + toHex(amount, 32).substr(2);
 }
 

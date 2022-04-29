@@ -128,7 +128,7 @@ const nonceAndId = (nonce, id) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
 }
 
-const createOracleFeeData = async (oracleResponse, signer, amount) => {
+const createOracleFeeData = (oracleResponse, privateKey, amount) => {
     /*
         feeData structure:
             ber*10^18: uint256
@@ -160,9 +160,11 @@ const createOracleFeeData = async (oracleResponse, signer, amount) => {
         oracleResponse.resourceID.substr(2);                      // resourceID:    bytes32
 
     const messageHash = Ethers.utils.keccak256(oracleMessage);
+    const signingKey = new Ethers.utils.SigningKey(privateKey);
     const messageHashBytes = Ethers.utils.arrayify(messageHash);
-    const signature = await signer.signMessage(messageHashBytes);
-    return oracleMessage + signature.substr(2) + toHex(amount, 32).substr(2);
+    const signature = signingKey.signDigest(messageHashBytes);
+    const rawSignature = Ethers.utils.joinSignature(signature);
+    return oracleMessage + rawSignature.substr(2) + toHex(amount, 32).substr(2);
 }
 
 module.exports = {

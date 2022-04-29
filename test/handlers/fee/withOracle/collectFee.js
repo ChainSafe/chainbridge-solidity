@@ -82,7 +82,7 @@
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await TruffleAssert.passes(
             BridgeInstance.deposit(
                 domainID,
@@ -110,7 +110,7 @@
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
                 domainID,
@@ -138,7 +138,7 @@
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
@@ -166,7 +166,7 @@
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
         await TruffleAssert.reverts(
             FeeHandlerWithOracleInstance.collectFee(

@@ -65,7 +65,7 @@
             resourceID
         };
 
-        feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
     });
  
     it("should distribute fees", async () => {

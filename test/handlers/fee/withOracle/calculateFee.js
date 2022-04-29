@@ -76,7 +76,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         const res = await FeeHandlerWithOracleInstance.calculateFee.call(sender, domainID, domainID, resourceID, depositData, feeData);
         assert.equal(Ethers.utils.formatEther(res.fee.toString()), "0.00491802");
         assert.equal(res.tokenAddress, ERC20MintableInstance.address);
@@ -95,7 +95,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         const res = await FeeHandlerWithOracleInstance.calculateFee.call(sender, domainID, domainID, resourceID, depositData, feeData);
         assert.equal(web3.utils.fromWei(res.fee, "ether"), "0.05");
         assert.equal(res.tokenAddress, ERC20MintableInstance.address);
@@ -115,7 +115,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         const res = await FeeHandlerWithOracleInstance.calculateFee.call(sender, domainID, domainID, resourceID, depositData, feeData);
         assert.equal(Ethers.utils.formatEther(res.fee.toString()), "0.0045");
         assert.equal(res.tokenAddress, ERC20MintableInstance.address);
@@ -135,7 +135,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount) + "11";
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount) + "11";
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, domainID, resourceID, depositData, feeData), "Incorrect feeData length");
     });
 
@@ -154,7 +154,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             resourceID
         };
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, otherDomainId, resourceID, depositData, feeData), "Incorrect deposit params");
     });
     
@@ -174,7 +174,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
 
         const oracle2 = new Ethers.Wallet.createRandom();
 
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle2, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle2.privateKey, tokenAmount);
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, domainID, resourceID, depositData, feeData), "Invalid signature");
     });
 
@@ -194,7 +194,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
             toDomainID: domainID,
             resourceID
         };
-        const feeData = await Helpers.createOracleFeeData(oracleResponse, oracle, tokenAmount);
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, domainID, resourceID, depositData, feeData), "Obsolete oracle data");
     });
  });

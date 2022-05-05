@@ -26,6 +26,18 @@ interface IFeeHandler {
     );
 
     /**
+        @notice This event is emitted when the fee is distributed to an address.
+        @param tokenAddress Address of the token in which the fee was collected (0 for the base currency).
+        @param recipient Address that receives the distributed fee.
+        @param amount Amount that is distributed.
+     */
+    event FeeDistributed(
+        address tokenAddress,
+        address recipient,
+        uint256 amount
+    );
+
+    /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.

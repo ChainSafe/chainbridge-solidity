@@ -74,12 +74,20 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
  
          let payout = Ethers.utils.parseEther("0.5")
          // Transfer the funds
-         await TruffleAssert.passes(
-              BasicFeeHandlerInstance.transferFee(
+         const tx = await BasicFeeHandlerInstance.transferFee(
                  [accounts[1], accounts[2]], 
                  [payout, payout]
-             )
-         )
+             );
+         TruffleAssert.eventEmitted(tx, 'FeeDistributed', (event) => {
+            return event.tokenAddress === '0x0000000000000000000000000000000000000000' &&
+            event.recipient === accounts[1] &&
+            event.amount.toString() === payout.toString()
+         });
+         TruffleAssert.eventEmitted(tx, 'FeeDistributed', (event) => {
+            return event.tokenAddress === '0x0000000000000000000000000000000000000000' &&
+            event.recipient === accounts[2] &&
+            event.amount.toString() === payout.toString()
+         });
          b1 = await web3.eth.getBalance(accounts[1]);
          b2 = await web3.eth.getBalance(accounts[2]);
          assert.equal(b1, Ethers.BigNumber.from(b1Before).add(payout));

@@ -169,6 +169,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
         for (uint256 i = 0; i < addrs.length; i++) {
             releaseERC20(tokenAddress, addrs[i], amounts[i]);
+            emit FeeDistributed(tokenAddress, addrs[i], amounts[i]);
         }
     }
 

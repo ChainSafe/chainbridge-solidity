@@ -90,13 +90,21 @@
         let payout = Ethers.utils.parseEther("0.5");
 
         // Transfer the funds
-        await TruffleAssert.passes(
-            FeeHandlerWithOracleInstance.transferFee(
+        const tx = await FeeHandlerWithOracleInstance.transferFee(
                 resourceID,
                 [accounts[3], accounts[4]], 
                 [payout, payout]
-            )
-        );
+            );
+        TruffleAssert.eventEmitted(tx, 'FeeDistributed', (event) => {
+            return event.tokenAddress === ERC20MintableInstance.address &&
+            event.recipient === accounts[3] &&
+            event.amount.toString() === payout.toString()
+         });
+         TruffleAssert.eventEmitted(tx, 'FeeDistributed', (event) => {
+            return event.tokenAddress === ERC20MintableInstance.address &&
+            event.recipient === accounts[4] &&
+            event.amount.toString() === payout.toString()
+         });
         b1 = await ERC20MintableInstance.balanceOf(accounts[3]);
         b2 = await ERC20MintableInstance.balanceOf(accounts[4]);
         assert.equal(b1.toString(), payout.add(b1Before).toString());

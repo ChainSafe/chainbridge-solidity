@@ -84,6 +84,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         for (uint256 i = 0; i < addrs.length; i++) {
             (bool success,) = addrs[i].call{value: amounts[i]}("");
             require(success, "Fee ether transfer failed");
+            emit FeeDistributed(address(0), addrs[i], amounts[i]);
         }
     }
 

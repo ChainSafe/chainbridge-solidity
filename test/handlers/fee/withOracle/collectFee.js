@@ -71,6 +71,7 @@
     });
 
     it("should collect fee in tokens", async () => {
+        const fee = Ethers.utils.parseEther("0.05");
         const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
@@ -83,8 +84,10 @@
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
-        await TruffleAssert.passes(
-            BridgeInstance.deposit(
+
+        const balanceBefore = (await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address)).toString();
+
+        const depositTx = await BridgeInstance.deposit(
                 domainID,
                 resourceID,
                 depositData,
@@ -92,10 +95,22 @@
                 {
                     from: depositerAddress
                 }
-            )
-        );
-        const balance = await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address);
-        assert.equal(web3.utils.fromWei(balance, "ether"), "0.05");
+            );
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationDomainID.toNumber() === domainID &&
+                event.resourceID === resourceID.toLowerCase();
+        });
+        const internalTx = await TruffleAssert.createTransactionResult(FeeHandlerWithOracleInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
+            return event.sender === depositerAddress &&
+                event.fromDomainID.toNumber() === domainID &&
+                event.destinationDomainID.toNumber() === domainID &&
+                event.resourceID === resourceID.toLowerCase() &&
+                event.fee.toString() === fee.toString() &&
+                event.tokenAddress === ERC20MintableInstance.address;
+        });
+        const balanceAfter = (await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address)).toString();
+        assert.equal(balanceAfter, fee.add(balanceBefore).toString());
     });
 
     it("deposit should revert if msg.value != 0", async () => {

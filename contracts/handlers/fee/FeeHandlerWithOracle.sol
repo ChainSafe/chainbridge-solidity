@@ -82,6 +82,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         lockERC20(tokenAddress, sender, address(this), fee);
+        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, fee, tokenAddress);
     }
 
      /**

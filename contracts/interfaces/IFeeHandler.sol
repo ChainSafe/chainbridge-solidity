@@ -6,9 +6,29 @@ pragma solidity 0.8.11;
     @author ChainSafe Systems.
  */
 interface IFeeHandler {
+
+    /**
+        @notice This event is emitted when the fee is collected.
+        @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
+        @param destinationDomainID ID of chain deposit will be bridged to.
+        @param resourceID ResourceID to be used when making deposits.
+        @param fee Collected fee amount.
+        @param tokenAddress Address of the token in which the fee was collected (0 for the base currency).
+     */
+    event FeeCollected(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        uint256 fee,
+        address tokenAddress
+    );
+
     /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
@@ -19,6 +39,7 @@ interface IFeeHandler {
     /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.

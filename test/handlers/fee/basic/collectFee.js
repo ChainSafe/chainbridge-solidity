@@ -85,25 +85,42 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     });
 
     it("deposit should pass if valid fee amount supplied", async () => {
+        const fee = Ethers.utils.parseEther("0.5");
         await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
         // current fee is set to 0
         assert.equal(await BasicFeeHandlerInstance._fee.call(), 0);
         // Change fee to 0.5 ether
-        await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
+        await BasicFeeHandlerInstance.changeFee(fee);
         assert.equal(web3.utils.fromWei((await BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
 
-        await TruffleAssert.passes(
-            BridgeInstance.deposit(
+        const balanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+
+        const depositTx = await BridgeInstance.deposit(
                 domainID,
                 resourceID,
                 depositData,
                 feeData,
                 {
                     from: depositerAddress,
-                    value: Ethers.utils.parseEther("0.5")
+                    value: fee
                 }
-            )
-        )
+            );
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationDomainID.toNumber() === domainID &&
+                event.resourceID === resourceID.toLowerCase();
+        });
+        const internalTx = await TruffleAssert.createTransactionResult(BasicFeeHandlerInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
+            return event.sender === depositerAddress &&
+                event.fromDomainID.toNumber() === domainID &&
+                event.destinationDomainID.toNumber() === domainID &&
+                event.resourceID === resourceID.toLowerCase() &&
+                event.fee.toString() === fee.toString() &&
+                event.tokenAddress === "0x0000000000000000000000000000000000000000";
+        });
+        const balanceAfter = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+        assert.equal(balanceAfter, fee.add(balanceBefore));
     });
 
     it("deposit should revert if fee handler not set and fee supplied", async () => {        

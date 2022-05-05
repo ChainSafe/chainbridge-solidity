@@ -46,6 +46,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
         require(msg.value == _fee, "Incorrect fee supplied");
+        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }
 
      /**

@@ -17,6 +17,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
     const tokenAmount = 100;
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;
@@ -29,7 +30,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
         
@@ -70,6 +71,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 tokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
+            feeData,   
             { from: depositerAddress }
         );
 
@@ -97,6 +99,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 tokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -131,6 +134,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 tokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
+            feeData,
             { from: depositerAddress }
         ), "ERC20: not a contract");
 
@@ -141,6 +145,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 tokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
+            feeData,
             { from: depositerAddress }
         ), "ERC20: not a contract");
     });

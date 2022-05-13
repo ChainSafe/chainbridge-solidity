@@ -20,6 +20,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;
@@ -34,7 +35,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
-pragma experimental ABIEncoderV2;
 
 import "./utils/AccessControl.sol";
 import "./utils/Pausable.sol";
@@ -9,6 +8,7 @@ import "./utils/SafeCast.sol";
 import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
+import "./interfaces/IFeeHandler.sol";
 
 /**
     @title Facilitates deposits, creation and voting of deposit proposals, and deposit executions.
@@ -22,8 +22,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
     uint8   public _domainID;
     uint8   public _relayerThreshold;
-    uint128 public _fee;
     uint40  public _expiry;
+
+    IFeeHandler public _feeHandler;
 
     enum ProposalStatus {Inactive, Active, Passed, Executed, Cancelled}
 
@@ -46,6 +47,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     event RelayerThresholdChanged(uint256 newThreshold);
     event RelayerAdded(address relayer);
     event RelayerRemoved(address relayer);
+    event FeeHandlerChanged(address newFeeHandler);
     event Deposit(
         uint8   destinationDomainID,
         bytes32 resourceID,
@@ -126,10 +128,9 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @param initialRelayers Addresses that should be initially granted the relayer role.
         @param initialRelayerThreshold Number of votes needed for a deposit proposal to be considered passed.
      */
-    constructor (uint8 domainID, address[] memory initialRelayers, uint256 initialRelayerThreshold, uint256 fee, uint256 expiry) public {
+    constructor (uint8 domainID, address[] memory initialRelayers, uint256 initialRelayerThreshold, uint256 expiry) public {
         _domainID = domainID;
         _relayerThreshold = initialRelayerThreshold.toUint8();
-        _fee = fee.toUint128();
         _expiry = expiry.toUint40();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -316,13 +317,13 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     /**
-        @notice Changes deposit fee.
+        @notice Changes deposit fee handler contract address.
         @notice Only callable by admin.
-        @param newFee Value {_fee} will be updated to.
+        @param newFeeHandler Address {_feeHandler} will be updated to.
      */
-    function adminChangeFee(uint256 newFee) external onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to new fee");
-        _fee = newFee.toUint128();
+    function adminChangeFeeHandler(address newFeeHandler) external onlyAdmin {
+        _feeHandler = IFeeHandler(newFeeHandler);
+        emit FeeHandlerChanged(newFeeHandler);
     }
 
     /**
@@ -343,25 +344,31 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable when Bridge is not paused.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID used to find address of handler to be used for deposit.
-        @param data Additional data to be passed to specified handler.
+        @param depositData Additional data to be passed to specified handler.
+        @param feeData Additional data to be passed to the fee handler.
         @notice Emits {Deposit} event with all necessary parameters and a handler response.
         - ERC20Handler: responds with an empty data.
         - ERC721Handler: responds with the deposited token metadata acquired by calling a tokenURI method in the token contract.
         - GenericHandler: responds with the raw bytes returned from the call to the target contract.
      */
-    function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata data) external payable whenNotPaused {
-        require(msg.value == _fee, "Incorrect fee supplied");
+    function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external payable whenNotPaused {
+        address sender = _msgSender();
+        if (address(_feeHandler) == address(0)) {
+            require(msg.value == 0, "no FeeHandler, msg.value != 0");
+        } else {
+            // Reverts on failure
+            _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
+        }
 
         address handler = _resourceIDToHandlerAddress[resourceID];
         require(handler != address(0), "resourceID not mapped to handler");
 
         uint64 depositNonce = ++_depositCounts[destinationDomainID];
-        address sender = _msgSender();
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, data);
+        bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
 
-        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, data, handlerResponse);
+        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, depositData, handlerResponse);
     }
 
     /**
@@ -489,17 +496,5 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         }
         
         emit ProposalEvent(domainID, depositNonce, ProposalStatus.Executed, dataHash);
-    }
-
-    /**
-        @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
-        This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
-        @param addrs Array of addresses to transfer {amounts} to.
-        @param amounts Array of amonuts to transfer to {addrs}.
-     */
-    function transferFunds(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
-        for (uint256 i = 0; i < addrs.length; i++) {
-            addrs[i].transfer(amounts[i]);
-        }
     }
 }

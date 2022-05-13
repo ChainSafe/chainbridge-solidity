@@ -23,6 +23,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     const depositerAddress = accounts[1];
 
+    const feeData = '0x';
+
     let BridgeInstance;
     let CentrifugeAssetInstance;
     let NoArgumentInstance;
@@ -42,7 +44,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
             NoArgumentContract.new().then(instance => NoArgumentInstance = instance),
             OneArgumentContract.new().then(instance => OneArgumentInstance = instance),
@@ -118,6 +120,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[0],
             depositData,
+            feeData,
             { from: depositerAddress }
         ));
     });
@@ -127,6 +130,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[0],
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -145,6 +149,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[1],
             Helpers.createGenericDepositData(null),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -168,6 +173,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[2],
             Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -193,6 +199,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[3],
             Helpers.createGenericDepositData(encodedMetaData),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -222,6 +229,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[4],
             Helpers.createGenericDepositData(encodedMetaData),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -250,6 +258,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[5],
             Helpers.createGenericDepositData(encodedMetaData),
+            feeData,
             { from: depositerAddress }
         );
 
@@ -278,6 +287,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[5],
             Helpers.createGenericDepositData(encodedMetaData),
+            feeData,
             { from: depositerAddress }
         ), 'incorrect depositer in the data');
     });
@@ -290,6 +300,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             domainID,
             initialResourceIDs[6],
             Helpers.createGenericDepositData(encodedMetaData),
+            feeData,
             { from: depositerAddress }
         );
         

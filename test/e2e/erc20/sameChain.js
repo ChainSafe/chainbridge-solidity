@@ -19,6 +19,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
+    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;
@@ -34,7 +35,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [relayer1Address, relayer2Address], relayerThreshold, 0, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID, [relayer1Address, relayer2Address], relayerThreshold, 100).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
         
@@ -74,6 +75,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             domainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         ));
 

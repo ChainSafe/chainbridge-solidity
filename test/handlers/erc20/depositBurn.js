@@ -12,11 +12,11 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
-    const relayerThreshold = 2;
     const domainID = 1;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
+    ;
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
@@ -35,7 +35,7 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
@@ -59,7 +59,9 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
         ]);
 
         depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
-        
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {

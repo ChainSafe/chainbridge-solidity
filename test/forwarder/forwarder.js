@@ -51,7 +51,7 @@ contract('Forwarder', async (accounts) => {
     beforeEach(async () => {
         ForwarderInstance = await ForwarderContract.new();
         TestTargetInstance = await TestTargetContract.new();
-        
+
         const signer = provider.getSigner();
 
         await signer.sendTransaction({to: relayer1Address, value: Ethers.utils.parseEther("0.1")});

@@ -13,15 +13,15 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('GenericHandler - [Execute Proposal]', async (accounts) => {
-    const relayerThreshold = 2;
     const domainID = 1;
+    const destinationDomainID = 2;
     const expectedDepositNonce = 1;
-
-    const depositerAddress = accounts[1];
     const relayer1Address = accounts[2];
     const relayer2Address = accounts[3];
 
-    const initialRelayers = [relayer1Address, relayer2Address];
+    const depositerAddress = accounts[1];
+    ;
+
 
     const centrifugeAssetMinCount = 10;
     const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
@@ -40,7 +40,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, initialRelayers, relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
         ]);
 
@@ -60,9 +60,14 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('deposit can be executed successfully', async () => {
+        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+
         await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
@@ -71,32 +76,25 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             { from: depositerAddress }
         ));
 
-        // relayer1 creates the deposit proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
+       // relayer1 executes the proposal
+        await TruffleAssert.passes(BridgeInstance.executeProposal(
             domainID,
+            destinationDomainID,
             expectedDepositNonce,
-            resourceID,
             depositData,
+            resourceID,
+            proposalSignedData,
             { from: relayer1Address }
         ));
 
-        // relayer2 votes in favor of the deposit proposal
-        // because the relayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
-            domainID,
-            expectedDepositNonce,
-            resourceID,
-            depositData,
-            { from: relayer2Address }
-        ));
-        
         // Verifying asset was marked as stored in CentrifugeAssetInstance
         assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
     });
 
     it('AssetStored event should be emitted', async () => {
+        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+
+
         await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
@@ -105,30 +103,19 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             { from: depositerAddress }
         ));
 
-        // relayer1 creates the deposit proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
+        // relayer1 executes the proposal
+        const executeTx = await BridgeInstance.executeProposal(
             domainID,
+            destinationDomainID,
             expectedDepositNonce,
-            resourceID,
             depositData,
-            { from: relayer1Address }
-        ));
-
-        // relayer2 votes in favor of the deposit proposal
-        // because the relayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        const voteWithExecuteTx = await BridgeInstance.voteProposal(
-            domainID,
-            expectedDepositNonce,
             resourceID,
-            depositData,
+            proposalSignedData,
             { from: relayer2Address }
         );
-
-        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, voteWithExecuteTx.tx);
+        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
-            return event.asset === hashOfCentrifugeAsset;
+          return event.asset === hashOfCentrifugeAsset;
         });
 
         assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset),

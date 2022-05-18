@@ -16,11 +16,12 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
+    ;
     const originChainTokenID = 42;
     const expectedDepositNonce = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
     const feeData = '0x';
-    
+
     let BridgeInstance;
     let OriginERC721MintableInstance;
     let OriginERC721HandlerInstance;
@@ -31,9 +32,9 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
-            BridgeContract.new(originDomainID, [], 0, 100).then(instance => BridgeInstance = instance)
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance)
         ]);
-        
+
         originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
 
         await Promise.all([
@@ -45,13 +46,16 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             BridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
             OriginERC721MintableInstance.mint(depositerAddress, originChainTokenID, genericBytes)
         ]);
-        
+
         await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositerAddress });
 
         depositData = Helpers.createERCDepositData(
             originChainTokenID,
             20,
             recipientAddress);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -119,14 +123,14 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             feeData,
             { from: depositerAddress }
         );
-        
+
         let expectedMetaData = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(genericBytes));
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            
+
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === originResourceID.toLowerCase() &&
-                event.depositNonce.toNumber() === expectedDepositNonce && 
+                event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
                 event.data === depositData.toLowerCase() &&
                 event.handlerResponse === expectedMetaData

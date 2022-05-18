@@ -4,24 +4,23 @@
  */
 
  const TruffleAssert = require("truffle-assertions");
- 
+
  const BridgeContract = artifacts.require("Bridge");
  const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
- 
+
  contract("FeeHandlerWithOracle - [admin]", async accounts => {
-     const relayerThreshold = 0;
      const domainID = 1;
      const initialRelayers = accounts.slice(0, 3);
- 
+
      const assertOnlyAdmin = (method, ...params) => {
          return TruffleAssert.reverts(method(...params, {from: initialRelayers[1]}), "sender doesn't have admin role");
      };
- 
+
      let BridgeInstance;
      let FeeHandlerWithOracleInstance;
- 
+
      beforeEach(async () => {
-         BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance);
+         BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
          FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
      });
 
@@ -54,4 +53,3 @@
         await assertOnlyAdmin(FeeHandlerWithOracleInstance.setFeeProperties, gasUsed, feePercent);
      });
  });
- 

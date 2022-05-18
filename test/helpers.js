@@ -8,7 +8,8 @@
  const blankFunctionSig = '0x00000000';
  const blankFunctionDepositerOffset = 0;
  const AbiCoder = new Ethers.utils.AbiCoder;
-
+ const mpcAddress = "0x1Ad4b1efE3Bc6FEE085e995FCF48219430e615C3";
+ const mpcPrivateKey= "0x497b6ae580cb1b0238f8b6b543fada697bc6f8768a983281e5e52a1a5bca4d58"
  const toHex = (covertThis, padding) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(covertThis), padding);
  };
@@ -80,7 +81,7 @@ const createGenericDepositData = (hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
             toHex(0, 32).substr(2) // len(metaData) (32 bytes)
-    } 
+    }
     const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
     return '0x' +
         toHex(hexMetaDataLength, 32).substr(2) +
@@ -119,8 +120,8 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
                 actualValue = parseInt(actualValue);
             }
         }
-        
-        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);    
+
+        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);
     }
 };
 //uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(domainID);
@@ -167,11 +168,27 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
     return oracleMessage + rawSignature.substr(2) + toHex(amount, 32).substr(2);
 }
 
+
+const signDataWithMpc = async (domainID, destinationDomainID, depositNonce, depositData, resourceID) => {
+  const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
+
+  const messageHash = Ethers.utils.solidityKeccak256(
+    ['uint8', 'uint8', 'uint64', 'bytes', 'bytes32'],
+    [domainID, destinationDomainID, depositNonce, depositData, resourceID]
+  );
+
+  const signature = signingKey.signDigest(messageHash)
+  const rawSignature = Ethers.utils.joinSignature(signature)
+  return rawSignature
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
     blankFunctionSig,
     blankFunctionDepositerOffset,
+    mpcAddress,
+    mpcPrivateKey,
     toHex,
     abiEncode,
     getFunctionSignature,
@@ -186,5 +203,6 @@ module.exports = {
     createResourceID,
     assertObjectsMatch,
     nonceAndId,
-    createOracleFeeData
+    createOracleFeeData,
+    signDataWithMpc
 };

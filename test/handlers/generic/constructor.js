@@ -13,7 +13,6 @@ const GenericHandlerContract = artifacts.require("GenericHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
 contract('GenericHandler - [constructor]', async () => {
-    const relayerThreshold = 2;
     const domainID = 1;
     const centrifugeAssetMinCount = 1;
     const blankFunctionSig = '0x00000000';
@@ -32,7 +31,7 @@ contract('GenericHandler - [constructor]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)
@@ -44,7 +43,7 @@ contract('GenericHandler - [constructor]', async () => {
             Helpers.createResourceID(CentrifugeAssetInstance3.address, domainID)
         ];
         initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
-        
+
         const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(centrifugeAssetStoreFuncSig))).substr(0, 10);
 
         initialDepositFunctionSignatures = [blankFunctionSig, blankFunctionSig, blankFunctionSig];
@@ -65,7 +64,7 @@ contract('GenericHandler - [constructor]', async () => {
         for (let i = 0; i < initialResourceIDs.length; i++) {
             await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], initialDepositFunctionSignatures[i], initialDepositFunctionDepositerOffsets[i], initialExecuteFunctionSignatures[i]);
         }
-        
+
         for (let i = 0; i < initialResourceIDs.length; i++) {
             const retrievedTokenAddress = await GenericHandlerInstance._resourceIDToContractAddress.call(initialResourceIDs[i]);
             assert.strictEqual(initialContractAddresses[i].toLowerCase(), retrievedTokenAddress.toLowerCase());

@@ -12,10 +12,10 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
-    const relayerThreshold = 2;
     const domainID = 1;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
+    ;
     const tokenAmount = 100;
     const feeData = '0x';
 
@@ -30,10 +30,10 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
-        
+
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
@@ -48,6 +48,9 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('[sanity] depositer owns tokenAmount of ERC20', async () => {
@@ -63,7 +66,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     it('Varied recipient address with length 40', async () => {
         const recipientAddress = accounts[0] + accounts[1].substr(2);
         const lenRecipientAddress = 40;
-        
+
         const depositTx = await BridgeInstance.deposit(
             domainID,
             resourceID,
@@ -71,7 +74,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 tokenAmount,
                 lenRecipientAddress,
                 recipientAddress),
-            feeData,   
+            feeData,
             { from: depositerAddress }
         );
 
@@ -150,4 +153,3 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         ), "ERC20: not a contract");
     });
 });
-

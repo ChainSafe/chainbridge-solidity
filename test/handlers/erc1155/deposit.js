@@ -12,10 +12,10 @@ const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
 contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
-    const relayerThreshold = 2;
     const domainID = 1;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
+    ;
     const tokenID = 1;
     const tokenAmount = 100;
     const feeData = '0x';
@@ -32,10 +32,10 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance)
         ])
-        
+
         resourceID = Helpers.createResourceID(ERC1155MintableInstance.address, domainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC1155MintableInstance.address];
@@ -50,8 +50,11 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
             ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID, ERC1155MintableInstance.address)
         ]);
-        
+
         depositData = Helpers.createERC1155DepositData([tokenID], [tokenAmount]);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('[sanity] depositer owns tokenAmount of tokenID', async () => {

@@ -15,14 +15,13 @@ const ERC1155SafeContract = artifacts.require("ERC1155Safe");
 
 contract('Gas Benchmark - [contract deployments]', async () => {
     const domainID = 1;
-    const relayerThreshold = 1;
     const centrifugeAssetMinCount = 1;
     const gasBenchmarks = [];
 
     let BridgeInstance;
 
     it('Should deploy all contracts and print benchmarks', async () => {
-        let contractInstances = [await BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance)];
+        let contractInstances = [await BridgeContract.new(domainID).then(instance => BridgeInstance = instance)];
         contractInstances = contractInstances.concat(
             await Promise.all([
                 ERC20HandlerContract.new(BridgeInstance.address),

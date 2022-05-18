@@ -8,13 +8,12 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Same Chain', async accounts => {
-    const relayerThreshold = 2;
     const domainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
-    const relayer2Address = accounts[4];
 
     const initialTokenAmount = 100;
     const depositAmount = 10;
@@ -29,21 +28,14 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositData;
     let depositProposalData;
     let depositProposalDataHash;
-    let initialResourceIDs;
-    let initialContractAddresses;
-    let burnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [relayer1Address, relayer2Address], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
-        
+
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
-    
-        initialResourceIDs = [resourceID];
-        initialContractAddresses = [ERC20MintableInstance.address];
-        burnableContractAddresses = [];
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -51,12 +43,15 @@ contract('E2E ERC20 - Same Chain', async accounts => {
             ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
-        
+
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress });
 
         depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] depositerAddress' balance should be equal to initialTokenAmount", async () => {
@@ -70,7 +65,10 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     });
 
     it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
+        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+
         // depositerAddress makes initial deposit of depositAmount
+        assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
             domainID,
             resourceID,
@@ -83,25 +81,15 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         const handlerBalance = await ERC20MintableInstance.balanceOf(ERC20HandlerInstance.address);
         assert.strictEqual(handlerBalance.toNumber(), depositAmount);
 
-        // relayer1 creates the deposit proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
+        // relayer2 executes the proposal
+        await TruffleAssert.passes(BridgeInstance.executeProposal(
             domainID,
+            destinationDomainID,
             expectedDepositNonce,
-            resourceID,
             depositProposalData,
+            resourceID,
+            proposalSignedData,
             { from: relayer1Address }
-        ));
-
-        // relayer2 votes in favor of the deposit proposal
-        // because the relayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
-            domainID,
-            expectedDepositNonce,
-            resourceID,
-            depositProposalData,
-            { from: relayer2Address }
         ));
 
         // Assert ERC20 balance was transferred from depositerAddress

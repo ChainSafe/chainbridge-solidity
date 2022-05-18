@@ -20,9 +20,9 @@ const Helpers = require('../helpers');
 
 contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const domainID = 1;
-    const relayerThreshold = 1;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
+    ;
     const lenRecipientAddress = 20;
     const gasBenchmarks = [];
 
@@ -56,7 +56,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
 
     before(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance),
@@ -75,7 +75,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, domainID);
         twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, domainID);
         threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, domainID);
-        
+
         const genericInitialResourceIDs = [
             centrifugeAssetResourceID,
             noArgumentResourceID,
@@ -130,6 +130,9 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], genericInitialDepositFunctionSignatures[3], genericInitialDepositFunctionDepositerOffsets[3], genericInitialExecuteFunctionSignatures[3]),
             BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], genericInitialDepositFunctionSignatures[4], genericInitialDepositFunctionDepositerOffsets[4], genericInitialExecuteFunctionSignatures[4])
         ]);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('Should make ERC20 deposit', async () => {

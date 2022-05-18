@@ -7,18 +7,18 @@
  const Ethers = require("ethers");
 
  const Helpers = require("../../../helpers");
- 
+
  const BridgeContract = artifacts.require("Bridge");
  const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
  const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
  const ERC20HandlerContract = artifacts.require("ERC20Handler");
- 
+
  contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
-    const relayerThreshold = 0;
     const domainID = 1;
     const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const depositerAddress = accounts[1];
+    ;
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
 
     let BridgeInstance;
@@ -27,13 +27,13 @@
     let depositData;
     let feeData;
     let oracleResponse;
- 
+
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: accounts[1]}), "sender doesn't have admin role");
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance);
+        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 
@@ -49,12 +49,12 @@
         await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address);
 
         await ERC20MintableInstance.mint(depositerAddress, tokenAmount.add(feeAmount)),
-        
+
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress });
         await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositerAddress });
         await BridgeInstance.adminChangeFeeHandler(FeeHandlerWithOracleInstance.address);
 
-        depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
@@ -66,8 +66,11 @@
         };
 
         feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
- 
+
     it("should distribute fees", async () => {
         // check the balance is 0
         let b1Before = (await ERC20MintableInstance.balanceOf(accounts[3])).toString();
@@ -92,7 +95,7 @@
         // Transfer the funds
         const tx = await FeeHandlerWithOracleInstance.transferFee(
                 resourceID,
-                [accounts[3], accounts[4]], 
+                [accounts[3], accounts[4]],
                 [payout, payout]
             );
         TruffleAssert.eventEmitted(tx, 'FeeDistributed', (event) => {
@@ -135,7 +138,7 @@
         await TruffleAssert.reverts(
             FeeHandlerWithOracleInstance.transferFee(
                 resourceID,
-                [accounts[3], accounts[4]], 
+                [accounts[3], accounts[4]],
                 [payout, payout]
             )
         );

@@ -18,7 +18,6 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
-    const feeData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;
@@ -40,7 +39,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
-            ERC20MintableInstance.mint(depositerAddress, 10000),
+            ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
 
@@ -84,93 +83,77 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         // depositNonce is not used
         assert.isFalse(depositProposalAfterFailedExecute);
     });
-/*
+
     it("Should not revert even though handler execute is reverted. FailedHandlerExecution event should be emitted with expected values", async () => {
+        const revertOnFail = false;
+
         const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
 
-        await TruffleAssert.passes(BridgeInstance.deposit(
-          destinationDomainID,
-          resourceID,
-          depositData,
-          feeData,
-          { from: depositerAddress }
-        ));
+        const executeTx = await BridgeInstance.executeProposal(
+            domainID,
+            destinationDomainID,
+            expectedDepositNonce,
+            depositProposalData,
+            resourceID,
+            proposalSignedData,
+            revertOnFail,
+            { from: relayer1Address }
+        );
 
-        // const executeTx = await BridgeInstance.executeProposal(
-        //     domainID,
-        //     destinationDomainID,
-        //     expectedDepositNonce,
-        //     depositProposalData,
-        //     resourceID,
-        //     proposalSignedData,
-        //     { from: relayer1Address }
-        // );
+        TruffleAssert.eventEmitted(executeTx, 'FailedHandlerExecution', (event) => {
+          return Ethers.utils.parseBytes32String('0x' + event.lowLevelData.slice(-64)) === 'Something bad happened'
+        });
 
-        // TruffleAssert.eventEmitted(executeTx, 'FailedHandlerExecution', (event) => {
-        //   return Ethers.utils.parseBytes32String('0x' + event.lowLevelData123.slice(-64)) === 'Something bad happened'
-        // });
+        const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
+          domainID, expectedDepositNonce);
 
-        // const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-        //   domainID, expectedDepositNonce);
-
-        //   assert.isTrue(depositProposalAfterFailedExecute);
+          assert.isTrue(depositProposalAfterFailedExecute);
     });
 
     it("Should execute the proposal successfully if the handler has enough amount after the last execution is reverted", async () => {
+      const revertOnFail = false;
+      const secondDepositNonce = expectedDepositNonce + 1;
+
       const proposalSignedData = await Helpers.signDataWithMpc(
         domainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID
       );
-
-      await TruffleAssert.passes(BridgeInstance.deposit(
-        destinationDomainID,
-        resourceID,
-        depositData,
-        feeData,
-        { from: depositerAddress }
-      ));
-
-      // await TruffleAssert.passes(BridgeInstance.executeProposal(
-      //     domainID,
-      //     destinationDomainID,
-      //     expectedDepositNonce,
-      //     depositProposalData,
-      //     resourceID,
-      //     proposalSignedData,
-      //     { from: relayer1Address }
-      // ));
+      const secondProposalSignedData = await Helpers.signDataWithMpc(
+        domainID, destinationDomainID, secondDepositNonce, depositProposalData, resourceID
+      );
 
       // Execution is reverted.
       // But the whole transaction is not reverted.
-      // await TruffleAssert.passes(BridgeInstance.executeProposal(
-      //     domainID,
-      //     destinationDomainID,
-      //     expectedDepositNonce,
-      //     depositProposalData,
-      //     resourceID,
-      //     proposalSignedData,
-      //     { from: relayer2Address }
-      // ));
+      await TruffleAssert.passes(BridgeInstance.executeProposal(
+          domainID,
+          destinationDomainID,
+          expectedDepositNonce,
+          depositProposalData,
+          resourceID,
+          proposalSignedData,
+          revertOnFail,
+          { from: relayer2Address }
+      ));
 
-      // // Some virtual operation so that the handler can have enough conditions to be executed.
-      // await ERC20HandlerInstance.virtualIncreaseBalance(1);
+      // Some virtual operation so that the handler can have enough conditions to be executed.
+      await ERC20HandlerInstance.virtualIncreaseBalance(1);
 
-      // // Should execute proposal.
-      // const executeTx = await BridgeInstance.executeProposal(
-      //   domainID,
-      //   destinationDomainID,
-      //   expectedDepositNonce,
-      //   depositProposalData,
-      //   resourceID,
-      //   proposalSignedData,
-      //     { from: relayer2Address }
-      // );
+      // Should execute proposal.
+      const executeTx = await BridgeInstance.executeProposal(
+        domainID,
+        destinationDomainID,
+        secondDepositNonce,
+        depositProposalData,
+        resourceID,
+        secondProposalSignedData,
+        revertOnFail,
+          { from: relayer2Address }
+      );
 
-      // TruffleAssert.eventEmitted(executeTx, 'ProposalExecution', (event) => {
-      //     return event.originDomainID.toNumber() === domainID &&
-      //         event.destinationDomainID.toNumber() === destinationDomainID &&
-      //         event.depositNonce.toNumber() === expectedDepositNonce &&
-      //         event.dataHash === depositProposalDataHash
-      // });
+      TruffleAssert.eventEmitted(executeTx, 'ProposalExecution', (event) => {
+          return event.originDomainID.toNumber() === domainID &&
+              event.destinationDomainID.toNumber() === destinationDomainID &&
+              event.depositNonce.toNumber() === secondDepositNonce &&
+              event.dataHash === depositProposalDataHash
+      });
   });
-  */
 });

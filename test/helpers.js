@@ -151,15 +151,18 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
         total feeData length: 321
     */
 
-    const oracleMessage = '0x' +
-        toHex(oracleResponse.ber, 32).substr(2) +                 // ber*10^18:     uint256 (32 bytes)
-        toHex(oracleResponse.ter, 32).substr(2) +                 // ter*10^18:     uint256 (32 bytes)
-        toHex(oracleResponse.dstGasPrice, 32).substr(2) +         // dstGasPrice:   uint256 (32 bytes)
-        toHex(oracleResponse.expiresAt, 32).substr(2) +           // expiresAt:     uint256
-        toHex(oracleResponse.fromDomainID, 32).substr(2) +        // fromDomainID:  uint256
-        toHex(oracleResponse.toDomainID, 32).substr(2) +          // toDomainID:    uint256
-        oracleResponse.resourceID.substr(2);                      // resourceID:    bytes32
-
+    const oracleMessage = Ethers.utils.solidityPack(
+        ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+        [
+            oracleResponse.ber,
+            oracleResponse.ter,
+            oracleResponse.dstGasPrice,
+            oracleResponse.expiresAt,
+            oracleResponse.fromDomainID,
+            oracleResponse.toDomainID,
+            oracleResponse.resourceID
+        ]
+      );
     const messageHash = Ethers.utils.keccak256(oracleMessage);
     const signingKey = new Ethers.utils.SigningKey(privateKey);
     const messageHashBytes = Ethers.utils.arrayify(messageHash);

@@ -33,7 +33,7 @@ contract HandlerHelpers is IERCHandler {
      */
     constructor(
         address          bridgeAddress
-    ) public {
+    ) {
         _bridgeAddress = bridgeAddress;
     }
 

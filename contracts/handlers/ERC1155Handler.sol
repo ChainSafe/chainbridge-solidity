@@ -19,7 +19,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
      */
     constructor(
         address bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
+    ) HandlerHelpers(bridgeAddress) {
     }
 
     /**

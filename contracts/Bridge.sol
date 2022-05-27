@@ -3,7 +3,6 @@ pragma solidity 0.8.11;
 
 import "./utils/AccessControl.sol";
 import "./utils/Pausable.sol";
-import "./utils/SafeMath.sol";
 import "./utils/SafeCast.sol";
 import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IERCHandler.sol";
@@ -14,7 +13,7 @@ import "./interfaces/IFeeHandler.sol";
     @title Facilitates deposits, creation and voting of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
-contract Bridge is Pausable, AccessControl, SafeMath {
+contract Bridge is Pausable, AccessControl {
     using SafeCast for *;
 
     // Limit relayers number because proposal can fit only so much votes
@@ -104,7 +103,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     }
 
     function _relayerBit(address relayer) private view returns(uint) {
-        return uint(1) << sub(AccessControl.getRoleMemberIndex(RELAYER_ROLE, relayer), 1);
+        return uint(1) << AccessControl.getRoleMemberIndex(RELAYER_ROLE, relayer) - 1;
     }
 
     function _hasVoted(Proposal memory proposal, address relayer) private view returns(bool) {
@@ -409,7 +408,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
             });
 
             emit ProposalEvent(domainID, depositNonce, ProposalStatus.Active, dataHash);
-        } else if (uint40(sub(block.number, proposal._proposedBlock)) > _expiry) {
+        } else if (uint40(block.number - proposal._proposedBlock) > _expiry) {
             // if the number of blocks that has passed since this proposal was
             // submitted exceeds the expiry threshold set, cancel the proposal
             proposal._status = ProposalStatus.Cancelled;
@@ -452,7 +451,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
 
         require(currentStatus == ProposalStatus.Active || currentStatus == ProposalStatus.Passed,
             "Proposal cannot be cancelled");
-        require(uint40(sub(block.number, proposal._proposedBlock)) > _expiry, "Proposal not at expiry threshold");
+        require(uint40(block.number - proposal._proposedBlock) > _expiry, "Proposal not at expiry threshold");
 
         proposal._status = ProposalStatus.Cancelled;
         _proposals[nonceAndID][dataHash] = proposal;

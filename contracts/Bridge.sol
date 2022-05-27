@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
+import "@openzeppelin/contracts/security/Pausable.sol";
+
 import "./utils/AccessControl.sol";
-import "./utils/Pausable.sol";
 import "./utils/SafeMath.sol";
 import "./utils/SafeCast.sol";
 import "./interfaces/IDepositExecute.sol";
@@ -176,7 +177,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by an address that currently has the admin role.
      */
     function adminPauseTransfers() external onlyAdmin {
-        _pause(_msgSender());
+        _pause();
     }
 
     /**
@@ -184,7 +185,7 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         @notice Only callable by an address that currently has the admin role.
      */
     function adminUnpauseTransfers() external onlyAdmin {
-        _unpause(_msgSender());
+        _unpause();
     }
 
     /**

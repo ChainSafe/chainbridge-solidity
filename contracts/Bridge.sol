@@ -4,8 +4,6 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./utils/AccessControl.sol";
 import "./utils/Pausable.sol";
-import "./utils/SafeMath.sol";
-import "./utils/SafeCast.sol";
 
 import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IERCHandler.sol";
@@ -16,8 +14,7 @@ import "./interfaces/IFeeHandler.sol";
     @title Facilitates deposits and creation of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
-contract Bridge is Pausable, AccessControl, SafeMath {
-    using SafeCast for *;
+contract Bridge is Pausable, AccessControl {
     using ECDSA for bytes32;
 
 

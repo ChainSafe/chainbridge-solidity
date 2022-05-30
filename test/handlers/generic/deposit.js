@@ -21,7 +21,6 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const expectedDepositNonce = 1;
 
     const depositerAddress = accounts[1];
-    ;
 
     const feeData = '0x';
 

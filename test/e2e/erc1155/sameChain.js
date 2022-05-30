@@ -8,7 +8,7 @@ const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
 contract('E2E ERC1155 - Same Chain', async accounts => {
-    const domainID = 1;
+    const originDomainID = 1;
     const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
@@ -35,11 +35,11 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(ERC1155MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC1155MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC1155MintableInstance.address];
         burnableContractAddresses = [];
@@ -66,11 +66,11 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
     });
 
     it("depositAmount of Destination ERC1155 should be transferred to recipientAddress", async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
 
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -83,8 +83,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
         // relayer1 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            domainID,
-            destinationDomainID,
+            originDomainID,
             expectedDepositNonce,
             proposalData,
             resourceID,

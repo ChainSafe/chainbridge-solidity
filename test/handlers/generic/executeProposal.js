@@ -13,15 +13,13 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('GenericHandler - [Execute Proposal]', async (accounts) => {
-    const domainID = 1;
+    const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
     const relayer1Address = accounts[2];
     const relayer2Address = accounts[3];
 
     const depositerAddress = accounts[1];
-    ;
-
 
     const centrifugeAssetMinCount = 10;
     const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
@@ -40,13 +38,13 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
         ]);
 
         const centrifugeAssetFuncSig = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
@@ -66,20 +64,19 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     });
 
     it('deposit can be executed successfully', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
             { from: depositerAddress }
         ));
 
-       // relayer1 executes the proposal
+        // relayer1 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            domainID,
-            destinationDomainID,
+            originDomainID,
             expectedDepositNonce,
             depositData,
             resourceID,
@@ -92,11 +89,11 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     });
 
     it('AssetStored event should be emitted', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
 
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -105,8 +102,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 executes the proposal
         const executeTx = await BridgeInstance.executeProposal(
-            domainID,
-            destinationDomainID,
+            originDomainID,
             expectedDepositNonce,
             depositData,
             resourceID,

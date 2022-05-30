@@ -107,8 +107,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20 owned by recipientAddress and back again", async () => {
-      const originProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
-      const destinationProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, originDepositProposalData, destinationResourceID);
+        // when signing data, first param is domain from where deposit originated and second is destination
+        const originProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, originDepositProposalData, destinationResourceID);
+        const destinationProposalSignedData = await Helpers.signDataWithMpc(destinationDomainID, originDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
 
         let depositerBalance;
         let recipientBalance;
@@ -122,14 +123,13 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
             { from: depositerAddress }
         ));
 
-      // destinationRelayer1 executes the proposal
+        // destinationRelayer1 executes the proposal
         await TruffleAssert.passes(DestinationBridgeInstance.executeProposal(
             originDomainID,
-            destinationDomainID,
             expectedDepositNonce,
             originDepositProposalData,
             destinationResourceID,
-            destinationProposalSignedData,
+            originProposalSignedData,
             { from: destinationRelayer1Address }
         ));
 
@@ -151,7 +151,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
         // recipientAddress makes a deposit of the received depositAmount
         await TruffleAssert.passes(DestinationBridgeInstance.deposit(
-            originDomainID,
+            destinationDomainID,
             destinationResourceID,
             destinationDepositData,
             feeData,
@@ -164,12 +164,11 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
         // destinationRelayer1 executes the proposal
         await TruffleAssert.passes(OriginBridgeInstance.executeProposal(
-            originDomainID,
             destinationDomainID,
             expectedDepositNonce,
             destinationDepositProposalData,
             originResourceID,
-            originProposalSignedData,
+            destinationProposalSignedData,
             { from: originRelayer1Address }
         ));
 

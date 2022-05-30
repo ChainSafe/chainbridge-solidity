@@ -87,7 +87,7 @@ contract('Forwarder', async (accounts) => {
         )
     });
 
-    it ('In case of invalid request(from), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(from), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other = {
             from: relayer2Address,
             to: TestTargetInstance.address,
@@ -101,7 +101,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('In case of invalid request(to), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(to), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other =  {
             from: relayer1Address,
             to: relayer2Address,
@@ -115,7 +115,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('In case of invalid request(value), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(value), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other =  {
             from: relayer1Address,
             to: TestTargetInstance.address,
@@ -129,7 +129,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('In case of invalid request(gas), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(gas), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other =  {
             from: relayer1Address,
             to: TestTargetInstance.address,
@@ -143,7 +143,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('In case of invalid request(nonce), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(nonce), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other =  {
             from: relayer1Address,
             to: TestTargetInstance.address,
@@ -157,7 +157,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('In case of invalid request(data), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
+    it('In case of invalid request(data), it should not be verified and should be reverted in executing of the forwarder contract', async () => {
         const request_other =  {
             from: relayer1Address,
             to: TestTargetInstance.address,
@@ -171,7 +171,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('If signature is valid, but req.from != signer, it should be reverted and should not be verified', async () => {
+    it('If signature is valid, but req.from != signer, it should be reverted and should not be verified', async () => {
         const sign_other = ethSigUtil.signTypedMessage(
             relayer2.getPrivateKey(),
             {
@@ -188,7 +188,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request, sign_other), "MinimalForwarder: signature does not match request");
     });
 
-    it ('If signature is valid, but req.nonce != nonce[signer], it should be reverted and should not be verified', async () => {
+    it('If signature is valid, but req.nonce != nonce[signer], it should be reverted and should not be verified', async () => {
         const request_other =  {
             from: relayer1Address,
             to: TestTargetInstance.address,
@@ -214,7 +214,7 @@ contract('Forwarder', async (accounts) => {
         return TruffleAssert.reverts(ForwarderInstance.execute(request_other, sign_other), "MinimalForwarder: signature does not match request");
     });
 
-    it ('Execute should succeed even if the call to the target failed', async () => {
+    it('Execute should succeed even if the call to the target failed', async () => {
         const new_request = {
             from: relayer1Address,
             to: ForwarderInstance.address,
@@ -240,7 +240,7 @@ contract('Forwarder', async (accounts) => {
         assert.equal(result[0], false);
     });
 
-    it ('Should be failed in case of execute is called with less gas than req.gas', async () => {
+    it('Should be failed in case of execute is called with less gas than req.gas', async () => {
         const new_request = {
             from: relayer3Address,
             to: TestTargetInstance.address,
@@ -266,7 +266,7 @@ contract('Forwarder', async (accounts) => {
         await TruffleAssert.fails(ForwarderInstance.execute(new_request, new_sign, {gas: 100000}));
     });
 
-    it ('req.gas should be passed to the target contract', async () => {
+    it('req.gas should be passed to the target contract', async () => {
         const requestGas = 100000;
         const new_request = {
             from: relayer3Address,
@@ -295,7 +295,7 @@ contract('Forwarder', async (accounts) => {
         assert(availableGas < requestGas);
     });
 
-    it ('req.data should be passed to the target contract along with the req.from at the end', async () => {
+    it('req.data should be passed to the target contract along with the req.from at the end', async () => {
         const requestData = '0x1234';
         const new_request = {
             from: relayer3Address,
@@ -323,7 +323,7 @@ contract('Forwarder', async (accounts) => {
         assert.equal(callData, expectedData);
     });
 
-    it ('req.value should be passed to the target contract', async () => {
+    it('req.value should be passed to the target contract', async () => {
         const request_value = Ethers.utils.parseEther('0.1');
         const new_request = {
             from: relayer3Address,
@@ -350,22 +350,22 @@ contract('Forwarder', async (accounts) => {
         assert.equal((await targetContract_balance).toString(), request_value.toString());
     });
 
-    it ('The successful execute can not be replayed again', async () => {
+    it('The successful execute can not be replayed again', async () => {
         await ForwarderInstance.execute(request, sign);
         return TruffleAssert.reverts(ForwarderInstance.execute(request, sign), "MinimalForwarder: signature does not match request");
     });
 
-    it ('Only a single call to the target is performed during the execution', async () => {
+    it('Only a single call to the target is performed during the execution', async () => {
         await ForwarderInstance.execute(request, sign);
         const calls = await TestTargetInstance.calls();
         assert.equal(calls.toNumber(), 1);
     });
 
-    it ('In case of request is matched with signature, it should be verified', async () => {
+    it('In case of request is matched with signature, it should be verified', async () => {
         assert.equal((await ForwarderInstance.verify(request, sign)), true);
     });
 
-    it ('In case of request is matched with signature, it should not be reverted and nonce should be increased', async () => {
+    it('In case of request is matched with signature, it should not be reverted and nonce should be increased', async () => {
         const nonce_before_execute = await ForwarderInstance.getNonce(relayer1Address);
         await ForwarderInstance.execute(request, sign);
         const nonce_after_execute = await ForwarderInstance.getNonce(relayer1Address);

@@ -15,7 +15,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
     const domainID = 1;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
-    ;
+
     const tokenID = 1;
     const feeData = '0x';
 

@@ -15,7 +15,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     const domainID = 1;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
-    ;
+
     const tokenAmount = 100;
     const feeData = '0x';
 

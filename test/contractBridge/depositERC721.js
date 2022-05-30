@@ -16,7 +16,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
+
     const originChainTokenID = 42;
     const expectedDepositNonce = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';

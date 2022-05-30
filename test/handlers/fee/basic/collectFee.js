@@ -19,7 +19,6 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
 
     const depositAmount = 10;
     const feeData = "0x0";

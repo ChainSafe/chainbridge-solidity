@@ -20,7 +20,6 @@
     const tokenAmount = Ethers.utils.parseEther("1");
     const feeAmount =Ethers.utils.parseEther("0.05");
     const depositerAddress = accounts[1];
-    ;
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;

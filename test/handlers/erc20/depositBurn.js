@@ -16,7 +16,6 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
 
     const initialTokenAmount = 100;
     const depositAmount = 10;

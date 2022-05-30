@@ -15,7 +15,6 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
     const domainID = 1;
 
     const depositerAddress = accounts[1];
-    ;
 
     const tokenID = 1;
     const tokenAmount = 100;

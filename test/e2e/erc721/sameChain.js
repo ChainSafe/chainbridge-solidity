@@ -8,7 +8,7 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Same Chain', async accounts => {
-    const domainID = 1;
+    const originDomainID = 1;
     const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
@@ -34,11 +34,11 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
@@ -73,7 +73,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     it("depositAmount of Destination ERC721 should be transferred to recipientAddress", async () => {
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -84,12 +84,11 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);
 
-        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
 
         // relayer1 creates the deposit proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            domainID,
-            destinationDomainID,
+            originDomainID,
             expectedDepositNonce,
             proposalData,
             resourceID,

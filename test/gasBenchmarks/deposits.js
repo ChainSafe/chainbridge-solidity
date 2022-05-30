@@ -22,7 +22,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const domainID = 1;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
+
     const lenRecipientAddress = 20;
     const gasBenchmarks = [];
 

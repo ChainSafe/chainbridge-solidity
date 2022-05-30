@@ -18,7 +18,7 @@
     const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const depositerAddress = accounts[1];
-    ;
+
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
 
     let BridgeInstance;
@@ -161,9 +161,9 @@
 
         let payout = Ethers.utils.parseEther("0.5");
         await assertOnlyAdmin(FeeHandlerWithOracleInstance.transferFee, resourceID, [accounts[3], accounts[4]], [payout, payout]);
-     });
+    });
 
-     it("should revert if addrs and amounts arrays have different length", async () => {
+    it("should revert if addrs and amounts arrays have different length", async () => {
         await TruffleAssert.passes(
             BridgeInstance.deposit(
                 domainID,
@@ -181,5 +181,5 @@
         let payout = Ethers.utils.parseEther("0.5");
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.transferFee(resourceID, [accounts[3], accounts[4]], [payout, payout, payout]),
             "addrs[], amounts[]: diff length");
-     });
- });
+    });
+});

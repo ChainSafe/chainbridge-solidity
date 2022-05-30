@@ -16,7 +16,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
+
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;

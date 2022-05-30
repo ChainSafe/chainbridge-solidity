@@ -16,7 +16,6 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
-    ;
 
     const tokenID = 1;
 

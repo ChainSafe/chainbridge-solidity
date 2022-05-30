@@ -31,7 +31,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
-            BridgeInstance = BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance)
         ]);
 
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);

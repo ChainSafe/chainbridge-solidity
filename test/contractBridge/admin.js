@@ -40,9 +40,6 @@ contract('Bridge - [admin]', async (accounts) => {
     });
 
     // Testing pauseable methods
-    it('Bridge should be initially paused', async () => {
-        assert.isTrue(await BridgeInstance.paused());
-    });
 
     it('Bridge should not be paused after MPC address is set', async () => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -70,57 +67,51 @@ contract('Bridge - [admin]', async (accounts) => {
     // Testing starKeygen, endKeygen and refreshKey methods
 
     it('Should successfully emit "StartKeygen" event if called by admin', async () => {
-      const startKeygenTx = await BridgeInstance.startKeygen();
+        const startKeygenTx = await BridgeInstance.startKeygen();
 
-      TruffleAssert.eventEmitted(startKeygenTx, 'StartKeygen', (event)=> {
-        return event
-      });
+        TruffleAssert.eventEmitted(startKeygenTx, 'StartKeygen');
     });
 
     it('Should fail if "StartKeygen" is called by non admin', async () => {
-      await assertOnlyAdmin(BridgeInstance.startKeygen);
+        await assertOnlyAdmin(BridgeInstance.startKeygen);
     });
 
     it('Should fail if "StartKeygen" is called after MPC address is set', async () => {
-      await BridgeInstance.endKeygen(Helpers.mpcAddress);
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-      await TruffleAssert.reverts(BridgeInstance.startKeygen(), "MPC address is already set");
+        await TruffleAssert.reverts(BridgeInstance.startKeygen(), "MPC address is already set");
     });
 
     it('Should successfully set MPC address and emit "EndKeygen" event if called by admin', async () => {
-      const startKeygenTx = await BridgeInstance.endKeygen(Helpers.mpcAddress);
+        const startKeygenTx = await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-      assert.equal(await BridgeInstance._MPCAddress(), Helpers.mpcAddress);
+        assert.equal(await BridgeInstance._MPCAddress(), Helpers.mpcAddress);
 
-      TruffleAssert.eventEmitted(startKeygenTx, 'EndKeygen', (event)=> {
-        return event
-      });
+        TruffleAssert.eventEmitted(startKeygenTx, 'EndKeygen');
     });
 
     it('Should fail if "endKeygen" is called by non admin', async () => {
-      await assertOnlyAdmin(BridgeInstance.endKeygen, someAddress);
+        await assertOnlyAdmin(BridgeInstance.endKeygen, someAddress);
     });
 
     it('Should fail if null address is passed as MPC address', async () => {
-      await TruffleAssert.reverts(BridgeInstance.endKeygen(nullAddress), "MPC address can't be null-address");
+        await TruffleAssert.reverts(BridgeInstance.endKeygen(nullAddress), "MPC address can't be null-address");
     });
 
     it('Should fail if admin tries to updated MPC address', async () => {
-      BridgeInstance.endKeygen(Helpers.mpcAddress);
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-      await TruffleAssert.reverts(BridgeInstance.endKeygen(someAddress), "MPC address can't be updated");
+        await TruffleAssert.reverts(BridgeInstance.endKeygen(someAddress), "MPC address can't be updated");
     });
 
     it('Should successfully emit "KeyRefresh" event if called by admin', async () => {
-      const startKeygenTx = await BridgeInstance.refreshKey();
+        const startKeygenTx = await BridgeInstance.refreshKey();
 
-      TruffleAssert.eventEmitted(startKeygenTx, 'KeyRefresh', (event)=> {
-        return event
-      });
+        TruffleAssert.eventEmitted(startKeygenTx, 'KeyRefresh');
     });
 
     it('Should fail if "refreshKey" is called by non admin', async () => {
-      await assertOnlyAdmin(BridgeInstance.refreshKey);
+        await assertOnlyAdmin(BridgeInstance.refreshKey);
     });
 
 

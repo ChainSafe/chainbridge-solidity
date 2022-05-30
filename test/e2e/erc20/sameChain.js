@@ -8,7 +8,7 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Same Chain', async accounts => {
-    const domainID = 1;
+    const originDomainID = 1;
     const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
@@ -31,11 +31,11 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -65,12 +65,12 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     });
 
     it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(domainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -83,8 +83,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         // relayer2 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            domainID,
-            destinationDomainID,
+            originDomainID,
             expectedDepositNonce,
             depositProposalData,
             resourceID,

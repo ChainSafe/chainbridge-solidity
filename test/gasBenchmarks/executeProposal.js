@@ -21,7 +21,7 @@ const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 
 contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
-    const domainID = 1;
+    const originDomainID = 1;
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -56,15 +56,15 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     let twoArgumentsResourceID;
     let threeArgumentsResourceID;
 
-    const deposit = (resourceID, depositData) => BridgeInstance.deposit(domainID, resourceID, depositData, feeData, { from: depositerAddress });
-    const execute = async (domainID, destinationDomainID, depositNonce, depositData, resourceID) => {
-      const signature = await Helpers.signDataWithMpc(domainID, destinationDomainID, depositNonce, depositData, resourceID);
-      return BridgeInstance.executeProposal(domainID, destinationDomainID, depositNonce, depositData, resourceID, signature, true);
+    const deposit = (resourceID, depositData) => BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, { from: depositerAddress });
+    const execute = async (originDomainID, depositNonce, depositData, resourceID) => {
+      const signature = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, depositNonce, depositData, resourceID);
+      return BridgeInstance.executeProposal(originDomainID, depositNonce, depositData, resourceID, signature);
     };
 
     before(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance),
@@ -75,14 +75,14 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
             ThreeArgumentsContract.new().then(instance => ThreeArgumentsInstance = instance)
         ]);
 
-        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
-        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
-        erc1155ResourceID = Helpers.createResourceID(ERC1155MintableInstance.address, domainID);
-        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
-        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, domainID);
-        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, domainID);
-        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, domainID);
-        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, domainID);
+        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
+        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainID);
+        erc1155ResourceID = Helpers.createResourceID(ERC1155MintableInstance.address, originDomainID);
+        centrifugeAssetResourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID);
+        noArgumentResourceID = Helpers.createResourceID(NoArgumentInstance.address, originDomainID);
+        oneArgumentResourceID = Helpers.createResourceID(OneArgumentInstance.address, originDomainID);
+        twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, originDomainID);
+        threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, originDomainID);
 
         const genericInitialResourceIDs = [
             centrifugeAssetResourceID,
@@ -151,7 +151,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
             recipientAddress);
 
         await deposit(erc20ResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, erc20ResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, erc20ResourceID);
 
         gasBenchmarks.push({
             type: 'ERC20',
@@ -171,7 +171,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
             metaData);
 
         await deposit(erc721ResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, erc721ResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, erc721ResourceID);
 
         gasBenchmarks.push({
             type: 'ERC721',
@@ -185,7 +185,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createERC1155DepositProposalData([erc1155TokenID], [erc1155TokenAmount], recipientAddress, metaData);
 
         await deposit(erc1155ResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, erc1155ResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, erc1155ResourceID);
 
         gasBenchmarks.push({
             type: 'ERC1155',
@@ -199,7 +199,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
 
         await deposit(centrifugeAssetResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, centrifugeAssetResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, centrifugeAssetResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Centrifuge Asset',
@@ -212,7 +212,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(null);
 
         await deposit(noArgumentResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, noArgumentResourceID,);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, noArgumentResourceID,);
 
         gasBenchmarks.push({
             type: 'Generic - No Argument',
@@ -225,7 +225,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(Helpers.toHex(42, 32));
 
         await deposit(oneArgumentResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, oneArgumentResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, oneArgumentResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - One Argument',
@@ -241,7 +241,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(encodedMetaData);
 
         await deposit(twoArgumentsResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, twoArgumentsResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, twoArgumentsResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Two Argument',
@@ -258,7 +258,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const depositData = Helpers.createGenericDepositData(encodedMetaData);
 
         await deposit(threeArgumentsResourceID, depositData);
-        const executeTx = await execute(domainID, destinationDomainID, depositNonce, depositData, threeArgumentsResourceID);
+        const executeTx = await execute(originDomainID, depositNonce, depositData, threeArgumentsResourceID);
 
         gasBenchmarks.push({
             type: 'Generic - Three Argument',

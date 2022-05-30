@@ -43,6 +43,14 @@ contract('ERC20Handler - [constructor]', async () => {
         await TruffleAssert.passes(ERC20HandlerContract.new(BridgeInstance.address));
     });
 
+    it('[sanity] bridge configured on domain', async () => {
+        assert.equal(await BridgeInstance._domainID(), domainID)
+    });
+
+    it('[sanity] bridge should be initially paused', async () => {
+        assert.isTrue(await BridgeInstance.paused());
+    });
+
     it('initialResourceIDs should be parsed correctly and corresponding resourceID mappings should have expected values', async () => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -60,4 +68,4 @@ contract('ERC20Handler - [constructor]', async () => {
             assert.strictEqual(resourceID.toLowerCase(), retrievedResourceID.toLowerCase());
         }
     });
-});
+  });

@@ -95,8 +95,9 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: tokenID of Origin ERC1155 owned by depositAddress to Destination ERC1155 owned by recipientAddress and back again", async () => {
+        // when signing data, first param is domain from where deposit originated and second is destination
         const originProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, originDepositProposalData, destinationResourceID);
-        const destinationProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
+        const destinationProposalSignedData = await Helpers.signDataWithMpc(destinationDomainID, originDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
 
         let tokenOwner;
 
@@ -118,7 +119,6 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
         // destinationRelayer1 executes the proposal
         await TruffleAssert.passes(DestinationBridgeInstance.executeProposal(
             originDomainID,
-            destinationDomainID,
             expectedDepositNonce,
             originDepositProposalData,
             destinationResourceID,
@@ -136,7 +136,7 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
 
         // recipientAddress makes a deposit of the received depositAmount
         await TruffleAssert.passes(DestinationBridgeInstance.deposit(
-            originDomainID,
+            destinationDomainID,
             destinationResourceID,
             destinationDepositData,
             feeData,
@@ -147,9 +147,8 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
         recipientBalance = await DestinationERC1155MintableInstance.balanceOf(recipientAddress, tokenID);
         assert.strictEqual(recipientBalance.toNumber(), 0);
 
-        // destinationRelayer2 executes the proposal
+        // originRelayer2 executes the proposal
         await TruffleAssert.passes(OriginBridgeInstance.executeProposal(
-            originDomainID,
             destinationDomainID,
             expectedDepositNonce,
             destinationDepositProposalData,

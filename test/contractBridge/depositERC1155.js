@@ -15,7 +15,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
-    ;
+
     const originChainTokenID = 42;
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;

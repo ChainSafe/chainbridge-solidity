@@ -45,7 +45,6 @@ contract Bridge is Pausable, AccessControl {
     );
     event ProposalExecution(
         uint8   originDomainID,
-        uint8   destinationDomainID,
         uint64  depositNonce,
         bytes32 dataHash
     );
@@ -267,7 +266,7 @@ contract Bridge is Pausable, AccessControl {
         // Reverts on failure
         depositHandler.executeProposal(resourceID, data);
 
-        emit ProposalExecution(originDomainID, _domainID, depositNonce, dataHash);
+        emit ProposalExecution(originDomainID, depositNonce, dataHash);
     }
 
     /**

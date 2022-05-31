@@ -222,6 +222,8 @@ contract Bridge is Pausable, AccessControl {
         - GenericHandler: responds with the raw bytes returned from the call to the target contract.
      */
     function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external payable whenNotPaused {
+        require(destinationDomainID != _domainID, "Can't deposit to current domain");
+
         address sender = _msgSender();
         if (address(_feeHandler) == address(0)) {
             require(msg.value == 0, "no FeeHandler, msg.value != 0");

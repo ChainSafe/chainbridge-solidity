@@ -15,7 +15,8 @@ const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 
 contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -33,11 +34,11 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -58,7 +59,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
     it("[sanity] Generic deposit can be made", async () => {
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -73,7 +74,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -98,7 +99,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         const balanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
 
         const depositTx = await BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -109,14 +110,14 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
             );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationDomainID.toNumber() === domainID &&
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase();
         });
         const internalTx = await TruffleAssert.createTransactionResult(BasicFeeHandlerInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
             return event.sender === depositerAddress &&
-                event.fromDomainID.toNumber() === domainID &&
-                event.destinationDomainID.toNumber() === domainID &&
+                event.fromDomainID.toNumber() === originDomainID &&
+                event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.fee.toString() === fee.toString() &&
                 event.tokenAddress === "0x0000000000000000000000000000000000000000";
@@ -128,7 +129,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     it("deposit should revert if fee handler not set and fee supplied", async () => {
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -144,7 +145,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     it("deposit should pass if fee handler not set and fee not supplied", async () => {
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,

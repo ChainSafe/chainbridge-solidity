@@ -14,7 +14,8 @@
  const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
  contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const depositerAddress = accounts[1];
@@ -33,7 +34,7 @@
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
+        BridgeInstance = await BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 
@@ -42,7 +43,7 @@
         await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
 
         ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -60,8 +61,8 @@
             ter: Ethers.utils.parseEther("1.63934"),
             dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
             expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-            fromDomainID: domainID,
-            toDomainID: domainID,
+            fromDomainID: originDomainID,
+            toDomainID: destinationDomainID,
             resourceID
         };
 
@@ -78,7 +79,7 @@
 
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -117,7 +118,7 @@
     it("should not distribute fees with other resourceID", async () => {
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -132,7 +133,7 @@
         let payout = Ethers.utils.parseEther("0.5");
 
         // Incorrect resourceID
-        resourceID = Helpers.createResourceID(FeeHandlerWithOracleInstance.address, domainID);
+        resourceID = Helpers.createResourceID(FeeHandlerWithOracleInstance.address, originDomainID);
 
         // Transfer the funds: fails
         await TruffleAssert.reverts(
@@ -147,7 +148,7 @@
     it("should require admin role to distribute fee", async () => {
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
@@ -166,7 +167,7 @@
     it("should revert if addrs and amounts arrays have different length", async () => {
         await TruffleAssert.passes(
             BridgeInstance.deposit(
-                domainID,
+                destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,

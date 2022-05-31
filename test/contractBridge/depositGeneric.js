@@ -16,6 +16,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const depositerAddress = accounts[1];
 
     let BridgeInstance;
     let GenericHandlerInstance;
@@ -85,4 +86,8 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
                 event.depositNonce.toNumber() === expectedDepositNonce
         });
     });
+
+    it('Deposit destination domain can not be current bridge domain ', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+  });
 });

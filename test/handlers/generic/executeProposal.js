@@ -67,7 +67,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            destinationDomainID,
+            originDomainID,
             resourceID,
             depositData,
             feeData,
@@ -93,7 +93,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            destinationDomainID,
+            originDomainID,
             resourceID,
             depositData,
             feeData,

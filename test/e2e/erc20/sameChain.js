@@ -70,7 +70,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
-            destinationDomainID,
+            originDomainID,
             resourceID,
             depositData,
             feeData,

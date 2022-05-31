@@ -15,7 +15,8 @@ const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 
 contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -37,11 +38,11 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
@@ -67,7 +68,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
          // check the balance is 0
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
-         await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")})
+         await BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")})
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BridgeInstance.address)), "ether"), "0");
          assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
 
@@ -100,7 +101,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
         await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
         await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
 
-        await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
+        await BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
 
         assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
 
@@ -112,7 +113,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
         await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
         await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
 
-        await BridgeInstance.deposit(domainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
+        await BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, {from: depositerAddress, value: Ethers.utils.parseEther("1")});
 
         assert.equal(web3.utils.fromWei((await web3.eth.getBalance(BasicFeeHandlerInstance.address)), "ether"), "1");
 

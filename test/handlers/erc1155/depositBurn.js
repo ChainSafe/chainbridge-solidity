@@ -12,7 +12,8 @@ const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
 contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
 
@@ -34,13 +35,13 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance1 = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance2 = instance)
         ])
 
-        resourceID1 = Helpers.createResourceID(ERC1155MintableInstance1.address, domainID);
-        resourceID2 = Helpers.createResourceID(ERC1155MintableInstance2.address, domainID);
+        resourceID1 = Helpers.createResourceID(ERC1155MintableInstance1.address, originDomainID);
+        resourceID2 = Helpers.createResourceID(ERC1155MintableInstance2.address, originDomainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC1155MintableInstance1.address, ERC1155MintableInstance2.address];
         burnableContractAddresses = [ERC1155MintableInstance1.address]
@@ -72,7 +73,7 @@ contract('ERC1155Handler - [Deposit Burn ERC1155]', async (accounts) => {
 
     it('depositAmount of ERC1155MintableInstance1 tokens should have been burned', async () => {
         await BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID1,
             depositData,
             feeData,

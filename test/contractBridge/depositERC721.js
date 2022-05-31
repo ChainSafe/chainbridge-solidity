@@ -136,4 +136,8 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
                 event.handlerResponse === expectedMetaData
         });
     });
+
+    it('Deposit destination domain can not be current bridge domain ', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+  });
 });

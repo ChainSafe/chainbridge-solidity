@@ -133,4 +133,8 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     it('deposit requires resourceID that is mapped to a handler', async () => {
         await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "resourceID not mapped to handler");
     });
+
+    it('Deposit destination domain can not be current bridge domain ', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+  });
 });

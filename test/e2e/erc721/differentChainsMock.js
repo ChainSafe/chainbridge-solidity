@@ -145,7 +145,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
         // recipientAddress makes a deposit of the received depositAmount
         await TruffleAssert.passes(DestinationBridgeInstance.deposit(
-            destinationDomainID,
+            originDomainID,
             destinationResourceID,
             destinationDepositData,
             feeData,

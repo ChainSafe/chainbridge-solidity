@@ -172,12 +172,12 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
 }
 
 
-const signDataWithMpc = async (domainID, _domainID, depositNonce, depositData, resourceID) => {
+const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce, depositData, resourceID) => {
   const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
 
   const messageHash = Ethers.utils.solidityKeccak256(
     ['uint8', 'uint8', 'uint64', 'bytes', 'bytes32'],
-    [domainID, _domainID, depositNonce, depositData, resourceID]
+    [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
   );
 
   const signature = signingKey.signDigest(messageHash)

@@ -56,7 +56,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     let twoArgumentsResourceID;
     let threeArgumentsResourceID;
 
-    const deposit = (resourceID, depositData) => BridgeInstance.deposit(destinationDomainID, resourceID, depositData, feeData, { from: depositerAddress });
+    const deposit = (resourceID, depositData) => BridgeInstance.deposit(originDomainID, resourceID, depositData, feeData, { from: depositerAddress });
     const execute = async (originDomainID, depositNonce, depositData, resourceID) => {
       const signature = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, depositNonce, depositData, resourceID);
       return BridgeInstance.executeProposal(originDomainID, depositNonce, depositData, resourceID, signature);

@@ -12,7 +12,8 @@ const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
 contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
 
@@ -32,11 +33,11 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance)
         ])
 
-        resourceID = Helpers.createResourceID(ERC1155MintableInstance.address, domainID);
+        resourceID = Helpers.createResourceID(ERC1155MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC1155MintableInstance.address];
         burnableContractAddresses = []
@@ -64,7 +65,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
 
     it('Deposit event is emitted with expected values', async () => {
         const depositTx = await BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             depositData,
             feeData,
@@ -72,7 +73,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationDomainID.toNumber() === domainID &&
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.data === Helpers.createERC1155DepositData([tokenID], [tokenAmount]).toLowerCase() &&

@@ -70,7 +70,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
-            destinationDomainID,
+            originDomainID,
             resourceID,
             depositData,
             feeData,

@@ -291,6 +291,17 @@ contract Bridge is Pausable, AccessControl, SafeMath {
     function adminSetForwarder(address forwarder, bool valid) external onlyAdmin {
         isValidForwarder[forwarder] = valid;
     }
+    
+    function adminSetWtoken(
+        bytes32 resourceID,
+        address wtokenAddress,
+        bool isWtoken
+    ) external onlyAdmin {
+        IERCHandler handler = IERCHandler(
+            _resourceIDToHandlerAddress[resourceID]
+        );
+        handler.setWtoken(wtokenAddress, isWtoken);
+    }
 
     /**
         @notice Returns a proposal.
@@ -339,6 +350,14 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         handler.withdraw(data);
     }
 
+    function adminWithdrawETH(
+        address handlerAddress,
+        bytes memory data
+    ) external onlyAdmin {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.withdrawETH(data);
+    }
+
     /**
         @notice Initiates a transfer using a specified handler contract.
         @notice Only callable when Bridge is not paused.
@@ -353,11 +372,21 @@ contract Bridge is Pausable, AccessControl, SafeMath {
      */
     function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external payable whenNotPaused {
         address sender = _msgSender();
+        uint256 value = msg.value;
         if (address(_feeHandler) == address(0)) {
-            require(msg.value == 0, "no FeeHandler, msg.value != 0");
-        } else {
+            (uint256 fee, ) = _feeHandler.calculateFee(
+                sender,
+                _domainID,
+                destinationDomainID,
+                resourceID,
+                depositData,
+                feeData
+            );
+            if (fee > 0) {
             // Reverts on failure
             _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
+                value -= fee;
+            }
         }
 
         address handler = _resourceIDToHandlerAddress[resourceID];
@@ -366,8 +395,8 @@ contract Bridge is Pausable, AccessControl, SafeMath {
         uint64 depositNonce = ++_depositCounts[destinationDomainID];
 
         IDepositExecute depositHandler = IDepositExecute(handler);
-        bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
-
+        bytes memory handlerResponse = depositHandler.deposit{value: value}(resourceID, sender, depositData);
+        
         emit Deposit(destinationDomainID, resourceID, depositNonce, sender, depositData, handlerResponse);
     }
 

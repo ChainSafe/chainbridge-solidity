@@ -34,7 +34,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         bytes32 resourceID,
         address depositer,
         bytes   calldata data
-    ) external override onlyBridge returns (bytes memory) {
+    ) external payable override onlyBridge returns (bytes memory) {
         uint256        amount;
         (amount) = abi.decode(data, (uint));
 
@@ -43,6 +43,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         if (_burnList[tokenAddress]) {
             burnERC20(tokenAddress, depositer, amount);
+        } else if (isWtoken[tokenAddress]) {
+            depositETH(amount);
         } else {
             lockERC20(tokenAddress, depositer, address(this), amount);
         }
@@ -77,6 +79,8 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
 
         if (_burnList[tokenAddress]) {
             mintERC20(tokenAddress, address(recipientAddress), amount);
+        } else if (isWtoken[tokenAddress]) {
+            withdrawETH(address(recipientAddress), amount);
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), amount);
         }
@@ -98,5 +102,21 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
         releaseERC20(tokenAddress, recipient, amount);
+    }
+
+    /**
+        @notice Used to manually release ETH ERC20Safe.
+        @param data Consists of {recipient}, and {amount} all padded to 32 bytes.
+        @notice Data passed into the function should be constructed as follows:
+        recipient                           address     bytes  0 - 32
+        amount                                 uint     bytes  32 - 64
+     */
+    function withdrawETH(bytes memory data) external override onlyBridge {
+        address recipient;
+        uint amount;
+
+        (recipient, amount) = abi.decode(data, (address, uint));
+
+        withdrawETH(recipient, amount);
     }
 }

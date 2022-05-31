@@ -86,7 +86,7 @@ contract GenericHandler is IGenericHandler {
         {metaData} is expected to consist of needed function arguments.
         @return Returns the raw bytes returned from the call to {contractAddress}.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external onlyBridge returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external payable onlyBridge returns (bytes memory) {
         uint256      lenMetadata;
         bytes memory metadata;
 

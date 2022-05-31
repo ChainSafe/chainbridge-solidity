@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
  */
 contract ERC20Safe {
     using SafeMath for uint256;
+    uint256 public ETHReserve;
 
     /**
         @notice Used to gain custody of deposited token.
@@ -35,6 +36,24 @@ contract ERC20Safe {
     function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransfer(erc20, recipient, amount);
+    }
+
+    function depositETH(uint256 amount) internal {
+        require(amount == msg.value, "msg.value and data mismatched");
+        require(
+            address(this).balance >= ETHReserve + amount,
+            "ETHReserve mismatched"
+        );
+        ETHReserve = address(this).balance;
+    }
+
+    function withdrawETH(address recipient, uint256 amount) internal {
+        uint256 balanceBefore = address(this).balance;
+        _safeTransferETH(recipient, amount);
+        require(
+            address(this).balance == balanceBefore - amount,
+            "ERC20: withdraw fail!"
+        );
     }
 
     /**
@@ -70,6 +89,19 @@ contract ERC20Safe {
         _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
+    function _safeTransferETH(address to, uint256 value) private {
+        (bool success, bytes memory returndata) = address(to).call{
+            value: value
+        }("");
+        require(success, "ERC20: call failed");
+
+        if (returndata.length > 0) {
+            require(
+                abi.decode(returndata, (bool)),
+                "ERC20: operation did not succeed"
+            );
+        }
+    }
 
     /**
         @notice used to transfer ERC20s safely

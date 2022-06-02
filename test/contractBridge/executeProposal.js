@@ -73,7 +73,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
-    it("isProposalExecuted returns false is depositNonce is not used", async () => {
+    it("isProposalExecuted returns false if depositNonce is not used", async () => {
         const destinationDomainID = await BridgeInstance._domainID();
 
         assert.isFalse(await BridgeInstance.isProposalExecuted(destinationDomainID, expectedDepositNonce));

@@ -8,18 +8,14 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Two EVM Chains', async accounts => {
-    const originRelayerThreshold = 2;
     const originDomainID = 1;
-    const originRelayer1Address = accounts[3];
-    const originRelayer2Address = accounts[4];
-
-    const destinationRelayerThreshold = 2;
     const destinationDomainID = 2;
-    const destinationRelayer1Address = accounts[3];
-    const destinationRelayer2Address = accounts[4];
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
+    const originRelayer1Address = accounts[3];
+    const destinationRelayer1Address = accounts[4];
+
     const tokenID = 1;
     const expectedDepositNonce = 1;
     const feeData = '0x';
@@ -43,17 +39,17 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID, [originRelayer1Address, originRelayer2Address], originRelayerThreshold, 100).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationDomainID, [destinationRelayer1Address, destinationRelayer2Address], destinationRelayerThreshold, 100).then(instance => DestinationBridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => OriginBridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => DestinationBridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
         ]);
-        
+
         originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC721MintableInstance.address];
         originBurnableContractAddresses = [];
-        
+
         destinationResourceID = Helpers.createResourceID(DestinationERC721MintableInstance.address, originDomainID)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC721MintableInstance.address];
@@ -82,6 +78,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         destinationDepositData = Helpers.createERCDepositData(tokenID, 20, depositerAddress);
         destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC721HandlerInstance.address + destinationDepositProposalData.substr(2));
+
+        // set MPC address to unpause the Bridge
+        await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
+        await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] depositerAddress' should own tokenID", async () => {
@@ -100,6 +100,10 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: tokenID of Origin ERC721 owned by depositAddress to Destination ERC721 owned by recipientAddress and back again", async () => {
+        // when signing data, first param is domain from where deposit originated and second is destination
+        const originProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, originDepositProposalData, destinationResourceID);
+        const destinationProposalSignedData = await Helpers.signDataWithMpc(destinationDomainID, originDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
+
         let tokenOwner;
 
         // depositerAddress makes initial deposit of tokenID
@@ -115,25 +119,14 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         tokenOwner = await OriginERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(OriginERC721HandlerInstance.address, tokenOwner, "OriginERC721HandlerInstance.address does not own tokenID");
 
-        // destinationRelayer1 creates the deposit proposal
-        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
+        // destinationRelayer2 executes the proposal
+        await TruffleAssert.passes(DestinationBridgeInstance.executeProposal(
             originDomainID,
             expectedDepositNonce,
-            destinationResourceID,
             originDepositProposalData,
+            destinationResourceID,
+            originProposalSignedData,
             { from: destinationRelayer1Address }
-        ));
-
-        // destinationRelayer2 votes in favor of the deposit proposal
-        // because the destinationRelayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        await TruffleAssert.passes(DestinationBridgeInstance.voteProposal(
-            originDomainID,
-            expectedDepositNonce,
-            destinationResourceID,
-            originDepositProposalData,
-            { from: destinationRelayer2Address }
         ));
 
         // Handler should still own tokenID of OriginERC721MintableInstance
@@ -162,25 +155,15 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         // Token should no longer exist
         TruffleAssert.reverts(DestinationERC721MintableInstance.ownerOf(tokenID), "ERC721: owner query for nonexistent token")
 
-        // destinationRelayer1 creates the deposit proposal
-        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
-            destinationDomainID,
-            expectedDepositNonce,
-            originResourceID,
-            destinationDepositProposalData,
-            { from: originRelayer1Address }
-        ));
 
-        // destinationRelayer2 votes in favor of the deposit proposal
-        // because the destinationRelayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        await TruffleAssert.passes(OriginBridgeInstance.voteProposal(
+        // originRelayer executes the proposal
+        await TruffleAssert.passes(OriginBridgeInstance.executeProposal(
             destinationDomainID,
             expectedDepositNonce,
-            originResourceID,
             destinationDepositProposalData,
-            { from: originRelayer2Address }
+            originResourceID,
+            destinationProposalSignedData,
+            { from: originRelayer1Address }
         ));
 
         // Assert Destination tokenID no longer exists

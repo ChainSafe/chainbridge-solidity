@@ -12,8 +12,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [isWhitelisted]', async () => {
     const AbiCoder = new Ethers.utils.AbiCoder();
-    
-    const relayerThreshold = 2;
+
     const domainID = 1;
 
     let BridgeInstance;
@@ -25,7 +24,7 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance1 = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance2 = instance)
         ])
@@ -50,7 +49,7 @@ contract('ERC20Handler - [isWhitelisted]', async () => {
 
 
     // as we are working with a mandatory whitelist, these tests are currently not necessary
-    
+
     // it('initialContractAddress should not be whitelisted', async () => {
     //     const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address, initialResourceIDs, initialContractAddresses);
     //     const isWhitelisted = await ERC20HandlerInstance._contractWhitelist.call(ERC20MintableInstance1.address);

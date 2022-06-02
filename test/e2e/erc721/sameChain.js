@@ -8,19 +8,18 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('E2E ERC721 - Same Chain', async accounts => {
-    const relayerThreshold = 2;
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
-    const relayer2Address = accounts[4];
 
     const tokenID = 1;
     const depositMetadata = "0xc0ff33";
     const expectedDepositNonce = 1;
     const feeData = '0x';
-    
+
     let BridgeInstance;
     let ERC721MintableInstance;
     let ERC721HandlerInstance;
@@ -35,11 +34,11 @@ contract('E2E ERC721 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [relayer1Address, relayer2Address], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ]);
-        
-        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+
+        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = [];
@@ -56,6 +55,9 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         depositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
         proposalData = Helpers.createERC721DepositProposalData(tokenID, 20, recipientAddress, depositMetadata.length, depositMetadata);
         depositProposalDataHash = Ethers.utils.keccak256(ERC721HandlerInstance.address + proposalData.substr(2));
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] depositerAddress' should own tokenID", async () => {
@@ -71,7 +73,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     it("depositAmount of Destination ERC721 should be transferred to recipientAddress", async () => {
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
-            domainID,
+            originDomainID,
             resourceID,
             depositData,
             feeData,
@@ -82,25 +84,16 @@ contract('E2E ERC721 - Same Chain', async accounts => {
         const tokenOwner = await ERC721MintableInstance.ownerOf(tokenID);
         assert.strictEqual(ERC721HandlerInstance.address, tokenOwner);
 
-        // relayer1 creates the deposit proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
-            domainID,
-            expectedDepositNonce,
-            resourceID,
-            proposalData,
-            { from: relayer1Address }
-        ));
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
 
-        // relayer2 votes in favor of the deposit proposal
-        // because the relayerThreshold is 2, the deposit proposal will go
-        // into a finalized state
-        // and then automatically executes the proposal
-        await TruffleAssert.passes(BridgeInstance.voteProposal(
-            domainID,
+        // relayer1 creates the deposit proposal
+        await TruffleAssert.passes(BridgeInstance.executeProposal(
+            originDomainID,
             expectedDepositNonce,
-            resourceID,
             proposalData,
-            { from: relayer2Address }
+            resourceID,
+            proposalSignedData,
+            { from: relayer1Address }
         ));
 
         // Assert ERC721 balance was transferred from depositerAddress

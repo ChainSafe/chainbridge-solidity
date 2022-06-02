@@ -31,7 +31,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
-            BridgeInstance = BridgeContract.new(originDomainID, [relayer], 0, 100).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance)
         ]);
 
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
@@ -52,7 +52,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
         await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
         // current fee is set to 0
         let res = await BasicFeeHandlerInstance.calculateFee.call(
-            relayer, 
+            relayer,
             originDomainID,
             destinationDomainID,
             resourceID,
@@ -63,7 +63,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
         // Change fee to 0.5 ether
         await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
         res = await BasicFeeHandlerInstance.calculateFee.call(
-            relayer, 
+            relayer,
             originDomainID,
             destinationDomainID,
             resourceID,

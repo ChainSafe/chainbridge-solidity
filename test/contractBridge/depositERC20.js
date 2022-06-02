@@ -14,14 +14,14 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
-    const relayerThreshold = 0;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
+
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
-    
+
     let BridgeInstance;
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
@@ -30,7 +30,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
-            BridgeInstance = await BridgeContract.new(originDomainID, [], relayerThreshold, 100),
+            BridgeInstance = await BridgeContract.new(originDomainID)
         ]);
 
         resourceID = Helpers.createResourceID(OriginERC20MintableInstance.address, originDomainID);
@@ -47,6 +47,10 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             depositAmount,
             20,
             recipientAddress);
+
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -130,5 +134,9 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
     it('deposit requires resourceID that is mapped to a handler', async () => {
         await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "resourceID not mapped to handler");
+    });
+
+    it('Deposit destination domain can not be current bridge domain ', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
     });
 });

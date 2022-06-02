@@ -2,7 +2,7 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
- 
+
  const TruffleAssert = require('truffle-assertions');
 
  const Helpers = require('../../helpers');
@@ -12,8 +12,8 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
-    const relayerThreshold = 2;
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -35,13 +35,13 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance1 = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance2 = instance)
         ])
 
-        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, domainID);
-        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, domainID);
+        resourceID1 = Helpers.createResourceID(ERC721MintableInstance1.address, originDomainID);
+        resourceID2 = Helpers.createResourceID(ERC721MintableInstance2.address, originDomainID);
         initialResourceIDs = [resourceID1, resourceID2];
         initialContractAddresses = [ERC721MintableInstance1.address, ERC721MintableInstance2.address];
         burnableContractAddresses = [ERC721MintableInstance1.address]
@@ -50,7 +50,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
         ]);
-            
+
         await Promise.all([
             ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID1, ERC721MintableInstance1.address),
@@ -59,6 +59,9 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
         ]);
 
         depositData = Helpers.createERCDepositData(tokenID, 20, recipientAddress);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('[sanity] burnableContractAddresses should be marked true in _burnList', async () => {
@@ -75,7 +78,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
     it('depositAmount of ERC721MintableInstance1 tokens should have been burned', async () => {
         await BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID1,
             depositData,
             feeData,

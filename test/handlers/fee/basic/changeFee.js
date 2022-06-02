@@ -10,19 +10,17 @@ const BridgeContract = artifacts.require("Bridge");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 
 contract("BasicFeeHandler - [changeFee]", async accounts => {
-    const relayerThreshold = 0;
     const domainID = 1;
-    const initialRelayers = accounts.slice(0, 3);
-    const relayer = accounts[0];
+    const nonAdmin = accounts[1];
 
     const assertOnlyAdmin = (method, ...params) => {
-        return TruffleAssert.reverts(method(...params, {from: initialRelayers[1]}), "sender doesn't have admin role");
+        return TruffleAssert.reverts(method(...params, {from: nonAdmin}), "sender doesn't have admin role");
     };
 
     let BridgeInstance;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance);
+        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
     });
 
     it("[sanity] contract should be deployed successfully", async () => {
@@ -34,7 +32,7 @@ contract("BasicFeeHandler - [changeFee]", async accounts => {
         const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
         const fee = Ethers.utils.parseEther("0.05");
         const tx = await BasicFeeHandlerInstance.changeFee(fee);
-        TruffleAssert.eventEmitted(tx, "FeeChanged", (event) => 
+        TruffleAssert.eventEmitted(tx, "FeeChanged", (event) =>
             web3.utils.fromWei(event.newFee, "ether") === "0.05"
         );
         const newFee = await BasicFeeHandlerInstance._fee.call();

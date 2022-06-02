@@ -12,8 +12,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     const AbiCoder = new Ethers.utils.AbiCoder();
-    
-    const relayerThreshold = 2;
+
     const domainID = 1;
 
     let BridgeInstance;
@@ -24,7 +23,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let burnableContractAddresses;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100);
+        BridgeInstance = await BridgeContract.new(domainID);
         ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(domainID).substr(2)), 32)];

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "./utils/SafeCast.sol";
 import "./handlers/HandlerHelpers.sol";
 
 contract NoArgument {
@@ -44,13 +43,6 @@ contract WithDepositer {
     }
 }
 
-contract SafeCaster {
-    using SafeCast for *;
-
-    function toUint200(uint input) external pure returns(uint200) {
-        return input.toUint200();
-    }
-}
 
 contract ReturnData {
     function returnData(string memory argument) external pure returns(bytes32 response) {

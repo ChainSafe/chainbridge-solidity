@@ -14,14 +14,14 @@ const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
-    const relayerThreshold = 0;
     const depositerAddress = accounts[1];
+
     const originChainTokenID = 42;
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
-    
+
     let BridgeInstance;
     let OriginERC1155MintableInstance;
     let OriginERC1155HandlerInstance;
@@ -30,10 +30,10 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC1155MintableContract.new("TOK").then(instance => OriginERC1155MintableInstance = instance),
-            BridgeInstance = await BridgeContract.new(originDomainID, [], relayerThreshold, 100)
+            BridgeInstance = await BridgeContract.new(originDomainID)
         ]);
-        
-        
+
+
         resourceID = Helpers.createResourceID(OriginERC1155MintableInstance.address, originDomainID);
 
         OriginERC1155HandlerInstance = await ERC1155HandlerContract.new(BridgeInstance.address);
@@ -45,6 +45,10 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
         await OriginERC1155MintableInstance.setApprovalForAll(OriginERC1155HandlerInstance.address, true, { from: depositerAddress });
 
         depositData = Helpers.createERC1155DepositData([originChainTokenID], [depositAmount]);
+
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it("[sanity] test depositerAddress' balance", async () => {
@@ -129,4 +133,8 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     it('deposit requires resourceID that is mapped to a handler', async () => {
         await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "resourceID not mapped to handler");
     });
+
+    it('Deposit destination domain can not be current bridge domain ', async () => {
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+  });
 });

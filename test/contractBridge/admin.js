@@ -13,86 +13,107 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const GenericHandlerContract = artifacts.require('GenericHandler');
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
-// This test does NOT include all getter methods, just 
+// This test does NOT include all getter methods, just
 // getters that should work with only the constructor called
-contract('Bridge - [admin]', async accounts => {
+contract('Bridge - [admin]', async (accounts) => {
     const domainID = 1;
-    const initialRelayers = accounts.slice(0, 3);
-    const initialRelayerThreshold = 2;
+    const nonAdminAddress = accounts[1];
 
     const expectedBridgeAdmin = accounts[0];
     const someAddress = "0xcafecafecafecafecafecafecafecafecafecafe";
+    const nullAddress = "0x0000000000000000000000000000000000000000";
+
     const bytes32 = "0x0";
     let ADMIN_ROLE;
-    
+
     let BridgeInstance;
 
     let withdrawData = '';
 
     const assertOnlyAdmin = (method, ...params) => {
-        return TruffleAssert.reverts(method(...params, {from: initialRelayers[1]}), "sender doesn't have admin role");
+        return TruffleAssert.reverts(method(...params, {from: nonAdminAddress}), "sender doesn't have admin role");
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 100);
-        ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
+        BridgeInstance = await BridgeContract.new(domainID);
+        ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE();
     });
 
-    // Testing pausable methods
+    // Testing pauseable methods
 
-    it('Bridge should not be paused', async () => {
+    it('Bridge should not be paused after MPC address is set', async () => {
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
         assert.isFalse(await BridgeInstance.paused());
     });
 
-    it('Bridge should be paused', async () => {
+    it('Bridge should be paused after being paused by admin', async () => {
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
         await TruffleAssert.passes(BridgeInstance.adminPauseTransfers());
         assert.isTrue(await BridgeInstance.paused());
     });
 
-    it('Bridge should be unpaused after being paused', async () => {
+    it('Bridge should be unpaused after being paused by admin', async () => {
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
         await TruffleAssert.passes(BridgeInstance.adminPauseTransfers());
         assert.isTrue(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.adminUnpauseTransfers());
         assert.isFalse(await BridgeInstance.paused());
     });
 
-    // Testing relayer methods
+    // Testing starKeygen, endKeygen and refreshKey methods
 
-    it('_relayerThreshold should be initialRelayerThreshold', async () => {
-        assert.equal(await BridgeInstance._relayerThreshold.call(), initialRelayerThreshold);
+    it('Should successfully emit "StartKeygen" event if called by admin', async () => {
+        const startKeygenTx = await BridgeInstance.startKeygen();
+
+        TruffleAssert.eventEmitted(startKeygenTx, 'StartKeygen');
     });
 
-    it('_relayerThreshold should be initialRelayerThreshold', async () => {
-        const newRelayerThreshold = 1;
-        await TruffleAssert.passes(BridgeInstance.adminChangeRelayerThreshold(newRelayerThreshold));
-        assert.equal(await BridgeInstance._relayerThreshold.call(), newRelayerThreshold);
+    it('Should fail if "StartKeygen" is called by non admin', async () => {
+        await assertOnlyAdmin(BridgeInstance.startKeygen);
     });
 
-    it('newRelayer should be added as a relayer', async () => {
-        const newRelayer = accounts[4];
-        await TruffleAssert.passes(BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await BridgeInstance.isRelayer(newRelayer));
+    it('Should fail if "StartKeygen" is called after MPC address is set', async () => {
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
+        await TruffleAssert.reverts(BridgeInstance.startKeygen(), "MPC address is already set");
     });
 
-    it('newRelayer should be removed as a relayer after being added', async () => {
-        const newRelayer = accounts[4];
-        await TruffleAssert.passes(BridgeInstance.adminAddRelayer(newRelayer));
-        assert.isTrue(await BridgeInstance.isRelayer(newRelayer))
-        await TruffleAssert.passes(BridgeInstance.adminRemoveRelayer(newRelayer));
-        assert.isFalse(await BridgeInstance.isRelayer(newRelayer));
+    it('Should successfully set MPC address and emit "EndKeygen" event if called by admin', async () => {
+        const startKeygenTx = await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
+        assert.equal(await BridgeInstance._MPCAddress(), Helpers.mpcAddress);
+
+        TruffleAssert.eventEmitted(startKeygenTx, 'EndKeygen');
     });
 
-    it('existingRelayer should not be able to be added as a relayer', async () => {
-        const existingRelayer = accounts[1];
-        await TruffleAssert.reverts(BridgeInstance.adminAddRelayer(existingRelayer));
-        assert.isTrue(await BridgeInstance.isRelayer(existingRelayer));
-    }); 
-
-    it('nonRelayerAddr should not be able to be added as a relayer', async () => {
-        const nonRelayerAddr = accounts[4];
-        await TruffleAssert.reverts(BridgeInstance.adminRemoveRelayer(nonRelayerAddr));
-        assert.isFalse(await BridgeInstance.isRelayer(nonRelayerAddr));
+    it('Should fail if "endKeygen" is called by non admin', async () => {
+        await assertOnlyAdmin(BridgeInstance.endKeygen, someAddress);
     });
+
+    it('Should fail if null address is passed as MPC address', async () => {
+        await TruffleAssert.reverts(BridgeInstance.endKeygen(nullAddress), "MPC address can't be null-address");
+    });
+
+    it('Should fail if admin tries to updated MPC address', async () => {
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
+        await TruffleAssert.reverts(BridgeInstance.endKeygen(someAddress), "MPC address can't be updated");
+    });
+
+    it('Should successfully emit "KeyRefresh" event if called by admin', async () => {
+        const startKeygenTx = await BridgeInstance.refreshKey();
+
+        TruffleAssert.eventEmitted(startKeygenTx, 'KeyRefresh');
+    });
+
+    it('Should fail if "refreshKey" is called by non admin', async () => {
+        await assertOnlyAdmin(BridgeInstance.refreshKey);
+    });
+
 
     // Testing ownership methods
 
@@ -173,7 +194,7 @@ contract('Bridge - [admin]', async accounts => {
     it('Should withdraw funds', async () => {
         const numTokens = 10;
         const tokenOwner = accounts[0];
-        
+
         let ownerBalance;
         let handlerBalance;
 
@@ -186,7 +207,7 @@ contract('Bridge - [admin]', async accounts => {
         await ERC20MintableInstance.mint(tokenOwner, numTokens);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, numTokens);
-        
+
         await ERC20MintableInstance.transfer(ERC20HandlerInstance.address, numTokens);
 
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
@@ -195,7 +216,7 @@ contract('Bridge - [admin]', async accounts => {
         assert.equal(handlerBalance, numTokens);
 
         withdrawData = Helpers.createERCWithdrawData(ERC20MintableInstance.address, tokenOwner, numTokens);
-        
+
         await BridgeInstance.adminWithdraw(ERC20HandlerInstance.address, withdrawData);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);
         assert.equal(ownerBalance, numTokens);

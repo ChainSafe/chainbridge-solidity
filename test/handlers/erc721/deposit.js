@@ -12,10 +12,12 @@ const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
-    const relayerThreshold = 2;
-    const domainID = 1;
+    const originDomainID = 1;
+    const destinationDomainID = 2;
+
     const expectedDepositNonce = 1;
     const depositerAddress = accounts[1];
+
     const tokenID = 1;
     const feeData = '0x';
 
@@ -30,11 +32,11 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance),
+            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ])
-        
-        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, domainID);
+
+        resourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC721MintableInstance.address];
         burnableContractAddresses = []
@@ -48,6 +50,9 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID, ERC721MintableInstance.address)
         ]);
+
+        // set MPC address to unpause the Bridge
+        await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('[sanity] depositer owns ERC721 with tokenID', async () => {
@@ -63,9 +68,9 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
     it('Varied recipient address with length 40', async () => {
         const recipientAddress = accounts[0] + accounts[1].substr(2);
         const lenRecipientAddress = 40;
-        
+
         const depositTx = await BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             Helpers.createERCDepositData(
                 tokenID,
@@ -76,7 +81,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationDomainID.toNumber() === domainID &&
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&
@@ -93,7 +98,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
         const lenRecipientAddress = 32;
 
         const depositTx = await BridgeInstance.deposit(
-            domainID,
+            destinationDomainID,
             resourceID,
             Helpers.createERCDepositData(
                 tokenID,
@@ -104,7 +109,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
-            return event.destinationDomainID.toNumber() === domainID &&
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositerAddress &&

@@ -12,9 +12,8 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
- 
+
 contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
-    const relayerThreshold = 0;
     const domainID = 1;
     const oracle = new Ethers.Wallet.createRandom();
     const sender = accounts[0];
@@ -46,7 +45,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     */
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100).then(instance => BridgeInstance = instance);
+        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 
@@ -63,8 +62,8 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     });
 
     it("should calculate amount of fee and return token address", async () => {
-        const tokenAmount = 100;      
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const tokenAmount = 100;
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
@@ -84,7 +83,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
 
     it("should return percent fee", async () => {
         const tokenAmount = Ethers.utils.parseEther("1");
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
@@ -102,8 +101,8 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     });
 
     it("should return fee to cover tx cost if percent fee does not cover tx cost", async () => {
-        const tokenAmount = 100;      
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const tokenAmount = 100;
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.0005"),
@@ -122,8 +121,8 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     });
 
     it("should not calculate fee if fee data is misformed", async () => {
-        const tokenAmount = 100;      
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const tokenAmount = 100;
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.0005"),
@@ -141,8 +140,8 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
 
     it("should not calculate fee if deposit data differ from fee data", async () => {
         const otherDomainId = 2;
-        const tokenAmount = 100;      
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const tokenAmount = 100;
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.0005"),
@@ -157,10 +156,10 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, otherDomainId, resourceID, depositData, feeData), "Incorrect deposit params");
     });
-    
+
     it("should not calculate fee if oracle signature is incorrect", async () => {
-        const tokenAmount = 100;      
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const tokenAmount = 100;
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.0005"),
@@ -184,7 +183,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
         await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
 
         const tokenAmount = Ethers.utils.parseEther("1");
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);  
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
@@ -198,4 +197,3 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
         await TruffleAssert.reverts(FeeHandlerWithOracleInstance.calculateFee(sender, domainID, domainID, resourceID, depositData, feeData), "Obsolete oracle data");
     });
  });
- 

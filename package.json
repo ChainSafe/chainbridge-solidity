@@ -1,6 +1,6 @@
 {
   "name": "@chainsafe/chainbridge-contracts",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "",
   "main": "dist/index.js",
   "repository": "https://github.com/ChainSafe/chainbridge-solidity.git",

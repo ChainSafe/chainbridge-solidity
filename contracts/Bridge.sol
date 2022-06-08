@@ -58,6 +58,8 @@ contract Bridge is Pausable, AccessControl {
 
     event KeyRefresh();
 
+    event Retry(string txHash);
+
     modifier onlyAdmin() {
         _onlyAdmin();
         _;
@@ -299,6 +301,14 @@ contract Bridge is Pausable, AccessControl {
      */
     function refreshKey() external onlyAdmin {
       emit KeyRefresh();
+    }
+
+    /**
+        @notice This method is used to trigger the process for retrying failed deposits on the MPC side.
+        @param txHash Transaction hash which contains deposit that should be retried
+     */
+    function retry(string memory txHash) external {
+      emit Retry(txHash);
     }
 
     /**

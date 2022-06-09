@@ -265,7 +265,7 @@ contract Bridge is Pausable, AccessControl {
 
         usedNonces[originDomainID][depositNonce / 256] |= 1 << (depositNonce % 256);
 
-        // Reverts on failure
+        // Reverts for every handler except GenericHandler
         depositHandler.executeProposal(resourceID, data);
 
         emit ProposalExecution(originDomainID, depositNonce, dataHash);

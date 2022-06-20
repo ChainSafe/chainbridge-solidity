@@ -187,6 +187,21 @@ const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce
   return rawSignature
 }
 
+const signArrayOfDataWithMpc = async (originDomainID, destinationDomainID, depositNonce, depositData, resourceID) => {
+  const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
+
+  const messageHash = Ethers.utils.keccak256(
+    Ethers.utils.defaultAbiCoder.encode(
+      ['uint8[]', 'uint8', 'uint64[]', 'bytes[]', 'bytes32[]'],
+      [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
+    )
+  );
+
+  const signature = signingKey.signDigest(messageHash)
+  const rawSignature = Ethers.utils.joinSignature(signature)
+  return rawSignature
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
@@ -209,5 +224,6 @@ module.exports = {
     assertObjectsMatch,
     nonceAndId,
     createOracleFeeData,
-    signDataWithMpc
+    signDataWithMpc,
+    signArrayOfDataWithMpc
 };

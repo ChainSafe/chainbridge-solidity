@@ -144,8 +144,8 @@ contract GenericHandler is IGenericHandler {
             bytes memory callData = abi.encodePacked(sig, metaData);
             (bool success, ) = contractAddress.call(callData);
 
-            if(!success) {
-              emit FailedHandlerExecution();
+            if (!success) {
+                emit FailedHandlerExecution();
             }
         }
     }

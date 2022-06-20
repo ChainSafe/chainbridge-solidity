@@ -48,6 +48,7 @@ contract Bridge is Pausable, AccessControl {
         uint64  depositNonce,
         bytes32 dataHash
     );
+
     event FailedHandlerExecution(
         bytes lowLevelData
     );
@@ -257,7 +258,7 @@ contract Bridge is Pausable, AccessControl {
     function executeProposal(uint8 originDomainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID, bytes calldata signature) public whenNotPaused {
         require(isProposalExecuted(originDomainID, depositNonce) != true, "Deposit with provided nonce already executed");
 
-        address signer = keccak256(abi.encodePacked(originDomainID, _domainID, depositNonce, data, resourceID)).recover(signature);
+        address signer = keccak256(abi.encode(originDomainID, _domainID, depositNonce, data, resourceID)).recover(signature);
         require(signer == _MPCAddress, "Invalid message signer");
 
         address handler = _resourceIDToHandlerAddress[resourceID];

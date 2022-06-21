@@ -29,6 +29,8 @@ contract GenericHandler is IGenericHandler {
     // token contract address => is whitelisted
     mapping (address => bool) public _contractWhitelist;
 
+    event FailedHandlerExecution();
+
     modifier onlyBridge() {
         _onlyBridge();
         _;
@@ -140,8 +142,11 @@ contract GenericHandler is IGenericHandler {
         bytes4 sig = _contractAddressToExecuteFunctionSignature[contractAddress];
         if (sig != bytes4(0)) {
             bytes memory callData = abi.encodePacked(sig, metaData);
-            (bool success,) = contractAddress.call(callData);
-            require(success, "delegatecall to contractAddress failed");
+            (bool success, ) = contractAddress.call(callData);
+
+            if (!success) {
+                emit FailedHandlerExecution();
+            }
         }
     }
 

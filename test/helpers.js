@@ -187,13 +187,22 @@ const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce
   return rawSignature
 }
 
-const signArrayOfDataWithMpc = async (originDomainID, destinationDomainID, depositNonce, depositData, resourceID) => {
+const signArrayOfDataWithMpc = async (proposals) => {
   const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
 
   const messageHash = Ethers.utils.keccak256(
     Ethers.utils.defaultAbiCoder.encode(
-      ['uint8[]', 'uint8', 'uint64[]', 'bytes[]', 'bytes32[]'],
-      [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
+      [{
+        type: "tuple[]",
+        name: "proposals",
+        components: [
+          { name: "originDomainID", type: 'uint8' },
+          { name: "depositNonce", type: 'uint64' },
+          { name: "resourceID", type: 'bytes32'},
+          { name: "data", type: 'bytes'}
+        ]
+      }],
+      [proposals]
     )
   );
 

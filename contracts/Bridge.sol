@@ -327,8 +327,8 @@ contract Bridge is Pausable, AccessControl {
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
     function startKeygen() external onlyAdmin {
-      require(_MPCAddress == address(0), "MPC address is already set");
-      emit StartKeygen();
+        require(_MPCAddress == address(0), "MPC address is already set");
+        emit StartKeygen();
     }
 
     /**
@@ -337,11 +337,11 @@ contract Bridge is Pausable, AccessControl {
         @param MPCAddress Address that will be set as MPC address.
      */
     function endKeygen(address MPCAddress) external onlyAdmin {
-      require(MPCAddress != address(0), "MPC address can't be null-address");
-      require(_MPCAddress == address(0), "MPC address can't be updated");
-      _MPCAddress = MPCAddress;
-      _unpause(_msgSender());
-      emit EndKeygen();
+        require(MPCAddress != address(0), "MPC address can't be null-address");
+        require(_MPCAddress == address(0), "MPC address can't be updated");
+        _MPCAddress = MPCAddress;
+        _unpause(_msgSender());
+        emit EndKeygen();
     }
 
     /**
@@ -349,7 +349,7 @@ contract Bridge is Pausable, AccessControl {
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
     function refreshKey() external onlyAdmin {
-      emit KeyRefresh();
+        emit KeyRefresh();
     }
 
     /**
@@ -357,7 +357,7 @@ contract Bridge is Pausable, AccessControl {
         @param txHash Transaction hash which contains deposit that should be retried
      */
     function retry(string memory txHash) external {
-      emit Retry(txHash);
+        emit Retry(txHash);
     }
 
     /**
@@ -367,6 +367,6 @@ contract Bridge is Pausable, AccessControl {
         @return Boolean value depending if deposit nonce has already been used or not.
      */
     function isProposalExecuted(uint8 domainID, uint256 depositNonce) public view returns (bool) {
-      return usedNonces[domainID][depositNonce / 256] & (1 << (depositNonce % 256)) != 0;
+        return usedNonces[domainID][depositNonce / 256] & (1 << (depositNonce % 256)) != 0;
     }
 }

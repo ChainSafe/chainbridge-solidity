@@ -15,7 +15,7 @@ const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
-    const originDomainIDs = [1,1];
+    const originDomainID = 1;
     const destinationDomainID = 2;
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -25,8 +25,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const erc721DepositMetadata = "0xf00d";
     const initialTokenAmount = 100;
     const depositAmount = 10;
-    const expectedDepositNonce = 1;
-    const expectedDepositNonces = [1,2];
+    const expectedDepositNonces = [1, 2, 3];
     const feeData = '0x';
 
     let BridgeInstance;
@@ -57,6 +56,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     let genericProposalData;
     let genericDepositProposalDataHash;
 
+    let proposalsForExecution;
 
     beforeEach(async () => {
         await Promise.all([
@@ -72,11 +72,10 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ERC1155HandlerInstance = await ERC1155HandlerContract.new(BridgeInstance.address);
         GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address);
 
-        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainIDs[0]);
-        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainIDs[0]);
-        erc1155ResourceID = Helpers.createResourceID(ERC1155MintableInstance.address, originDomainIDs[0]);
-        genericResourceID = Helpers.createResourceID(GenericHandlerInstance.address, originDomainIDs[0]);
-        resourceIDs = [erc20ResourceID, erc721ResourceID];
+        erc20ResourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
+        erc721ResourceID = Helpers.createResourceID(ERC721MintableInstance.address, originDomainID);
+        erc1155ResourceID = Helpers.createResourceID(ERC1155MintableInstance.address, originDomainID);
+        genericResourceID = Helpers.createResourceID(GenericHandlerInstance.address, originDomainID);
 
         initialGenericContractAddress = ERC20MintableInstance.address;
         initialGenericDepositFunctionSignature = Helpers.blankFunctionSig;
@@ -114,7 +113,24 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         genericProposalData = Helpers.createGenericDepositData(null);
         genericDepositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + genericProposalData.substr(2));
 
-        proposalDataArray = [erc20DepositProposalData, erc721DepositProposalData];
+        proposalsForExecution = [{
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[0],
+          resourceID: erc20ResourceID,
+          data: erc20DepositProposalData
+        },
+        {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[1],
+          resourceID: erc721ResourceID,
+          data: erc721DepositProposalData
+        },
+        {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[2],
+          resourceID: genericResourceID,
+          data: genericProposalData
+        }];
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -122,18 +138,18 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("[executeProposal - ERC20] - Should revert if handler execute is reverted", async () => {
         const depositProposalBeforeFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonce);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
         const proposalSignedData = await Helpers.signDataWithMpc(
-          originDomainIDs[0], destinationDomainID, expectedDepositNonce, erc20DepositProposalData, erc20ResourceID
+          originDomainID, destinationDomainID, expectedDepositNonces[0], erc20DepositProposalData, erc20ResourceID
         );
 
         await TruffleAssert.reverts(BridgeInstance.executeProposal(
-            originDomainIDs[0],
-            expectedDepositNonce,
+            originDomainID,
+            expectedDepositNonces[0],
             erc20DepositProposalData,
             erc20ResourceID,
             proposalSignedData,
@@ -141,7 +157,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ));
 
         const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-          originDomainIDs[0], expectedDepositNonce);
+          originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalAfterFailedExecute);
@@ -149,18 +165,18 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("[executeProposal - ERC721] - Should revert if handler execute is reverted", async () => {
         const depositProposalBeforeFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonce);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
         const proposalSignedData = await Helpers.signDataWithMpc(
-          originDomainIDs[0], destinationDomainID, expectedDepositNonce, erc721DepositProposalData, erc721ResourceID
+          originDomainID, destinationDomainID, expectedDepositNonces[0], erc721DepositProposalData, erc721ResourceID
         );
 
         await TruffleAssert.reverts(BridgeInstance.executeProposal(
-            originDomainIDs[0],
-            expectedDepositNonce,
+            originDomainID,
+            expectedDepositNonces[0],
             erc721DepositProposalData,
             erc721ResourceID,
             proposalSignedData,
@@ -168,7 +184,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ));
 
         const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonce);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalAfterFailedExecute);
@@ -176,18 +192,18 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("[executeProposal - ERC1155] - Should revert if handler execute is reverted", async () => {
         const depositProposalBeforeFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonce);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
         const proposalSignedData = await Helpers.signDataWithMpc(
-          originDomainIDs[0], destinationDomainID, expectedDepositNonce, erc1155DepositProposalData, erc1155ResourceID
+          originDomainID, destinationDomainID, expectedDepositNonces[0], erc1155DepositProposalData, erc1155ResourceID
         );
 
         await TruffleAssert.reverts(BridgeInstance.executeProposal(
-            originDomainIDs[0],
-            expectedDepositNonce,
+            originDomainID,
+            expectedDepositNonces[0],
             erc1155DepositProposalData,
             erc1155ResourceID,
             proposalSignedData,
@@ -195,7 +211,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ));
 
         const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonce);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalAfterFailedExecute);
@@ -203,16 +219,16 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("[executeProposal - Generic] - Should not revert if handler execution failed. FailedHandlerExecution event should be emitted", async () => {
         const depositProposalBeforeFailedExecute = await BridgeInstance.isProposalExecuted(
-          originDomainIDs[0], expectedDepositNonce);
+          originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainIDs[0], destinationDomainID, expectedDepositNonce, genericProposalData, genericResourceID);
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonces[0], genericProposalData, genericResourceID);
 
         const executeTx = await BridgeInstance.executeProposal(
-            originDomainIDs[0],
-            expectedDepositNonce,
+            originDomainID,
+            expectedDepositNonces[0],
             genericProposalData,
             genericResourceID,
             proposalSignedData,
@@ -224,13 +240,13 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         assert(handlerPastEvents[0].event === 'FailedHandlerExecution');
 
         TruffleAssert.eventEmitted(executeTx, 'ProposalExecution', (event) => {
-            return event.originDomainID.toNumber() === originDomainIDs[0] &&
-                event.depositNonce.toNumber() === expectedDepositNonce &&
+            return event.originDomainID.toNumber() === originDomainID &&
+                event.depositNonce.toNumber() === expectedDepositNonces[0] &&
                 event.dataHash === genericDepositProposalDataHash
         });
 
         const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-          originDomainIDs[0], expectedDepositNonce);
+          originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is used
         assert.isTrue(depositProposalAfterFailedExecute);
@@ -238,18 +254,16 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     it("[executeProposals] - Should not revert if handler execute is reverted and continue to process next execution. FailedHandlerExecution event should be emitted with expected values.", async () => {
         const depositProposalBeforeFailedExecute = await BridgeInstance.isProposalExecuted(
-            originDomainIDs[0], expectedDepositNonces[0]);
+            originDomainID, expectedDepositNonces[0]);
 
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(
-          originDomainIDs, destinationDomainID, expectedDepositNonces, proposalDataArray, resourceIDs
-        );
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[0],
+            originDomainID,
             erc721ResourceID,
             erc721DepositData,
             feeData,
@@ -257,29 +271,53 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         ));
 
         const executeTx = await BridgeInstance.executeProposals(
-            originDomainIDs,
-            expectedDepositNonces,
-            proposalDataArray,
-            resourceIDs,
+            proposalsForExecution,
             proposalSignedData,
             { from: relayer1Address }
         );
 
         TruffleAssert.eventEmitted(executeTx, 'FailedHandlerExecution', (event) => {
-          return Ethers.utils.parseBytes32String('0x' + event.lowLevelData.slice(-64)) === 'Something bad happened'
+          return event.originDomainID.toNumber() === originDomainID &&
+              event.depositNonce.toNumber() === expectedDepositNonces[0] &&
+              Ethers.utils.parseBytes32String('0x' + event.lowLevelData.slice(-64)) === 'Something bad happened'
         });
 
-        const depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
-          originDomainIDs[0], expectedDepositNonces[0]);
+        const erc20depositProposalAfterFailedExecute = await BridgeInstance.isProposalExecuted(
+          originDomainID, expectedDepositNonces[0]
+        );
+        // depositNonce for failed ERC20 deposit is unset
+        assert.isFalse(erc20depositProposalAfterFailedExecute);
 
-        // depositNonce is used
-        assert.isTrue(depositProposalAfterFailedExecute);
+        const erc721depositProposal = await BridgeInstance.isProposalExecuted(
+          originDomainID, expectedDepositNonces[1]
+        );
+        // depositNonce for ERC721 deposit is used
+        assert.isTrue(erc721depositProposal);
 
-        // check recipient token balances
+        const genericDepositProposal = await BridgeInstance.isProposalExecuted(
+          originDomainID, expectedDepositNonces[2]
+        );
+        // depositNonce for generic deposit is used
+        assert.isTrue(genericDepositProposal);
+
+
+        // recipient ERC20 token balances hasn't changed
         const recipientERC20Balance = await ERC20MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientERC20Balance.toNumber(), 0);
 
+        // recipient ERC721 token balance has changed to 1 token
         const recipientERC721Balance = await ERC721MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientERC721Balance.toNumber(), 1);
+
+
+        // check that 'ProposalExecution' event has been emitted with proper values for ERC721 deposit
+        assert.equal(executeTx.logs[1].args.originDomainID, 1);
+        assert.equal(executeTx.logs[1].args.depositNonce, expectedDepositNonces[1]);
+        assert.equal(executeTx.logs[1].args.dataHash, erc721DepositProposalDataHash);
+
+        // check that 'ProposalExecution' event has been emitted with proper values for generic deposit
+        assert.equal(executeTx.logs[2].args.originDomainID, 1);
+        assert.equal(executeTx.logs[2].args.depositNonce, expectedDepositNonces[2]);
+        assert.equal(executeTx.logs[2].args.dataHash, genericDepositProposalDataHash);
     });
 });

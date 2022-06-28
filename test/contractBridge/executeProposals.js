@@ -18,7 +18,7 @@
 
  contract('Bridge - [execute proposal]', async (accounts) => {
      const destinationDomainID = 1;
-     const originDomainIDs = [2,2,2];
+     const originDomainID = 2;
 
      const depositerAddress = accounts[1];
      const recipientAddress = accounts[2];
@@ -52,7 +52,8 @@
      let erc1155DepositData;
      let erc1155DepositProposalData;
      let erc1155DataHash;
-     let proposalDataArray;
+
+     let proposalsForExecution;
 
     beforeEach(async () => {
         await Promise.all([
@@ -100,19 +101,36 @@
         erc1155DepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x");
         erc1155DataHash = Ethers.utils.keccak256(ERC1155HandlerInstance.address + erc1155DepositProposalData.substr(2));
 
-        proposalDataArray = [erc20DepositProposalData, erc721DepositProposalData, erc1155DepositProposalData];
+        proposalsForExecution = [{
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[0],
+          resourceID: erc20ResourceID,
+          data: erc20DepositProposalData
+        },
+        {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[1],
+          resourceID: erc721ResourceID,
+          data: erc721DepositProposalData
+        },
+        {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonces[2],
+          resourceID: erc1155ResourceID,
+          data: erc1155DepositProposalData
+        }];
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
   });
 
     it('should create and execute executeProposal successfully', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(originDomainIDs, destinationDomainID, expectedDepositNonces, proposalDataArray, resourceIDs);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[0],
+            originDomainID,
             erc20ResourceID,
             erc20DepositData,
             feeData,
@@ -120,7 +138,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[1],
+            originDomainID,
             erc721ResourceID,
             erc721DepositData,
             feeData,
@@ -128,7 +146,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[2],
+            originDomainID,
             erc1155ResourceID,
             erc1155DepositData,
             feeData,
@@ -136,10 +154,7 @@
         ));
 
         const executeTx = await BridgeInstance.executeProposals(
-            originDomainIDs,
-            expectedDepositNonces,
-            proposalDataArray,
-            resourceIDs,
+            proposalsForExecution,
             proposalSignedData,
             { from: relayer1Address }
         );
@@ -149,7 +164,7 @@
         // check that deposit nonces had been marked as used in bitmap
         expectedDepositNonces.forEach(
             async (_,index) => {
-              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainIDs[0], expectedDepositNonces[index]));
+              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonces[index]));
         });
 
         // check that tokens are transferred to recipient address
@@ -164,12 +179,12 @@
     });
 
     it('should skip executing proposal if deposit nonce is already used', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(originDomainIDs, destinationDomainID, expectedDepositNonces, proposalDataArray, resourceIDs);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[0],
+            originDomainID,
             erc20ResourceID,
             erc20DepositData,
             feeData,
@@ -177,7 +192,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[1],
+            originDomainID,
             erc721ResourceID,
             erc721DepositData,
             feeData,
@@ -185,7 +200,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[2],
+            originDomainID,
             erc1155ResourceID,
             erc1155DepositData,
             feeData,
@@ -193,10 +208,7 @@
         ));
 
         const executeTx = await BridgeInstance.executeProposals(
-            originDomainIDs,
-            expectedDepositNonces,
-            proposalDataArray,
-            resourceIDs,
+            proposalsForExecution,
             proposalSignedData,
             { from: relayer1Address }
         );
@@ -207,7 +219,7 @@
         // check that deposit nonces had been marked as used in bitmap
         expectedDepositNonces.forEach(
           async (_,index) => {
-              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainIDs[0], expectedDepositNonces[index]));
+              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonces[index]));
         });
 
         // check that tokens are transferred to recipient address
@@ -222,10 +234,7 @@
 
 
         const skipExecuteTx = await BridgeInstance.executeProposals(
-          originDomainIDs,
-          expectedDepositNonces,
-          proposalDataArray,
-          resourceIDs,
+          proposalsForExecution,
           proposalSignedData,
           { from: relayer1Address }
           );
@@ -234,13 +243,23 @@
           assert.equal(skipExecuteTx.logs.length, 0);
     });
 
+    it('should fail executing proposals if empty array is passed for execution', async () => {
+      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+
+      await TruffleAssert.reverts(BridgeInstance.executeProposals(
+        [],
+        proposalSignedData,
+        { from: relayer1Address }
+      ), "Proposals can't be an empty array");
+    });
+
     it('executeProposal event should be emitted with expected values', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(originDomainIDs, destinationDomainID, expectedDepositNonces, proposalDataArray, resourceIDs);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[0],
+            originDomainID,
             erc20ResourceID,
             erc20DepositData,
             feeData,
@@ -248,7 +267,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[1],
+            originDomainID,
             erc721ResourceID,
             erc721DepositData,
             feeData,
@@ -256,7 +275,7 @@
         ));
 
         await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainIDs[2],
+            originDomainID,
             erc1155ResourceID,
             erc1155DepositData,
             feeData,
@@ -264,34 +283,31 @@
         ));
 
         const executeTx = await BridgeInstance.executeProposals(
-            originDomainIDs,
-            expectedDepositNonces,
-            proposalDataArray,
-            resourceIDs,
+            proposalsForExecution,
             proposalSignedData,
             { from: relayer1Address }
         );
 
         TruffleAssert.eventEmitted(executeTx, 'ProposalExecution', (event) => {
-            return event.originDomainID.toNumber() === originDomainIDs[0] &&
+            return event.originDomainID.toNumber() === originDomainID &&
                 event.depositNonce.toNumber() === expectedDepositNonces[0] &&
                 event.dataHash === erc20DataHash
         });
 
         // check that ProposalExecution has been emitted with expected values for ERC721
-        assert.equal(executeTx.logs[1].args.originDomainID, originDomainIDs[1]);
+        assert.equal(executeTx.logs[1].args.originDomainID, originDomainID);
         assert.equal(executeTx.logs[1].args.depositNonce, expectedDepositNonces[1]);
         assert.equal(executeTx.logs[1].args.dataHash, erc721DataHash);
 
         // check that ProposalExecution has been emitted with expected values for ERC1155
-        assert.equal(executeTx.logs[2].args.originDomainID, originDomainIDs[2]);
+        assert.equal(executeTx.logs[2].args.originDomainID, originDomainID);
         assert.equal(executeTx.logs[2].args.depositNonce, expectedDepositNonces[2]);
         assert.equal(executeTx.logs[2].args.dataHash, erc1155DataHash);
 
         // check that deposit nonces had been marked as used in bitmap
         expectedDepositNonces.forEach(
           async (_,index) => {
-              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainIDs[0], expectedDepositNonces[index]));
+              assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonces[index]));
         });
 
         // check that tokens are transferred to recipient address

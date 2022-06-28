@@ -2,28 +2,27 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./utils/AccessControl.sol";
 import "./utils/Pausable.sol";
 
 import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IGenericHandler.sol";
 import "./interfaces/IFeeHandler.sol";
+import "./interfaces/IAccessControlSegregator.sol";
 
 /**
     @title Facilitates deposits and creation of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
-contract Bridge is Pausable, AccessControl {
+contract Bridge is Pausable {
     using ECDSA for bytes32;
-
-
-
 
     uint8   public _domainID;
     address public _MPCAddress;
 
     IFeeHandler public _feeHandler;
+
+    IAccessControlSegregator public _accessControlSegregator;
 
     // destinationDomainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
@@ -60,13 +59,13 @@ contract Bridge is Pausable, AccessControl {
 
     event Retry(string txHash);
 
-    modifier onlyAdmin() {
-        _onlyAdmin();
+    modifier onlyAllowed(string func) {
+        _onlyAllowed(func, account);
         _;
     }
 
-    function _onlyAdmin() private view {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "sender doesn't have admin role");
+    function _onlyAllowed(string func) private view {
+        require(_accessControlSegregator.hasAccess(func, _msgSender()), "sender doesn't have access to function");
     }
 
     function _msgSender() internal override view returns (address) {
@@ -87,7 +86,6 @@ contract Bridge is Pausable, AccessControl {
     constructor (uint8 domainID) public {
         _domainID = domainID;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _pause(_msgSender());
     }
 
@@ -96,7 +94,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Only callable by an address that currently has the admin role.
         @param newAdmin Address that admin role will be granted to.
      */
-    function renounceAdmin(address newAdmin) external onlyAdmin {
+    function renounceAdmin(address newAdmin) external onlyAllowed("renounceAdmin") {
         address sender = _msgSender();
         require(sender != newAdmin, 'Cannot renounce oneself');
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
@@ -107,7 +105,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Pauses deposits, proposal creation and voting, and deposit executions.
         @notice Only callable by an address that currently has the admin role.
      */
-    function adminPauseTransfers() external onlyAdmin {
+    function adminPauseTransfers() external onlyAllowed("adminPauseTransfers") {
         _pause(_msgSender());
     }
 
@@ -116,7 +114,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Only callable by an address that currently has the admin role.
         @notice MPC address has to be set before Bridge can be unpaused
      */
-    function adminUnpauseTransfers() external onlyAdmin {
+    function adminUnpauseTransfers() external onlyAllowed("adminUnpauseTransfers") {
         require(_MPCAddress != address(0), "MPC address not set");
         _unpause(_msgSender());
     }
@@ -129,7 +127,7 @@ contract Bridge is Pausable, AccessControl {
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAdmin {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAllowed("adminSetResource") {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
@@ -150,7 +148,7 @@ contract Bridge is Pausable, AccessControl {
         bytes4 depositFunctionSig,
         uint256 depositFunctionDepositerOffset,
         bytes4 executeFunctionSig
-    ) external onlyAdmin {
+    ) external onlaAllowed("adminSetGenericResource") {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
@@ -162,7 +160,7 @@ contract Bridge is Pausable, AccessControl {
         @param handlerAddress Address of handler resource will be set for.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetBurnable(address handlerAddress, address tokenAddress) external onlyAdmin {
+    function adminSetBurnable(address handlerAddress, address tokenAddress) external onlyAllowed("adminSetBurnable") {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setBurnable(tokenAddress);
     }
@@ -173,7 +171,7 @@ contract Bridge is Pausable, AccessControl {
         @param domainID Domain ID for increasing nonce.
         @param nonce The nonce value to be set.
      */
-    function adminSetDepositNonce(uint8 domainID, uint64 nonce) external onlyAdmin {
+    function adminSetDepositNonce(uint8 domainID, uint64 nonce) external onlyAllowed("adminSetDepositNonce") {
         require(nonce > _depositCounts[domainID], "Does not allow decrements of the nonce");
         _depositCounts[domainID] = nonce;
     }
@@ -184,7 +182,7 @@ contract Bridge is Pausable, AccessControl {
         @param forwarder Forwarder address to be added.
         @param valid Decision for the specific forwarder.
      */
-    function adminSetForwarder(address forwarder, bool valid) external onlyAdmin {
+    function adminSetForwarder(address forwarder, bool valid) external onlyAllowed("adminSetForwarder") {
         isValidForwarder[forwarder] = valid;
     }
 
@@ -193,7 +191,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Only callable by admin.
         @param newFeeHandler Address {_feeHandler} will be updated to.
      */
-    function adminChangeFeeHandler(address newFeeHandler) external onlyAdmin {
+    function adminChangeFeeHandler(address newFeeHandler) external onlyAllowed("adminChangeFeeHandler") {
         _feeHandler = IFeeHandler(newFeeHandler);
         emit FeeHandlerChanged(newFeeHandler);
     }
@@ -206,7 +204,7 @@ contract Bridge is Pausable, AccessControl {
     function adminWithdraw(
         address handlerAddress,
         bytes memory data
-    ) external onlyAdmin {
+    ) external onlyAllowed("adminWithdraw") {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.withdraw(data);
     }
@@ -277,7 +275,7 @@ contract Bridge is Pausable, AccessControl {
         @notice Once MPC address is set, this method can't be invoked anymore.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
-    function startKeygen() external onlyAdmin {
+    function startKeygen() external onlyAllowed("startKeygen") {
       require(_MPCAddress == address(0), "MPC address is already set");
       emit StartKeygen();
     }
@@ -287,7 +285,7 @@ contract Bridge is Pausable, AccessControl {
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
         @param MPCAddress Address that will be set as MPC address.
      */
-    function endKeygen(address MPCAddress) external onlyAdmin {
+    function endKeygen(address MPCAddress) external onlyAllowed("endKeygen") {
       require(MPCAddress != address(0), "MPC address can't be null-address");
       require(_MPCAddress == address(0), "MPC address can't be updated");
       _MPCAddress = MPCAddress;
@@ -299,7 +297,7 @@ contract Bridge is Pausable, AccessControl {
         @notice It's used to trigger the belonging process on the MPC side.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
-    function refreshKey() external onlyAdmin {
+    function refreshKey() external onlyAllowed("refreshKey") {
       emit KeyRefresh();
     }
 

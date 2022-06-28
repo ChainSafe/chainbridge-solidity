@@ -22,7 +22,7 @@ contract Bridge is Pausable {
 
     IFeeHandler public _feeHandler;
 
-    IAccessControlSegregator public _accessControlSegregator;
+    IAccessControlSegregator public _accessControl;
 
     // destinationDomainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
@@ -34,6 +34,7 @@ contract Bridge is Pausable {
     mapping(uint8 => mapping(uint256 => uint256)) public usedNonces;
 
     event FeeHandlerChanged(address newFeeHandler);
+    event AccessControlChanged(address newAccessControl);
     event Deposit(
         uint8   destinationDomainID,
         bytes32 resourceID,
@@ -65,7 +66,7 @@ contract Bridge is Pausable {
     }
 
     function _onlyAllowed(string func) private view {
-        require(_accessControlSegregator.hasAccess(func, _msgSender()), "sender doesn't have access to function");
+        require(_accessControl.hasAccess(func, _msgSender()), "sender doesn't have access to function");
     }
 
     function _msgSender() internal override view returns (address) {
@@ -79,26 +80,16 @@ contract Bridge is Pausable {
     }
 
     /**
-        @notice Initializes Bridge, creates and grants {_msgSender()} the admin role and
-        sets the inital state of the Bridge to paused.
+        @notice Initializes Bridge, creates and grants {_msgSender()} the admin role, sets access control
+        contract for bridge and sets the inital state of the Bridge to paused.
         @param domainID ID of chain the Bridge contract exists on.
+        @param accessControl Address of access control contract.
      */
-    constructor (uint8 domainID) public {
+    constructor (uint8 domainID, address accessControl) public {
         _domainID = domainID;
+        _accessControl = IAccessControlSegregator(accessControl)
 
         _pause(_msgSender());
-    }
-
-    /**
-        @notice Removes admin role from {_msgSender()} and grants it to {newAdmin}.
-        @notice Only callable by an address that currently has the admin role.
-        @param newAdmin Address that admin role will be granted to.
-     */
-    function renounceAdmin(address newAdmin) external onlyAllowed("renounceAdmin") {
-        address sender = _msgSender();
-        require(sender != newAdmin, 'Cannot renounce oneself');
-        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-        renounceRole(DEFAULT_ADMIN_ROLE, sender);
     }
 
     /**
@@ -184,6 +175,16 @@ contract Bridge is Pausable {
      */
     function adminSetForwarder(address forwarder, bool valid) external onlyAllowed("adminSetForwarder") {
         isValidForwarder[forwarder] = valid;
+    }
+
+    /**
+        @notice Changes access control contract address.
+        @notice Only callable by admin.
+        @param newAccessControl Address {_accessControl} will be updated to.
+     */
+    function adminChangeAccessControl(address newAccessControl) external onlyAllowed("adminChangeAccessControl) {
+        _accessControl = IAccessControlSegregator(newAccessControl);
+        emit AccessControlChanged(newAccessControl);
     }
 
     /**

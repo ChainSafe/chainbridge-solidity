@@ -8,10 +8,15 @@ const Ethers = require('ethers');
 const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
+const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const GenericHandlerContract = artifacts.require('GenericHandler');
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+
+
+
+// TODO: change access control
 
 // This test does NOT include all getter methods, just
 // getters that should work with only the constructor called
@@ -31,12 +36,33 @@ contract('Bridge - [admin]', async (accounts) => {
     let withdrawData = '';
 
     const assertOnlyAdmin = (method, ...params) => {
-        return TruffleAssert.reverts(method(...params, {from: nonAdminAddress}), "sender doesn't have admin role");
+        return TruffleAssert.reverts(method(...params, {from: nonAdminAddress}), "sender doesn't have access to function");
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID);
-        ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE();
+        let accessControlInstance = await AccessControlSegregatorContract.new(
+            [
+                "adminPauseTransfers", "adminUnpauseTransfers", "adminSetResource", "adminSetGenericResource", "adminSetBurnable",
+                "adminSetDepositNonce", "adminSetForwarder", "adminChangeAccessControl", "adminChangeFeeHandler", "adminWithdraw",
+                "startKeygen", "endKeygen", "refreshKey",
+            ],
+            [
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+                expectedBridgeAdmin,
+            ]
+        )
+        BridgeInstance = await BridgeContract.new(domainID, accessControlInstance.address);
     });
 
     // Testing pauseable methods
@@ -98,7 +124,7 @@ contract('Bridge - [admin]', async (accounts) => {
         await TruffleAssert.reverts(BridgeInstance.endKeygen(nullAddress), "MPC address can't be null-address");
     });
 
-    it('Should fail if admin tries to updated MPC address', async () => {
+    it('Should fail if admin tries to update MPC address', async () => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
         await TruffleAssert.reverts(BridgeInstance.endKeygen(someAddress), "MPC address can't be updated");
@@ -112,19 +138,6 @@ contract('Bridge - [admin]', async (accounts) => {
 
     it('Should fail if "refreshKey" is called by non admin', async () => {
         await assertOnlyAdmin(BridgeInstance.refreshKey);
-    });
-
-
-    // Testing ownership methods
-
-    it('Bridge admin should be expectedBridgeAdmin', async () => {
-        assert.isTrue(await BridgeInstance.hasRole(ADMIN_ROLE, expectedBridgeAdmin));
-    });
-
-    it('Bridge admin should be changed to expectedBridgeAdmin', async () => {
-        const expectedBridgeAdmin2 = accounts[1];
-        await TruffleAssert.passes(BridgeInstance.renounceAdmin(expectedBridgeAdmin2))
-        assert.isTrue(await BridgeInstance.hasRole(ADMIN_ROLE, expectedBridgeAdmin2));
     });
 
     // Set Handler Address
@@ -245,4 +258,11 @@ contract('Bridge - [admin]', async (accounts) => {
         const newNonce = 2;
         await TruffleAssert.reverts(BridgeInstance.adminSetDepositNonce(domainID, newNonce), "Does not allow decrements of the nonce");
     });
+
+    // Change access control contract
+
+    it('Should require admin role to change access control contract', async () => {
+        await assertOnlyAdmin(BridgeInstance.adminChangeAccessControl, someAddress)
+    })
+
 });

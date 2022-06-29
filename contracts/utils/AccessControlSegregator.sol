@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/utils/Context.sol";
-
 /**
     @title Handles access control per contract function.
     @author ChainSafe Systems.
     @notice This contract is intended to be used by the Bridge contract.
  */
-contract AccessControlSegregator is Context {
+contract AccessControlSegregator {
     // function => address has access
     mapping(string => address) public _functionAccess;
 
@@ -16,12 +14,12 @@ contract AccessControlSegregator is Context {
         @notice Initializes access control to functions and sets initial
         access to grantAccess function.
         @param functions List of functions to be granted access to.
-        @param account List of accounts.
+        @param accounts List of accounts.
     */
-    constructor(string[] functions, address[] accounts) public {
+    constructor(string[] memory functions, address[] memory accounts) public {
         require(accounts.length == functions.length, "array length should be equal");
 
-        _grantAccess("grantAccess", _msgSender());
+        _grantAccess("grantAccess", msg.sender);
         for (uint i=0; i < accounts.length; i++) {
             _grantAccess(functions[i], accounts[i]);
         }
@@ -33,8 +31,8 @@ contract AccessControlSegregator is Context {
         @param account Address of account.
         @return Boolean value depending if account has access.
     */
-    function hasAccess(string func, address account) public view returns (bool)  {
-        return _functionAccess[func] == _msgSender();
+    function hasAccess(string memory func, address account) public view returns (bool)  {
+        return _functionAccess[func] == account;
     }
 
     /**
@@ -43,12 +41,12 @@ contract AccessControlSegregator is Context {
         @param func Function name.
         @param account Address of account.
     */
-    function grantAccess(string func, address account) public {
+    function grantAccess(string memory func, address account) public {
         require(hasAccess(func, account), "account doesn't have access");
         _grantAccess(func, account);
     }
 
-    function _grantAccess(string func, address account) private {
+    function _grantAccess(string memory func, address account) private {
         _functionAccess[func] = account;
     }
 }

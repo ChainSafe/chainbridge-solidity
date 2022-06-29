@@ -2,6 +2,7 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 import "./utils/Pausable.sol";
 
 import "./interfaces/IDepositExecute.sol";
@@ -14,7 +15,7 @@ import "./interfaces/IAccessControlSegregator.sol";
     @title Facilitates deposits and creation of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
-contract Bridge is Pausable {
+contract Bridge is Pausable, Context {
     using ECDSA for bytes32;
 
     uint8   public _domainID;
@@ -60,13 +61,13 @@ contract Bridge is Pausable {
 
     event Retry(string txHash);
 
-    modifier onlyAllowed(string func) {
-        _onlyAllowed(func, account);
+    modifier onlyAllowed(string memory func) {
+        _onlyAllowed(func, _msgSender());
         _;
     }
 
-    function _onlyAllowed(string func) private view {
-        require(_accessControl.hasAccess(func, _msgSender()), "sender doesn't have access to function");
+    function _onlyAllowed(string memory func, address sender) private view {
+        require(_accessControl.hasAccess(func, sender), "sender doesn't have access to function");
     }
 
     function _msgSender() internal override view returns (address) {
@@ -87,7 +88,7 @@ contract Bridge is Pausable {
      */
     constructor (uint8 domainID, address accessControl) public {
         _domainID = domainID;
-        _accessControl = IAccessControlSegregator(accessControl)
+        _accessControl = IAccessControlSegregator(accessControl);
 
         _pause(_msgSender());
     }
@@ -139,7 +140,7 @@ contract Bridge is Pausable {
         bytes4 depositFunctionSig,
         uint256 depositFunctionDepositerOffset,
         bytes4 executeFunctionSig
-    ) external onlaAllowed("adminSetGenericResource") {
+    ) external onlyAllowed("adminSetGenericResource") {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
@@ -182,7 +183,7 @@ contract Bridge is Pausable {
         @notice Only callable by admin.
         @param newAccessControl Address {_accessControl} will be updated to.
      */
-    function adminChangeAccessControl(address newAccessControl) external onlyAllowed("adminChangeAccessControl) {
+    function adminChangeAccessControl(address newAccessControl) external onlyAllowed("adminChangeAccessControl") {
         _accessControl = IAccessControlSegregator(newAccessControl);
         emit AccessControlChanged(newAccessControl);
     }

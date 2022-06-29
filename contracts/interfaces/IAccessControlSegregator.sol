@@ -12,5 +12,5 @@ interface IAccessControlSegregator {
         @param account Address of account.
         @return Boolean value depending if account has access.
     */
-    function hasAccess(string func, address account) public;
+    function hasAccess(string memory func, address account) external view returns (bool);
 }

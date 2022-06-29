@@ -11,6 +11,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
 
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
@@ -35,7 +36,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance = instance)
         ]);
 

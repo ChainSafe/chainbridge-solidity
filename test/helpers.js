@@ -5,6 +5,9 @@
 
  const Ethers = require('ethers');
 
+ const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
+ const BridgeContract = artifacts.require("Bridge");
+
  const blankFunctionSig = '0x00000000';
  const blankFunctionDepositerOffset = 0;
  const AbiCoder = new Ethers.utils.AbiCoder;
@@ -185,6 +188,18 @@ const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce
   return rawSignature
 }
 
+const deployBridge = async (domainID, admin) => {
+    let accessControlInstance = await AccessControlSegregatorContract.new(
+        [
+            "adminPauseTransfers", "adminUnpauseTransfers", "adminSetResource", "adminSetGenericResource", "adminSetBurnable",
+            "adminSetDepositNonce", "adminSetForwarder", "adminChangeAccessControl", "adminChangeFeeHandler", "adminWithdraw",
+            "startKeygen", "endKeygen", "refreshKey",
+        ],
+        Array(13).fill(admin)
+    )
+    return await BridgeContract.new(domainID, accessControlInstance.address);
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
@@ -207,5 +222,6 @@ module.exports = {
     assertObjectsMatch,
     nonceAndId,
     createOracleFeeData,
-    signDataWithMpc
+    signDataWithMpc,
+    deployBridge
 };

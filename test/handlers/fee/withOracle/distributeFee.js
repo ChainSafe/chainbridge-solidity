@@ -34,7 +34,7 @@
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance);
+        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 

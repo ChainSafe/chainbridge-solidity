@@ -8,6 +8,8 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract('E2E ERC20 - Two EVM Chains', async accounts => {
+    const adminAddress = accounts[0]
+
     const originDomainID = 1;
     const originRelayer1Address = accounts[3];
 
@@ -45,8 +47,8 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationDomainID).then(instance => DestinationBridgeInstance = instance),
+            OriginBridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress),
+            DestinationBridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
             ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
             ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
         ]);

@@ -16,6 +16,7 @@ const GenericHandlerContract = artifacts.require("GenericHandler");
 contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
@@ -55,7 +56,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
             ERC20MintableContract.new("token721", "TOK20").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("token20", "TOK721", "").then(instance => ERC721MintableInstance = instance),
             ERC1155MintableContract.new("TOK1155").then(instance => ERC1155MintableInstance = instance)

@@ -15,12 +15,13 @@
      const domainID = 1;
 
      const txHash = "0x59d881e01ca682130e550e3576b6de760951fb45b1d5dd81342132f57920bbfa";
+     const adminAddress = accounts[0]
 
      let BridgeInstance;
 
 
      beforeEach(async () => {
-         BridgeInstance = await BridgeContract.new(domainID);
+        BridgeInstance = await Helpers.deployBridge(domainID, adminAddress),
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);

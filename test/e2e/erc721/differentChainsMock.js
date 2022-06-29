@@ -11,6 +11,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
 
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const originRelayer1Address = accounts[3];
@@ -39,8 +40,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID).then(instance => OriginBridgeInstance = instance),
-            BridgeContract.new(destinationDomainID).then(instance => DestinationBridgeInstance = instance),
+            OriginBridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress),
+            DestinationBridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
             ERC721MintableContract.new("token", "TOK", "").then(instance => DestinationERC721MintableInstance = instance)
         ]);

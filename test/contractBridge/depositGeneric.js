@@ -16,6 +16,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
 
     let BridgeInstance;
@@ -30,7 +31,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance)
+            BridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress)
         ]);
 
         resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)

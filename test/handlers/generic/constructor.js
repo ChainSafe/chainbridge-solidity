@@ -12,7 +12,7 @@ const BridgeContract = artifacts.require("Bridge");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
-contract('GenericHandler - [constructor]', async () => {
+contract('GenericHandler - [constructor]', async (accounts) => {
     const domainID = 1;
     const centrifugeAssetMinCount = 1;
     const blankFunctionSig = '0x00000000';
@@ -31,7 +31,7 @@ contract('GenericHandler - [constructor]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+           BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)

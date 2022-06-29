@@ -8,7 +8,6 @@ const Ethers = require('ethers');
 const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
-const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const GenericHandlerContract = artifacts.require('GenericHandler');
@@ -40,29 +39,7 @@ contract('Bridge - [admin]', async (accounts) => {
     };
 
     beforeEach(async () => {
-        let accessControlInstance = await AccessControlSegregatorContract.new(
-            [
-                "adminPauseTransfers", "adminUnpauseTransfers", "adminSetResource", "adminSetGenericResource", "adminSetBurnable",
-                "adminSetDepositNonce", "adminSetForwarder", "adminChangeAccessControl", "adminChangeFeeHandler", "adminWithdraw",
-                "startKeygen", "endKeygen", "refreshKey",
-            ],
-            [
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-                expectedBridgeAdmin,
-            ]
-        )
-        BridgeInstance = await BridgeContract.new(domainID, accessControlInstance.address);
+        BridgeInstance = await Helpers.deployBridge(domainID, expectedBridgeAdmin);
     });
 
     // Testing pauseable methods

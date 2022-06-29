@@ -14,6 +14,7 @@ const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
 
     const originChainTokenID = 42;
@@ -30,7 +31,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC1155MintableContract.new("TOK").then(instance => OriginERC1155MintableInstance = instance),
-            BridgeInstance = await BridgeContract.new(originDomainID)
+            BridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress)
         ]);
 
 

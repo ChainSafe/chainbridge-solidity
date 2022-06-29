@@ -6,11 +6,12 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const BridgeContract = artifacts.require("Bridge");
+const Helpers = require('../../helpers');
+
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
+contract('ERC20Handler - [setResourceIDAndContractAddress]', async (accounts) => {
     const AbiCoder = new Ethers.utils.AbiCoder();
 
     const domainID = 1;
@@ -23,7 +24,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let burnableContractAddresses;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID);
+        BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
         ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(domainID).substr(2)), 32)];

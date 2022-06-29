@@ -211,6 +211,10 @@ const signArrayOfDataWithMpc = async (proposals) => {
   return rawSignature
 }
 
+const decimalToPaddedBinary = (decimal) => {
+  return decimal.toString(2).padStart(64,'0');
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
@@ -234,5 +238,6 @@ module.exports = {
     nonceAndId,
     createOracleFeeData,
     signDataWithMpc,
-    signArrayOfDataWithMpc
+    signArrayOfDataWithMpc,
+    decimalToPaddedBinary
 };

@@ -314,7 +314,7 @@ contract Bridge is Pausable, AccessControl {
             try depositHandler.executeProposal(proposals[i].resourceID, proposals[i].data) {
             } catch (bytes memory lowLevelData) {
                 emit FailedHandlerExecution(lowLevelData, proposals[i].originDomainID, proposals[i].depositNonce);
-                usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] &= 0 << (proposals[i].depositNonce % 256);
+                usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] &= ~(1 << (proposals[i].depositNonce % 256));
                 continue;
             }
 

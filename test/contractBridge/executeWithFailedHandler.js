@@ -270,6 +270,14 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             { from: depositerAddress }
         ));
 
+        // check that all nonces in nonce set are 0
+        const noncesSetBeforeDeposit = await BridgeInstance.usedNonces(originDomainID, 0);
+        assert.equal(
+          Helpers.decimalToPaddedBinary(noncesSetBeforeDeposit.toNumber()),
+          // nonces:                                             ...6543210
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        );
+
         const executeTx = await BridgeInstance.executeProposals(
             proposalsForExecution,
             proposalSignedData,
@@ -309,6 +317,13 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         const recipientERC721Balance = await ERC721MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientERC721Balance.toNumber(), 1);
 
+        // check that other nonces in nonce set are not affected after failed deposit
+        const noncesSetAfterDeposit = await BridgeInstance.usedNonces(originDomainID, 0);
+        assert.equal(
+          Helpers.decimalToPaddedBinary(noncesSetAfterDeposit.toNumber()),
+          // nonces:                                             ...6543210
+          "0000000000000000000000000000000000000000000000000000000000001100"
+        );
 
         // check that 'ProposalExecution' event has been emitted with proper values for ERC721 deposit
         assert.equal(executeTx.logs[1].args.originDomainID, 1);

@@ -42,7 +42,8 @@ contract AccessControlSegregator {
         @param account Address of account.
     */
     function grantAccess(string memory func, address account) public {
-        require(hasAccess(func, account), "account doesn't have access");
+        require(hasAccess("grantAccess", msg.sender), "sender doesn't have grant access rights");
+
         _grantAccess(func, account);
     }
 

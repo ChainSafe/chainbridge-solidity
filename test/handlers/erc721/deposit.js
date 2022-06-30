@@ -31,7 +31,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-           BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
+            BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
             ERC721MintableContract.new("token", "TOK", "").then(instance => ERC721MintableInstance = instance)
         ])
 

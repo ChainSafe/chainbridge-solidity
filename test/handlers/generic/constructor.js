@@ -31,7 +31,7 @@ contract('GenericHandler - [constructor]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-           BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
+            BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
             CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)

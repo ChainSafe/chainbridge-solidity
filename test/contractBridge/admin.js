@@ -13,10 +13,6 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const GenericHandlerContract = artifacts.require('GenericHandler');
 const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
 
-
-
-// TODO: change access control
-
 // This test does NOT include all getter methods, just
 // getters that should work with only the constructor called
 contract('Bridge - [admin]', async (accounts) => {

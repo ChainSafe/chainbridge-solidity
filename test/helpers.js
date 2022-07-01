@@ -175,14 +175,44 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
 const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce, depositData, resourceID) => {
   const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
 
-  const messageHash = Ethers.utils.solidityKeccak256(
-    ['uint8', 'uint8', 'uint64', 'bytes', 'bytes32'],
-    [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
+  const messageHash = Ethers.utils.keccak256(
+    Ethers.utils.defaultAbiCoder.encode(
+      ['uint8', 'uint8', 'uint64', 'bytes', 'bytes32'],
+      [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
+    )
   );
 
   const signature = signingKey.signDigest(messageHash)
   const rawSignature = Ethers.utils.joinSignature(signature)
   return rawSignature
+}
+
+const signArrayOfDataWithMpc = async (proposals) => {
+  const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
+
+  const messageHash = Ethers.utils.keccak256(
+    Ethers.utils.defaultAbiCoder.encode(
+      [{
+        type: "tuple[]",
+        name: "proposals",
+        components: [
+          { name: "originDomainID", type: 'uint8' },
+          { name: "depositNonce", type: 'uint64' },
+          { name: "resourceID", type: 'bytes32'},
+          { name: "data", type: 'bytes'}
+        ]
+      }],
+      [proposals]
+    )
+  );
+
+  const signature = signingKey.signDigest(messageHash)
+  const rawSignature = Ethers.utils.joinSignature(signature)
+  return rawSignature
+}
+
+const decimalToPaddedBinary = (decimal) => {
+  return decimal.toString(2).padStart(64,'0');
 }
 
 module.exports = {
@@ -207,5 +237,7 @@ module.exports = {
     assertObjectsMatch,
     nonceAndId,
     createOracleFeeData,
-    signDataWithMpc
+    signDataWithMpc,
+    signArrayOfDataWithMpc,
+    decimalToPaddedBinary
 };

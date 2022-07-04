@@ -296,7 +296,7 @@ contract Bridge is Pausable, AccessControl {
     function executeProposals(Proposal[] memory proposals, bytes memory signature) public whenNotPaused {
         require(proposals.length > 0, "Proposals can't be an empty array");
 
-        address signer = keccak256(abi.encode(proposals)).recover(signature);
+        address signer = keccak256(abi.encode(proposals, _domainID)).recover(signature);
         require(signer == _MPCAddress, "Invalid message signer");
 
         for (uint256 i = 0; i < proposals.length; i++) {

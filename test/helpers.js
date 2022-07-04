@@ -265,6 +265,6 @@ module.exports = {
     createOracleFeeData,
     signDataWithMpc,
     signArrayOfDataWithMpc,
-    decimalToPaddedBinary
+    decimalToPaddedBinary,
     deployBridge
 };

@@ -8,9 +8,9 @@ pragma solidity 0.8.11;
  */
 contract AccessControlSegregator {
     // function signature => address has access
-    mapping(bytes4 => address) public _functionAccess;
+    mapping(bytes4 => address) public functionAccess;
 
-    bytes4 public constant GRANT_ACCESS_SIG = 0xa973ec93;
+    bytes4 public constant GRANT_ACCESS_SIG = AccessControlSegregator(address(0)).grantAccess.selector;
 
     /**
         @notice Initializes access control to functions and sets initial
@@ -34,7 +34,7 @@ contract AccessControlSegregator {
         @return Boolean value depending if account has access.
     */
     function hasAccess(bytes4 sig, address account) public view returns (bool)  {
-        return _functionAccess[sig] == account;
+        return functionAccess[sig] == account;
     }
 
     /**
@@ -50,6 +50,6 @@ contract AccessControlSegregator {
     }
 
     function _grantAccess(bytes4 sig, address account) private {
-        _functionAccess[sig] = account;
+        functionAccess[sig] = account;
     }
 }

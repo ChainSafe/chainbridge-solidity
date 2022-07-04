@@ -8,9 +8,9 @@ pragma solidity 0.8.11;
 interface IAccessControlSegregator {
     /**
         @notice Returns boolean value if account has access to function.
-        @param func Function name.
+        @param sig Function identifier.
         @param account Address of account.
         @return Boolean value depending if account has access.
     */
-    function hasAccess(string memory func, address account) external view returns (bool);
+    function hasAccess(bytes4 sig, address account) external view returns (bool);
 }

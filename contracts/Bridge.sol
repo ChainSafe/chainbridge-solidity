@@ -61,13 +61,13 @@ contract Bridge is Pausable, Context {
 
     event Retry(string txHash);
 
-    modifier onlyAllowed(string memory func) {
-        _onlyAllowed(func, _msgSender());
+    modifier onlyAllowed() {
+        _onlyAllowed(msg.sig, _msgSender());
         _;
     }
 
-    function _onlyAllowed(string memory func, address sender) private view {
-        require(_accessControl.hasAccess(func, sender), "sender doesn't have access to function");
+    function _onlyAllowed(bytes4 sig, address sender) private view {
+        require(_accessControl.hasAccess(sig, sender), "sender doesn't have access to function");
     }
 
     function _msgSender() internal override view returns (address) {
@@ -97,7 +97,7 @@ contract Bridge is Pausable, Context {
         @notice Pauses deposits, proposal creation and voting, and deposit executions.
         @notice Only callable by an address that currently has the admin role.
      */
-    function adminPauseTransfers() external onlyAllowed("adminPauseTransfers") {
+    function adminPauseTransfers() external onlyAllowed {
         _pause(_msgSender());
     }
 
@@ -106,7 +106,7 @@ contract Bridge is Pausable, Context {
         @notice Only callable by an address that currently has the admin role.
         @notice MPC address has to be set before Bridge can be unpaused
      */
-    function adminUnpauseTransfers() external onlyAllowed("adminUnpauseTransfers") {
+    function adminUnpauseTransfers() external onlyAllowed {
         require(_MPCAddress != address(0), "MPC address not set");
         _unpause(_msgSender());
     }
@@ -119,7 +119,7 @@ contract Bridge is Pausable, Context {
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAllowed("adminSetResource") {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setResource(resourceID, tokenAddress);
@@ -140,7 +140,7 @@ contract Bridge is Pausable, Context {
         bytes4 depositFunctionSig,
         uint256 depositFunctionDepositerOffset,
         bytes4 executeFunctionSig
-    ) external onlyAllowed("adminSetGenericResource") {
+    ) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
@@ -152,7 +152,7 @@ contract Bridge is Pausable, Context {
         @param handlerAddress Address of handler resource will be set for.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
-    function adminSetBurnable(address handlerAddress, address tokenAddress) external onlyAllowed("adminSetBurnable") {
+    function adminSetBurnable(address handlerAddress, address tokenAddress) external onlyAllowed {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.setBurnable(tokenAddress);
     }
@@ -163,7 +163,7 @@ contract Bridge is Pausable, Context {
         @param domainID Domain ID for increasing nonce.
         @param nonce The nonce value to be set.
      */
-    function adminSetDepositNonce(uint8 domainID, uint64 nonce) external onlyAllowed("adminSetDepositNonce") {
+    function adminSetDepositNonce(uint8 domainID, uint64 nonce) external onlyAllowed {
         require(nonce > _depositCounts[domainID], "Does not allow decrements of the nonce");
         _depositCounts[domainID] = nonce;
     }
@@ -174,7 +174,7 @@ contract Bridge is Pausable, Context {
         @param forwarder Forwarder address to be added.
         @param valid Decision for the specific forwarder.
      */
-    function adminSetForwarder(address forwarder, bool valid) external onlyAllowed("adminSetForwarder") {
+    function adminSetForwarder(address forwarder, bool valid) external onlyAllowed {
         isValidForwarder[forwarder] = valid;
     }
 
@@ -183,7 +183,7 @@ contract Bridge is Pausable, Context {
         @notice Only callable by admin.
         @param newAccessControl Address {_accessControl} will be updated to.
      */
-    function adminChangeAccessControl(address newAccessControl) external onlyAllowed("adminChangeAccessControl") {
+    function adminChangeAccessControl(address newAccessControl) external onlyAllowed {
         _accessControl = IAccessControlSegregator(newAccessControl);
         emit AccessControlChanged(newAccessControl);
     }
@@ -193,7 +193,7 @@ contract Bridge is Pausable, Context {
         @notice Only callable by admin.
         @param newFeeHandler Address {_feeHandler} will be updated to.
      */
-    function adminChangeFeeHandler(address newFeeHandler) external onlyAllowed("adminChangeFeeHandler") {
+    function adminChangeFeeHandler(address newFeeHandler) external onlyAllowed {
         _feeHandler = IFeeHandler(newFeeHandler);
         emit FeeHandlerChanged(newFeeHandler);
     }
@@ -206,7 +206,7 @@ contract Bridge is Pausable, Context {
     function adminWithdraw(
         address handlerAddress,
         bytes memory data
-    ) external onlyAllowed("adminWithdraw") {
+    ) external onlyAllowed {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.withdraw(data);
     }
@@ -277,7 +277,7 @@ contract Bridge is Pausable, Context {
         @notice Once MPC address is set, this method can't be invoked anymore.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
-    function startKeygen() external onlyAllowed("startKeygen") {
+    function startKeygen() external onlyAllowed {
       require(_MPCAddress == address(0), "MPC address is already set");
       emit StartKeygen();
     }
@@ -287,7 +287,7 @@ contract Bridge is Pausable, Context {
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
         @param MPCAddress Address that will be set as MPC address.
      */
-    function endKeygen(address MPCAddress) external onlyAllowed("endKeygen") {
+    function endKeygen(address MPCAddress) external onlyAllowed {
       require(MPCAddress != address(0), "MPC address can't be null-address");
       require(_MPCAddress == address(0), "MPC address can't be updated");
       _MPCAddress = MPCAddress;
@@ -299,7 +299,7 @@ contract Bridge is Pausable, Context {
         @notice It's used to trigger the belonging process on the MPC side.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
      */
-    function refreshKey() external onlyAllowed("refreshKey") {
+    function refreshKey() external onlyAllowed {
       emit KeyRefresh();
     }
 

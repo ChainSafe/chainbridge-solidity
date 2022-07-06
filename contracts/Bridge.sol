@@ -18,7 +18,8 @@ import "./interfaces/IAccessControlSegregator.sol";
 contract Bridge is Pausable, Context {
     using ECDSA for bytes32;
 
-    uint8   public _domainID;
+
+    uint8   public immutable _domainID;
     address public _MPCAddress;
 
     IFeeHandler public _feeHandler;
@@ -296,7 +297,7 @@ contract Bridge is Pausable, Context {
     function executeProposals(Proposal[] memory proposals, bytes memory signature) public whenNotPaused {
         require(proposals.length > 0, "Proposals can't be an empty array");
 
-        address signer = keccak256(abi.encode(proposals)).recover(signature);
+        address signer = keccak256(abi.encode(proposals, _domainID)).recover(signature);
         require(signer == _MPCAddress, "Invalid message signer");
 
         for (uint256 i = 0; i < proposals.length; i++) {

@@ -17,10 +17,7 @@ import "./interfaces/IFeeHandler.sol";
 contract Bridge is Pausable, AccessControl {
     using ECDSA for bytes32;
 
-
-
-
-    uint8   public _domainID;
+    uint8   public immutable _domainID;
     address public _MPCAddress;
 
     IFeeHandler public _feeHandler;

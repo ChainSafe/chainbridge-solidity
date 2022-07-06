@@ -19,6 +19,7 @@
  contract('Bridge - [execute proposal]', async (accounts) => {
      const destinationDomainID = 1;
      const originDomainID = 2;
+     const invalidDestinationDomainID = 3;
 
      const depositerAddress = accounts[1];
      const recipientAddress = accounts[2];
@@ -125,7 +126,7 @@
   });
 
     it('should create and execute executeProposal successfully', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -179,7 +180,7 @@
     });
 
     it('should skip executing proposal if deposit nonce is already used', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -244,7 +245,7 @@
     });
 
     it('should fail executing proposals if empty array is passed for execution', async () => {
-      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
 
       await TruffleAssert.reverts(BridgeInstance.executeProposals(
         [],
@@ -254,7 +255,7 @@
     });
 
     it('executeProposal event should be emitted with expected values', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -319,5 +320,41 @@
 
         const recipientERC1155Balance = await ERC1155MintableInstance.balanceOf(recipientAddress, destinationDomainID);
         assert.strictEqual(recipientERC1155Balance.toNumber(), depositAmount);
+    });
+
+    it('should fail to executeProposals if signed destinationDomainID in not the domain on which proposal should be executed', async () => {
+      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, invalidDestinationDomainID);
+
+      // depositerAddress makes initial deposit of depositAmount
+      assert.isFalse(await BridgeInstance.paused());
+      await TruffleAssert.passes(BridgeInstance.deposit(
+          originDomainID,
+          erc20ResourceID,
+          erc20DepositData,
+          feeData,
+          { from: depositerAddress }
+      ));
+
+      await TruffleAssert.passes(BridgeInstance.deposit(
+          originDomainID,
+          erc721ResourceID,
+          erc721DepositData,
+          feeData,
+          { from: depositerAddress }
+      ));
+
+      await TruffleAssert.passes(BridgeInstance.deposit(
+          originDomainID,
+          erc1155ResourceID,
+          erc1155DepositData,
+          feeData,
+          { from: depositerAddress }
+      ));
+
+      await TruffleAssert.reverts(BridgeInstance.executeProposals(
+          proposalsForExecution,
+          proposalSignedData,
+          { from: relayer1Address }
+      ), "Invalid message signer");
     });
 });

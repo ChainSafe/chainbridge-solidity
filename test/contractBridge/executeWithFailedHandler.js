@@ -259,7 +259,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         // depositNonce is not used
         assert.isFalse(depositProposalBeforeFailedExecute);
 
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution);
+        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
 
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(

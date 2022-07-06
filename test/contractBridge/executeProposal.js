@@ -15,6 +15,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 contract('Bridge - [execute proposal]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
+    const invalidDestinationDomainID = 3;
 
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
@@ -175,5 +176,28 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         // check that tokens are transferred to recipient address
         const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+    });
+
+    it('should fail to executeProposal if signed destinationDomainID in not the domain on which proposal should be executed', async () => {
+        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, invalidDestinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+
+        // depositerAddress makes initial deposit of depositAmount
+        assert.isFalse(await BridgeInstance.paused());
+        await TruffleAssert.passes(BridgeInstance.deposit(
+            originDomainID,
+            resourceID,
+            depositData,
+            feeData,
+            { from: depositerAddress }
+        ));
+
+        await TruffleAssert.reverts(BridgeInstance.executeProposal(
+          originDomainID,
+          expectedDepositNonce,
+          depositProposalData,
+          resourceID,
+          proposalSignedData,
+          { from: relayer1Address }
+      ), "Invalid message signer");
     });
 });

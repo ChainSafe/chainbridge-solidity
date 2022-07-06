@@ -6,11 +6,12 @@
 const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 
-const BridgeContract = artifacts.require("Bridge");
+const Helpers =require('../../helpers');
+
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
-contract('ERC1155Handler - [Burn ERC1155]', async () => {
+contract('ERC1155Handler - [Burn ERC1155]', async (accounts) => {
     const domainID = 1;
 
     let BridgeInstance;
@@ -24,7 +25,7 @@ contract('ERC1155Handler - [Burn ERC1155]', async () => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(domainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance1 = instance),
             ERC1155MintableContract.new("TOK").then(instance => ERC1155MintableInstance2 = instance)
         ]);

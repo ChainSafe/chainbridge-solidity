@@ -58,7 +58,7 @@
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
             ERC20MintableContract.new("ERC20token", "ERC20TOK").then(instance => ERC20MintableInstance = instance),
             ERC721MintableContract.new("ERC721token", "ERC721TOK", "").then(instance => ERC721MintableInstance = instance),
             ERC1155MintableContract.new("ERC1155TOK").then(instance => ERC1155MintableInstance = instance),

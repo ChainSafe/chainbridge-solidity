@@ -17,6 +17,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
     const destinationDomainID = 2;
     const invalidDestinationDomainID = 3;
 
+    const adminAddress = accounts[0]
     const depositerAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
@@ -41,7 +42,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(destinationDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 

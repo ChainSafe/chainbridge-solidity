@@ -6,7 +6,8 @@
 const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
 
-const BridgeContract = artifacts.require("Bridge");
+const Helpers = require('../../../helpers');
+
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 
 contract("BasicFeeHandler - [changeFee]", async accounts => {
@@ -20,7 +21,7 @@ contract("BasicFeeHandler - [changeFee]", async accounts => {
     let BridgeInstance;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
+        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
     });
 
     it("[sanity] contract should be deployed successfully", async () => {

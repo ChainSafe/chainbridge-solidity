@@ -7,7 +7,6 @@ const Ethers = require('ethers');
 
 const Helpers = require('../../helpers');
 
-const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
@@ -31,7 +30,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 

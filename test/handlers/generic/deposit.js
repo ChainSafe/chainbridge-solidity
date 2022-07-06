@@ -44,7 +44,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
             NoArgumentContract.new().then(instance => NoArgumentInstance = instance),
             OneArgumentContract.new().then(instance => OneArgumentInstance = instance),

@@ -8,7 +8,6 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
 
-const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
@@ -45,7 +44,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     */
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID).then(instance => BridgeInstance = instance);
+        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 

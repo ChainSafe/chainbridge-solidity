@@ -5,6 +5,9 @@
 
  const Ethers = require('ethers');
 
+ const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
+ const BridgeContract = artifacts.require("Bridge");
+
  const blankFunctionSig = '0x00000000';
  const blankFunctionDepositerOffset = 0;
  const AbiCoder = new Ethers.utils.AbiCoder;
@@ -217,6 +220,29 @@ const decimalToPaddedBinary = (decimal) => {
   return decimal.toString(2).padStart(64,'0');
 }
 
+const deployBridge = async (domainID, admin) => {
+    let accessControlInstance = await AccessControlSegregatorContract.new(
+        [
+            "0x80ae1c28", // adminPauseTransfers
+            "0xffaac0eb", // adminUnpauseTransfers
+            "0xcb10f215", // adminSetResource
+            "0x5a1ad87c", // adminSetGenericResource
+            "0x8c0c2631", // adminSetBurnable
+            "0xedc20c3c", // adminSetDepositNonce
+            "0xd15ef64e", // adminSetForwarder
+            "0x9d33b6d4", // adminChangeAccessControl
+            "0x8b63aebf", // adminChangeFeeHandler
+            "0xbd2a1820", // adminWithdraw
+            "0x6ba6db6b", // startKeygen
+            "0xd2e5fae9", // endKeygen
+            "0xf5f63b39", // refreshKey
+
+        ],
+        Array(13).fill(admin)
+    )
+    return await BridgeContract.new(domainID, accessControlInstance.address);
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
@@ -241,5 +267,6 @@ module.exports = {
     createOracleFeeData,
     signDataWithMpc,
     signArrayOfDataWithMpc,
-    decimalToPaddedBinary
+    decimalToPaddedBinary,
+    deployBridge
 };

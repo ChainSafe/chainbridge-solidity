@@ -38,7 +38,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            BridgeContract.new(originDomainID).then(instance => BridgeInstance = instance),
+            BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
         ]);
 

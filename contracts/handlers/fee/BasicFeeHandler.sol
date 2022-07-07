@@ -11,7 +11,7 @@ import "../../utils/AccessControl.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract BasicFeeHandler is IFeeHandler, AccessControl {
-    address public immutable _bridgeAddress;
+    address public immutable _feeHandlerRouterAddress;
 
     uint256 public _fee;
 
@@ -19,20 +19,25 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         uint256 newFee
     );
 
-    modifier onlyBridge() {
-        _onlyBridge();
+    modifier onlyAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
         _;
     }
 
-    function _onlyBridge() private view {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+    modifier onlyRouter() {
+        _onlyRouter();
+        _;
+    }
+
+    function _onlyRouter() private view {
+        require(msg.sender == _feeHandlerRouterAddress, "sender must be fee router contract");
     }
 
     /**
-        @param bridgeAddress Contract address of previously deployed Bridge.
+        @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress) public {
-        _bridgeAddress = bridgeAddress;
+    constructor(address feeHandlerRouterAddress) public {
+        _feeHandlerRouterAddress = feeHandlerRouterAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -44,7 +49,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyRouter {
         require(msg.value == _fee, "Incorrect fee supplied");
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }
@@ -88,8 +93,5 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         }
     }
 
-    modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
-        _;
-    }
+
 }

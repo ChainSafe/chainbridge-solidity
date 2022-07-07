@@ -21,7 +21,7 @@ contract("BasicFeeHandler - [changeFee]", async accounts => {
     let BridgeInstance;
 
     beforeEach(async () => {
-        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
+        BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
     });
 
     it("[sanity] contract should be deployed successfully", async () => {

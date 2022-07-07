@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const TruffleAssert = require("truffle-assertions");
- const Ethers = require("ethers");
+const TruffleAssert = require("truffle-assertions");
+const Ethers = require("ethers");
 
- const Helpers = require("../../../helpers");
+const Helpers = require("../../../helpers");
 
- const BridgeContract = artifacts.require("Bridge");
- const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
- const ERC20HandlerContract = artifacts.require("ERC20Handler");
- const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const BridgeContract = artifacts.require("Bridge");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
- contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
+contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const oracle = new Ethers.Wallet.createRandom();
@@ -25,6 +26,8 @@
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
     let resourceID;
+    let FeeHandlerRouterInstance;
+
 
     /*
         feeData structure:
@@ -48,8 +51,9 @@
     */
 
     beforeEach(async () => {
-        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
-        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
+        BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 
         const gasUsed = 100000;
@@ -63,11 +67,14 @@
 
         await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address);
 
-        await ERC20MintableInstance.mint(depositerAddress, tokenAmount + feeAmount),
+        await Promise.all([
+            ERC20MintableInstance.mint(depositerAddress, tokenAmount + feeAmount),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
+            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, feeAmount, { from: depositerAddress }),
+            BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
+            FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address),
+        ]);
 
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress });
-        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, feeAmount, { from: depositerAddress });
-        await BridgeInstance.adminChangeFeeHandler(FeeHandlerWithOracleInstance.address);
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -199,7 +206,7 @@
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             ),
-            "sender must be bridge contract"
+            "sender must be fee router contract"
         );
     });
- });
+});

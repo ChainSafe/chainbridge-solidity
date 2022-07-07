@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const TruffleAssert = require("truffle-assertions");
+const TruffleAssert = require("truffle-assertions");
 
- const Helpers = require("../../../helpers");
+const Helpers = require("../../../helpers");
 
- const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
- contract("FeeHandlerWithOracle - [admin]", async accounts => {
+
+contract("FeeHandlerWithOracle - [admin]", async accounts => {
     const domainID = 1;
     const initialRelayers = accounts.slice(0, 3);
 
@@ -19,10 +21,12 @@
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
+    let FeeHandlerRouterInstance;
 
     beforeEach(async () => {
-        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
-        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
+        BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
     });
 
     it("should set fee oracle", async () => {

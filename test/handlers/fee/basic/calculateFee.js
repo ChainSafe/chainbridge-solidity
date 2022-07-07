@@ -8,10 +8,10 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
 
-const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
 contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     const originDomainID = 1;
@@ -27,42 +27,48 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     let initialResourceIDs;
     let initialContractAddresses;
     let ERC20MintableInstance;
+    let FeeHandlerRouterInstance;
 
     beforeEach(async () => {
         await Promise.all([
+            BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
             ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance),
-            BridgeInstance = BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0])
         ]);
+
+        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(FeeHandlerRouterInstance.address);
 
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
+
         burnableContractAddresses = [];
 
-        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
-
-        ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
-
         depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
+
+        await Promise.all([
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
+            FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, BasicFeeHandlerInstance.address),
+        ]);
     });
 
     it("should return amount of fee", async () => {
-        await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
         // current fee is set to 0
-        let res = await BasicFeeHandlerInstance.calculateFee.call(
+          let res = await FeeHandlerRouterInstance.calculateFee.call(
             relayer,
             originDomainID,
             destinationDomainID,
             resourceID,
             depositData,
             feeData
-        );
+            );
+
         assert.equal(web3.utils.fromWei(res[0], "ether"), "0");
         // Change fee to 0.5 ether
         await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
-        res = await BasicFeeHandlerInstance.calculateFee.call(
+        res = await FeeHandlerRouterInstance.calculateFee.call(
             relayer,
             originDomainID,
             destinationDomainID,

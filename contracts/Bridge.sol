@@ -106,7 +106,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Pauses deposits, proposal creation and voting, and deposit executions.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
      */
     function adminPauseTransfers() external onlyAllowed {
         _pause(_msgSender());
@@ -114,7 +114,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Unpauses deposits, proposal creation and voting, and deposit executions.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @notice MPC address has to be set before Bridge can be unpaused
      */
     function adminUnpauseTransfers() external onlyAllowed {
@@ -125,7 +125,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice Sets a new resource for handler contracts that use the IERCHandler interface,
         and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
@@ -139,7 +139,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice Sets a new resource for handler contracts that use the IGenericHandler interface,
         and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
@@ -159,7 +159,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Sets a resource as burnable for handler contracts that use the IERCHandler interface.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @param handlerAddress Address of handler resource will be set for.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
      */
@@ -170,7 +170,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Sets the nonce for the specific domainID.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @param domainID Domain ID for increasing nonce.
         @param nonce The nonce value to be set.
      */
@@ -181,7 +181,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Set a forwarder to be used.
-        @notice Only callable by an address that currently has the admin role.
+        @notice Only callable by address that has function call access.
         @param forwarder Forwarder address to be added.
         @param valid Decision for the specific forwarder.
      */
@@ -191,7 +191,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Changes access control contract address.
-        @notice Only callable by admin.
+        @notice Only callable by address that has function call access.
         @param newAccessControl Address {_accessControl} will be updated to.
      */
     function adminChangeAccessControl(address newAccessControl) external onlyAllowed {
@@ -201,7 +201,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Changes deposit fee handler contract address.
-        @notice Only callable by admin.
+        @notice Only callable by address that has function call access.
         @param newFeeHandler Address {_feeHandler} will be updated to.
      */
     function adminChangeFeeHandler(address newFeeHandler) external onlyAllowed {
@@ -211,6 +211,7 @@ contract Bridge is Pausable, Context {
 
     /**
         @notice Used to manually withdraw funds from ERC safes.
+        @notice Only callable by address that has function call access.
         @param handlerAddress Address of handler to withdraw from.
         @param data ABI-encoded withdrawal params relevant to the specified handler.
      */
@@ -326,6 +327,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice Once MPC address is set, this method can't be invoked anymore.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
+        @notice Only callable by address that has function call access.
      */
     function startKeygen() external onlyAllowed {
         require(_MPCAddress == address(0), "MPC address is already set");
@@ -335,6 +337,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice This method can be called only once, after the MPC address is set Bridge is unpaused.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
+        @notice Only callable by address that has function call access.
         @param MPCAddress Address that will be set as MPC address.
      */
     function endKeygen(address MPCAddress) external onlyAllowed {
@@ -348,6 +351,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice It's used to trigger the belonging process on the MPC side.
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
+        @notice Only callable by address that has function call access.
      */
     function refreshKey() external onlyAllowed {
         emit KeyRefresh();

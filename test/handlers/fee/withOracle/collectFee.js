@@ -8,7 +8,6 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
 
-const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
@@ -20,13 +19,20 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
     const tokenAmount = Ethers.utils.parseEther("1");
-    const feeAmount =Ethers.utils.parseEther("0.05");
+    const fee = Ethers.utils.parseEther("0.05");
     const depositerAddress = accounts[1];
+
+    const gasUsed = 100000;
+    const feePercent = 500;
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
     let resourceID;
+    let depositData;
+
     let FeeHandlerRouterInstance;
+    let ERC20HandlerInstance;
+    let ERC20MintableInstance;
 
 
     /*
@@ -51,29 +57,31 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     */
 
     beforeEach(async () => {
-        BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
-        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
-        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
-        await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
-
-        const gasUsed = 100000;
-        const feePercent = 500;
-        await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
-
-        ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
+        await Promise.all([
+            BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
+            ERC20MintableInstance = ERC20MintableContract.new("ERC20Token", "ERC20TOK").then(instance => ERC20MintableInstance = instance),
+        ]);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
 
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address);
+        await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
+        await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
+
+        resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
+
 
         await Promise.all([
-            ERC20MintableInstance.mint(depositerAddress, tokenAmount + feeAmount),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            ERC20MintableInstance.mint(depositerAddress, tokenAmount + fee),
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
-            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, feeAmount, { from: depositerAddress }),
+            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, fee, { from: depositerAddress }),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address),
         ]);
+
+        depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
 
 
         // set MPC address to unpause the Bridge
@@ -81,16 +89,14 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     });
 
     it("should collect fee in tokens", async () => {
-        const fee = Ethers.utils.parseEther("0.05");
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         const oracleResponse = {
-            ber: Ethers.utils.parseEther("0.000533"),
-            ter: Ethers.utils.parseEther("1.63934"),
-            dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-            fromDomainID: originDomainID,
-            toDomainID: destinationDomainID,
-            resourceID
+          ber: Ethers.utils.parseEther("0.000533"),
+          ter: Ethers.utils.parseEther("1.63934"),
+          dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
+          expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
+          fromDomainID: originDomainID,
+          toDomainID: destinationDomainID,
+          resourceID
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
@@ -124,7 +130,6 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     });
 
     it("deposit should revert if msg.value != 0", async () => {
-        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
             ter: Ethers.utils.parseEther("1.63934"),
@@ -179,7 +184,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         );
     });
 
-    it("deposit should revert if called not by bridge", async () => {
+    it("deposit should revert if not called by router on FeeHandlerWithOracle contract", async () => {
         const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         const oracleResponse = {
             ber: Ethers.utils.parseEther("0.000533"),
@@ -207,6 +212,37 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                 }
             ),
             "sender must be fee router contract"
+        );
+    });
+
+    it("deposit should revert if not called by bridge on FeeHandlerRouter contract", async () => {
+        const depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
+        const oracleResponse = {
+            ber: Ethers.utils.parseEther("0.000533"),
+            ter: Ethers.utils.parseEther("1.63934"),
+            dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
+            fromDomainID: originDomainID,
+            toDomainID: destinationDomainID,
+            resourceID
+        };
+
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
+        await TruffleAssert.reverts(
+            FeeHandlerRouterInstance.collectFee(
+                depositerAddress,
+                originDomainID,
+                destinationDomainID,
+                resourceID,
+                depositData,
+                feeData,
+                {
+                    from: depositerAddress,
+                    value: Ethers.utils.parseEther("0.5").toString(),
+                }
+            ),
+            "sender must be bridge contract"
         );
     });
 });

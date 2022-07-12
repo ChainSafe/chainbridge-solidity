@@ -90,13 +90,13 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
 
     it("should collect fee in tokens", async () => {
         const oracleResponse = {
-          ber: Ethers.utils.parseEther("0.000533"),
-          ter: Ethers.utils.parseEther("1.63934"),
-          dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-          expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-          fromDomainID: originDomainID,
-          toDomainID: destinationDomainID,
-          resourceID
+            ber: Ethers.utils.parseEther("0.000533"),
+            ter: Ethers.utils.parseEther("1.63934"),
+            dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
+            fromDomainID: originDomainID,
+            toDomainID: destinationDomainID,
+            resourceID
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);

@@ -56,14 +56,14 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
 
     it("should return amount of fee", async () => {
         // current fee is set to 0
-          let res = await FeeHandlerRouterInstance.calculateFee.call(
+        let res = await FeeHandlerRouterInstance.calculateFee.call(
             relayer,
             originDomainID,
             destinationDomainID,
             resourceID,
             depositData,
             feeData
-            );
+        );
 
         assert.equal(web3.utils.fromWei(res[0], "ether"), "0");
         // Change fee to 0.5 ether

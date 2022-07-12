@@ -14,6 +14,7 @@ const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 contract("FeeHandlerWithOracle - [admin]", async accounts => {
     const domainID = 1;
     const initialRelayers = accounts.slice(0, 3);
+    const currentFeeHandlerAdmin = accounts[0];
 
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: initialRelayers[1]}), "sender doesn't have admin role");
@@ -22,11 +23,13 @@ contract("FeeHandlerWithOracle - [admin]", async accounts => {
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
     let FeeHandlerRouterInstance;
+    let ADMIN_ROLE;
 
     beforeEach(async () => {
         BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
         FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
         FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
+        ADMIN_ROLE = await FeeHandlerWithOracleInstance.DEFAULT_ADMIN_ROLE();
     });
 
     it("should set fee oracle", async () => {
@@ -56,5 +59,18 @@ contract("FeeHandlerWithOracle - [admin]", async accounts => {
         const gasUsed = 100000;
         const feePercent = 5;
         await assertOnlyAdmin(FeeHandlerWithOracleInstance.setFeeProperties, gasUsed, feePercent);
+    });
+
+    it('FeeHandlerWithOracle admin should be changed to expectedFeeHandlerWithOracleAdmin', async () => {
+        const expectedFeeHandlerWithOracleAdmin = accounts[1];
+
+        // check current admin
+        assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
+
+        await TruffleAssert.passes(FeeHandlerWithOracleInstance.renounceAdmin(expectedFeeHandlerWithOracleAdmin))
+        assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, expectedFeeHandlerWithOracleAdmin));
+
+        // check that former admin is no longer admin
+        assert.isFalse(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
     });
 });

@@ -69,6 +69,18 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     // Admin functions
 
     /**
+        @notice Removes admin role from {_msgSender()} and grants it to {newAdmin}.
+        @notice Only callable by an address that currently has the admin role.
+        @param newAdmin Address that admin role will be granted to.
+     */
+    function renounceAdmin(address newAdmin) external onlyAdmin {
+        address sender = _msgSender();
+        require(sender != newAdmin, 'Cannot renounce oneself');
+        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, sender);
+    }
+
+    /**
         @notice Sets the fee oracle address for signature verification.
         @param oracleAddress Fee oracle address.
      */

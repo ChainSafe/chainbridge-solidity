@@ -59,15 +59,15 @@
     });
 
     it('FeeHandlerWithOracle admin should be changed to expectedFeeHandlerWithOracleAdmin', async () => {
-      const expectedFeeHandlerWithOracleAdmin = accounts[1];
+        const expectedFeeHandlerWithOracleAdmin = accounts[1];
 
-      // check current admin
-      assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
+        // check current admin
+        assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
 
-      await TruffleAssert.passes(FeeHandlerWithOracleInstance.renounceAdmin(expectedFeeHandlerWithOracleAdmin))
-      assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, expectedFeeHandlerWithOracleAdmin));
+        await TruffleAssert.passes(FeeHandlerWithOracleInstance.renounceAdmin(expectedFeeHandlerWithOracleAdmin))
+        assert.isTrue(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, expectedFeeHandlerWithOracleAdmin));
 
-      // check that former admin is no longer admin
-      assert.isFalse(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
-  });
+        // check that former admin is no longer admin
+        assert.isFalse(await FeeHandlerWithOracleInstance.hasRole(ADMIN_ROLE, currentFeeHandlerAdmin));
+    });
 });

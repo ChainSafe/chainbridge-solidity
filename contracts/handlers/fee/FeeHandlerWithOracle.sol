@@ -25,7 +25,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
     struct OracleMessageType {
         // Base Effective Rate - effective rate between base currencies of source and dest networks (eg. MATIC/ETH)
-        uint256 ber; 
+        uint256 ber;
         // Token Effective Rate - rate between base currency of destination network and token that is being trasferred (eg. MATIC/USDT)
         uint256 ter;
         uint256 dstGasPrice;
@@ -50,6 +50,18 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     }
 
     // Admin functions
+
+    /**
+        @notice Removes admin role from {_msgSender()} and grants it to {newAdmin}.
+        @notice Only callable by an address that currently has the admin role.
+        @param newAdmin Address that admin role will be granted to.
+     */
+    function renounceAdmin(address newAdmin) external onlyAdmin {
+        address sender = _msgSender();
+        require(sender != newAdmin, 'Cannot renounce oneself');
+        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, sender);
+    }
 
     /**
         @notice Sets the fee oracle address for signature verification.
@@ -101,7 +113,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     }
 
     function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view returns(uint256 fee, address tokenAddress) {
-        /** 
+        /**
             Message:
             ber * 10^18:  uint256
             ter * 10^18:  uint256
@@ -120,7 +132,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
             amount: uint256
             total: 321
-        */  
+        */
 
         require(feeData.length == 321, "Incorrect feeData length");
 
@@ -132,9 +144,9 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
         OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
         require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
-        require((oracleMessage.fromDomainID == fromDomainID) 
-            && (oracleMessage.toDomainID == destinationDomainID) 
-            && (oracleMessage.resourceID == resourceID), 
+        require((oracleMessage.fromDomainID == fromDomainID)
+            && (oracleMessage.toDomainID == destinationDomainID)
+            && (oracleMessage.resourceID == resourceID),
             "Incorrect deposit params"
         );
 
@@ -144,12 +156,12 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
 
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
-        
+
         // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
         uint256 txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
 
         fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
-        
+
         if (fee < txCost) {
             fee = txCost;
         }

@@ -37,6 +37,18 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
+        @notice Removes admin role from {_msgSender()} and grants it to {newAdmin}.
+        @notice Only callable by an address that currently has the admin role.
+        @param newAdmin Address that admin role will be granted to.
+     */
+    function renounceAdmin(address newAdmin) external onlyAdmin {
+        address sender = _msgSender();
+        require(sender != newAdmin, 'Cannot renounce oneself');
+        grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, sender);
+    }
+
+    /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
         @param destinationDomainID ID of chain deposit will be bridged to.

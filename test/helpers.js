@@ -235,7 +235,7 @@ const deployBridge = async (domainID, admin) => {
             "0xbd2a1820", // adminWithdraw
             "0x6ba6db6b", // startKeygen
             "0xd2e5fae9", // endKeygen
-            "0xf5f63b39", // refreshKey
+            "0xd8236744", // refreshKey
 
         ],
         Array(13).fill(admin)

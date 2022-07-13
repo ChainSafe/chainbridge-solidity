@@ -22,6 +22,7 @@ contract('Bridge - [admin]', async (accounts) => {
     const expectedBridgeAdmin = accounts[0];
     const someAddress = "0xcafecafecafecafecafecafecafecafecafecafe";
     const nullAddress = "0x0000000000000000000000000000000000000000";
+    const topologyHash = "549f715f5b06809ada23145c2dc548db";
 
     const bytes32 = "0x0";
     let ADMIN_ROLE;
@@ -103,14 +104,16 @@ contract('Bridge - [admin]', async (accounts) => {
         await TruffleAssert.reverts(BridgeInstance.endKeygen(someAddress), "MPC address can't be updated");
     });
 
-    it('Should successfully emit "KeyRefresh" event if called by admin', async () => {
-        const startKeygenTx = await BridgeInstance.refreshKey();
+    it('Should successfully emit "KeyRefresh" event with expected hash value if called by admin', async () => {
+        const startKeygenTx = await BridgeInstance.refreshKey(topologyHash);
 
-        TruffleAssert.eventEmitted(startKeygenTx, 'KeyRefresh');
+        TruffleAssert.eventEmitted(startKeygenTx, 'KeyRefresh', (event) => {
+            return event.hash = topologyHash;
+        });
     });
 
     it('Should fail if "refreshKey" is called by non admin', async () => {
-        await assertOnlyAdmin(BridgeInstance.refreshKey);
+        await assertOnlyAdmin(BridgeInstance.refreshKey, topologyHash);
     });
 
     // Set Handler Address

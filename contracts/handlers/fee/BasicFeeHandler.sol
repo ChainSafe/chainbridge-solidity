@@ -11,6 +11,7 @@ import "../../utils/AccessControl.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract BasicFeeHandler is IFeeHandler, AccessControl {
+    address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
 
     uint256 public _fee;
@@ -24,19 +25,23 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         _;
     }
 
-    modifier onlyRouter() {
-        _onlyRouter();
+    modifier onlyBridgeOrRouter() {
+        _onlyBridgeOrRouter();
         _;
     }
 
-    function _onlyRouter() private view {
-        require(msg.sender == _feeHandlerRouterAddress, "sender must be fee router contract");
+    function _onlyBridgeOrRouter() private view {
+        require(
+            msg.sender == _bridgeAddress || msg.sender == _feeHandlerRouterAddress,
+            "sender must be bridge or fee router contract"
+        );
     }
 
     /**
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address feeHandlerRouterAddress) public {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) public {
+        _bridgeAddress = bridgeAddress;
         _feeHandlerRouterAddress = feeHandlerRouterAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -61,7 +66,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyRouter {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
         require(msg.value == _fee, "Incorrect fee supplied");
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }

@@ -47,13 +47,16 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         _;
     }
 
-    modifier onlyRouter() {
-        _onlyRouter();
+    modifier onlyBridgeOrRouter() {
+        _onlyBridgeOrRouter();
         _;
     }
 
-    function _onlyRouter() private view {
-        require(msg.sender == _feeHandlerRouterAddress, "sender must be fee router contract");
+    function _onlyBridgeOrRouter() private view {
+        require(
+            msg.sender == _bridgeAddress || msg.sender == _feeHandlerRouterAddress,
+            "sender must be bridge or fee router contract"
+        );
     }
 
     /**
@@ -107,7 +110,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyRouter {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
         require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         lockERC20(tokenAddress, sender, address(this), fee);

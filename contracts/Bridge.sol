@@ -68,7 +68,7 @@ contract Bridge is Pausable, Context {
 
     event EndKeygen();
 
-    event KeyRefresh();
+    event KeyRefresh(string hash);
 
     event Retry(string txHash);
 
@@ -365,9 +365,10 @@ contract Bridge is Pausable, Context {
         It's used to trigger the belonging process on the MPC side which also handles keygen function calls order.
         @notice Only callable by address that has the right to call the specific function,
         which is mapped in {functionAccess} in AccessControlSegregator contract.
+        @param hash Topology hash which prevents changes during refresh process.
      */
-    function refreshKey() external onlyAllowed {
-        emit KeyRefresh();
+    function refreshKey(string memory hash) external onlyAllowed {
+        emit KeyRefresh(hash);
     }
 
     /**

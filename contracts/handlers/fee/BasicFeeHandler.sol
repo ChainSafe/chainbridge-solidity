@@ -51,7 +51,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @notice Only callable by an address that currently has the admin role.
         @param newAdmin Address that admin role will be granted to.
      */
-    function renounceAdmin(address newAdmin) external onlyAdmin {
+    function renounceAdmin(address newAdmin) external {
         address sender = _msgSender();
         require(sender != newAdmin, 'Cannot renounce oneself');
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);

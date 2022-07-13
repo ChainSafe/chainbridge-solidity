@@ -37,7 +37,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
-        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(FeeHandlerRouterInstance.address);
+        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
 
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
         initialResourceIDs = [resourceID];

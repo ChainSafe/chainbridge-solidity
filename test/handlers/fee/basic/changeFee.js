@@ -9,6 +9,7 @@ const Ethers = require("ethers");
 const Helpers = require('../../../helpers');
 
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
 contract("BasicFeeHandler - [changeFee]", async accounts => {
     const domainID = 1;
@@ -22,15 +23,16 @@ contract("BasicFeeHandler - [changeFee]", async accounts => {
 
     beforeEach(async () => {
         BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
     });
 
     it("[sanity] contract should be deployed successfully", async () => {
         TruffleAssert.passes(
-            await BasicFeeHandlerContract.new(BridgeInstance.address));
+            await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address));
     });
 
     it("should set fee", async () => {
-        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
         const fee = Ethers.utils.parseEther("0.05");
         const tx = await BasicFeeHandlerInstance.changeFee(fee);
         TruffleAssert.eventEmitted(tx, "FeeChanged", (event) =>
@@ -41,12 +43,12 @@ contract("BasicFeeHandler - [changeFee]", async accounts => {
     });
 
     it("should not set the same fee", async () => {
-        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
         await TruffleAssert.reverts(BasicFeeHandlerInstance.changeFee(0), "Current fee is equal to new fee");
     });
 
     it("should require admin role to change fee", async () => {
-        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+        const BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
         await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, 1);
     });
 });

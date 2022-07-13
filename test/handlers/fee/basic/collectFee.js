@@ -55,8 +55,8 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
         ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
         FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
-        ERC20BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(FeeHandlerRouterInstance.address);
-        ERC721BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(FeeHandlerRouterInstance.address);
+        ERC20BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
+        ERC721BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
 
         await Promise.all([
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
@@ -214,64 +214,144 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     });
 
     it("deposit should revert if not called by router on BasicFeeHandler contract", async () => {
-      const fee = Ethers.utils.parseEther("0.5");
-      await BridgeInstance.adminChangeFeeHandler(ERC20BasicFeeHandlerInstance.address);
-      // current fee is set to 0
-      assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
-      // Change fee to 0.5 ether
-      await ERC20BasicFeeHandlerInstance.changeFee(fee);
-      assert.equal(web3.utils.fromWei((await ERC20BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
+        const fee = Ethers.utils.parseEther("0.5");
+        await BridgeInstance.adminChangeFeeHandler(ERC20BasicFeeHandlerInstance.address);
+        // current fee is set to 0
+        assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+        // Change fee to 0.5 ether
+        await ERC20BasicFeeHandlerInstance.changeFee(fee);
+        assert.equal(web3.utils.fromWei((await ERC20BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
 
-      const balanceBefore = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+        const balanceBefore = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
 
-      await TruffleAssert.reverts(
-          ERC20BasicFeeHandlerInstance.collectFee(
-              depositerAddress,
-              originDomainID,
-              destinationDomainID,
-              erc20ResourceID,
-              erc20depositData,
-              feeData,
-              {
-                  from: depositerAddress,
-                  value: Ethers.utils.parseEther("0.5").toString(),
-              }
-            ),
-            "sender must be fee router contract"
-        );
+        await TruffleAssert.reverts(
+            ERC20BasicFeeHandlerInstance.collectFee(
+                depositerAddress,
+                originDomainID,
+                destinationDomainID,
+                erc20ResourceID,
+                erc20depositData,
+                feeData,
+                {
+                    from: depositerAddress,
+                    value: Ethers.utils.parseEther("0.5").toString(),
+                }
+              ),
+              "sender must be bridge or fee router contract"
+          );
 
-      const balanceAfter = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
-      assert.equal(balanceAfter, balanceBefore);
+        const balanceAfter = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+        assert.equal(balanceAfter, balanceBefore);
     });
 
     it("deposit should revert if not called by bridge on FeeHandlerRouter contract", async () => {
-      const fee = Ethers.utils.parseEther("0.5");
-      await BridgeInstance.adminChangeFeeHandler(ERC20BasicFeeHandlerInstance.address);
-      // current fee is set to 0
-      assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
-      // Change fee to 0.5 ether
-      await ERC20BasicFeeHandlerInstance.changeFee(fee);
-      assert.equal(web3.utils.fromWei((await ERC20BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
+        const fee = Ethers.utils.parseEther("0.5");
+        await BridgeInstance.adminChangeFeeHandler(ERC20BasicFeeHandlerInstance.address);
+        // current fee is set to 0
+        assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+        // Change fee to 0.5 ether
+        await ERC20BasicFeeHandlerInstance.changeFee(fee);
+        assert.equal(web3.utils.fromWei((await ERC20BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
 
-      const balanceBefore = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+        const balanceBefore = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
 
-      await TruffleAssert.reverts(
-          FeeHandlerRouterInstance.collectFee(
-              depositerAddress,
-              originDomainID,
-              destinationDomainID,
-              erc20ResourceID,
-              erc20depositData,
-              feeData,
-              {
-                  from: depositerAddress,
-                  value: Ethers.utils.parseEther("0.5").toString(),
-              }
-            ),
-            "sender must be bridge contract"
-        );
+        await TruffleAssert.reverts(
+            FeeHandlerRouterInstance.collectFee(
+                depositerAddress,
+                originDomainID,
+                destinationDomainID,
+                erc20ResourceID,
+                erc20depositData,
+                feeData,
+                {
+                    from: depositerAddress,
+                    value: Ethers.utils.parseEther("0.5").toString(),
+                }
+              ),
+              "sender must be bridge contract"
+          );
 
-      const balanceAfter = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
-      assert.equal(balanceAfter, balanceBefore);
+        const balanceAfter = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+        assert.equal(balanceAfter, balanceBefore);
+    });
+
+    it("should successfully change fee handler from FeeRouter to ERC20BasicFeeHandlerInstance and collect fee", async () => {
+        await BridgeInstance.adminChangeFeeHandler(ERC20BasicFeeHandlerInstance.address);
+
+        const fee = Ethers.utils.parseEther("0.5");
+        // current fee is set to 0
+        assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+        // Change fee to 0.5 ether
+        await ERC20BasicFeeHandlerInstance.changeFee(fee);
+        assert.equal(web3.utils.fromWei((await ERC20BasicFeeHandlerInstance._fee.call()), "ether"), "0.5");
+
+        const balanceBefore = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+
+        const depositTx = await BridgeInstance.deposit(
+                destinationDomainID,
+                erc20ResourceID,
+                erc20depositData,
+                feeData,
+                {
+                    from: depositerAddress,
+                    value: fee
+                }
+            );
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === erc20ResourceID.toLowerCase();
+        });
+        const internalTx = await TruffleAssert.createTransactionResult(ERC20BasicFeeHandlerInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
+            return event.sender === depositerAddress &&
+                event.fromDomainID.toNumber() === originDomainID &&
+                event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === erc20ResourceID.toLowerCase() &&
+                event.fee.toString() === fee.toString() &&
+                event.tokenAddress === "0x0000000000000000000000000000000000000000";
+        });
+        const balanceAfter = await web3.eth.getBalance(ERC20BasicFeeHandlerInstance.address);
+        assert.equal(balanceAfter, fee.add(balanceBefore));
+    });
+
+    it("should successfully change fee handler from FeeRouter to ERC721BasicFeeHandlerInstance and collect fee", async () => {
+        await BridgeInstance.adminChangeFeeHandler(ERC721BasicFeeHandlerInstance.address);
+
+        const fee = Ethers.utils.parseEther("0.4");
+        // current fee is set to 0
+        assert.equal(await ERC721BasicFeeHandlerInstance._fee.call(), 0);
+        // Change fee to 0.4 ether
+        await ERC721BasicFeeHandlerInstance.changeFee(fee);
+        assert.equal(web3.utils.fromWei((await ERC721BasicFeeHandlerInstance._fee.call()), "ether"), "0.4");
+
+        const balanceBefore = await web3.eth.getBalance(ERC721BasicFeeHandlerInstance.address);
+
+        const depositTx = await BridgeInstance.deposit(
+                destinationDomainID,
+                erc721ResourceID,
+                erc721depositData,
+                feeData,
+                {
+                    from: depositerAddress,
+                    value: fee
+                }
+            );
+
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === erc721ResourceID.toLowerCase();
+        });
+        const internalTx = await TruffleAssert.createTransactionResult(ERC721BasicFeeHandlerInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
+            return event.sender === depositerAddress &&
+                event.fromDomainID.toNumber() === originDomainID &&
+                event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === erc721ResourceID.toLowerCase() &&
+                event.fee.toString() === fee.toString() &&
+                event.tokenAddress === "0x0000000000000000000000000000000000000000";
+        });
+        const balanceAfter = await web3.eth.getBalance(ERC721BasicFeeHandlerInstance.address);
+        assert.equal(balanceAfter, fee.add(balanceBefore));
     });
 });

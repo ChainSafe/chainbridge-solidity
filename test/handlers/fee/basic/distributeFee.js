@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const TruffleAssert = require("truffle-assertions");
- const Ethers = require("ethers");
+const TruffleAssert = require("truffle-assertions");
+const Ethers = require("ethers");
 
- const Helpers = require("../../../helpers");
+const Helpers = require("../../../helpers");
 
- const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
 contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
@@ -32,6 +32,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
     let ERC20MintableInstance;
     let ERC20HandlerInstance;
     let BasicFeeHandlerInstance;
+    let FeeHandlerRouterInstance;
 
     let resourceID;
     let depositData;
@@ -44,6 +45,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
         resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
 
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
@@ -55,7 +57,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
         depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
 
-        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);

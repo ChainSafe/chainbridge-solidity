@@ -8,6 +8,7 @@
  const Helpers = require("../../../helpers");
 
  const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
+ const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
  contract("BasicFeeHandler - [admin]", async accounts => {
     const domainID = 1;
@@ -24,7 +25,8 @@
 
     beforeEach(async () => {
         BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
-        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
 
         ADMIN_ROLE = await BasicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
     });

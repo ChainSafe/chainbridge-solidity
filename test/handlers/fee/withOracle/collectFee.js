@@ -211,7 +211,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             ),
-            "sender must be fee router contract"
+            "sender must be bridge or fee router contract"
         );
     });
 
@@ -244,5 +244,48 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
             ),
             "sender must be bridge contract"
         );
+    });
+
+    it("should successfully change fee handler from FeeRouter to FeeHandlerWithOracle and collect fee", async () => {
+        await BridgeInstance.adminChangeFeeHandler(FeeHandlerWithOracleInstance.address);
+
+        const oracleResponse = {
+            ber: Ethers.utils.parseEther("0.000533"),
+            ter: Ethers.utils.parseEther("1.63934"),
+            dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
+            expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
+            fromDomainID: originDomainID,
+            toDomainID: destinationDomainID,
+            resourceID
+        };
+
+        const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
+
+        const balanceBefore = (await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address)).toString();
+
+        const depositTx = await BridgeInstance.deposit(
+                destinationDomainID,
+                resourceID,
+                depositData,
+                feeData,
+                {
+                    from: depositerAddress
+                }
+            );
+        TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
+            return event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === resourceID.toLowerCase();
+        });
+        const internalTx = await TruffleAssert.createTransactionResult(FeeHandlerWithOracleInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
+            return event.sender === depositerAddress &&
+                event.fromDomainID.toNumber() === originDomainID &&
+                event.destinationDomainID.toNumber() === destinationDomainID &&
+                event.resourceID === resourceID.toLowerCase() &&
+                event.fee.toString() === fee.toString() &&
+                event.tokenAddress === ERC20MintableInstance.address;
+        });
+        const balanceAfter = (await ERC20MintableInstance.balanceOf(FeeHandlerWithOracleInstance.address)).toString();
+        assert.equal(balanceAfter, fee.add(balanceBefore).toString());
     });
 });

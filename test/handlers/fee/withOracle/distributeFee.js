@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const TruffleAssert = require("truffle-assertions");
- const Ethers = require("ethers");
+const TruffleAssert = require("truffle-assertions");
+const Ethers = require("ethers");
 
- const Helpers = require("../../../helpers");
+const Helpers = require("../../../helpers");
 
- const BridgeContract = artifacts.require("Bridge");
- const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
- const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
- const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const BridgeContract = artifacts.require("Bridge");
+const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
- contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
+contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const oracle = new Ethers.Wallet.createRandom();
@@ -28,14 +29,16 @@
     let depositData;
     let feeData;
     let oracleResponse;
+    let FeeHandlerRouterInstance;
 
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: accounts[1]}), "sender doesn't have admin role");
     };
 
     beforeEach(async () => {
-        BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
-        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address);
+        BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
+        FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(BridgeInstance.address);
+        FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(BridgeInstance.address, FeeHandlerRouterInstance.address);
         await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
 
         const gasUsed = 100000;
@@ -47,13 +50,14 @@
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address);
-
-        await ERC20MintableInstance.mint(depositerAddress, tokenAmount.add(feeAmount)),
-
-        await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress });
-        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositerAddress });
-        await BridgeInstance.adminChangeFeeHandler(FeeHandlerWithOracleInstance.address);
+        await Promise.all([
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            ERC20MintableInstance.mint(depositerAddress, tokenAmount.add(feeAmount)),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
+            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositerAddress }),
+            BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
+            FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address),
+        ]);
 
         depositData = Helpers.createERCDepositData(tokenAmount, 20, recipientAddress);
         oracleResponse = {

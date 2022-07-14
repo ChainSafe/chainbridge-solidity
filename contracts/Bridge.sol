@@ -18,7 +18,6 @@ import "./interfaces/IAccessControlSegregator.sol";
 contract Bridge is Pausable, Context {
     using ECDSA for bytes32;
 
-
     uint8   public immutable _domainID;
     address public _MPCAddress;
 

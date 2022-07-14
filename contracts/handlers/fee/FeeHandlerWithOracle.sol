@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     address public immutable _bridgeAddress;
+    address public immutable _feeHandlerRouterAddress;
 
     address public _oracleAddress;
 
@@ -41,11 +42,30 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         uint256 amount;
     }
 
+    modifier onlyAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
+        _;
+    }
+
+    modifier onlyBridgeOrRouter() {
+        _onlyBridgeOrRouter();
+        _;
+    }
+
+    function _onlyBridgeOrRouter() private view {
+        require(
+            msg.sender == _bridgeAddress || msg.sender == _feeHandlerRouterAddress,
+            "sender must be bridge or fee router contract"
+        );
+    }
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
+        @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress) public {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) public {
         _bridgeAddress = bridgeAddress;
+        _feeHandlerRouterAddress = feeHandlerRouterAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -56,7 +76,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @notice Only callable by an address that currently has the admin role.
         @param newAdmin Address that admin role will be granted to.
      */
-    function renounceAdmin(address newAdmin) external onlyAdmin {
+    function renounceAdmin(address newAdmin) external {
         address sender = _msgSender();
         require(sender != newAdmin, 'Cannot renounce oneself');
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
@@ -90,7 +110,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
         require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         lockERC20(tokenAddress, sender, address(this), fee);
@@ -188,19 +208,5 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal view {
         address signerAddressRecovered = ECDSA.recover(message, signature);
         require(signerAddressRecovered == signerAddress, 'Invalid signature');
-    }
-
-    modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
-        _;
-    }
-
-    modifier onlyBridge() {
-        _onlyBridge();
-        _;
-    }
-
-    function _onlyBridge() private view {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 }

@@ -49,7 +49,11 @@ contract Forwarder is EIP712 {
             abi.encodePacked(req.data, req.from)
         );
         
-        assert(gasleft() > req.gas / 63);
+        if (gasleft() <= req.gas / 63) {
+            assembly {
+                invalid()
+            }
+        }
 
         return (success, returndata);
     }

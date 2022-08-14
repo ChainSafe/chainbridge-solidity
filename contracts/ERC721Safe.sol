@@ -55,8 +55,9 @@ contract ERC721Safe {
         @param tokenAddress Address of ERC721 to burn.
         @param tokenID ID of token to burn.
      */
-    function burnERC721(address tokenAddress, uint256 tokenID) internal {
+    function burnERC721(address tokenAddress, address owner, uint256 tokenID) internal {
         ERC721MinterBurnerPauser erc721 = ERC721MinterBurnerPauser(tokenAddress);
+        require(erc721.ownerOf(tokenID) == owner, 'Burn not from owner');
         erc721.burn(tokenID);
     }
 

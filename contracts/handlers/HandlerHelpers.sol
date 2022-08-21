@@ -27,7 +27,7 @@ contract HandlerHelpers is IERCHandler {
         _onlyBridge();
         _;
     }
-    
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
@@ -42,9 +42,7 @@ contract HandlerHelpers is IERCHandler {
     }
 
     /**
-        @notice First verifies {_resourceIDToContractAddress}[{resourceID}] and
-        {_contractAddressToResourceID}[{contractAddress}] are not already set,
-        then sets {_resourceIDToContractAddress} with {contractAddress},
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID},
         and {_contractWhitelist} to true for {contractAddress}.
         @param resourceID ResourceID to be used when making deposits.

@@ -50,9 +50,7 @@ contract GenericHandler is IGenericHandler {
     }
 
     /**
-        @notice First verifies {_resourceIDToContractAddress}[{resourceID}] and
-        {_contractAddressToResourceID}[{contractAddress}] are not already set,
-        then sets {_resourceIDToContractAddress} with {contractAddress},
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID},
         {_contractAddressToDepositFunctionSignature} with {depositFunctionSig},
         {_contractAddressToDepositFunctionDepositerOffset} with {depositFunctionDepositerOffset},

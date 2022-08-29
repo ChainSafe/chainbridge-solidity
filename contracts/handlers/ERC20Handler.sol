@@ -22,7 +22,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of {amount} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         amount                                      uint256     bytes   0 - 32
@@ -34,7 +34,7 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
      */
     function deposit(
         bytes32 resourceID,
-        address depositer,
+        address depositor,
         bytes   calldata data
     ) external override onlyBridge returns (bytes memory) {
         uint256        amount;
@@ -44,9 +44,9 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
-            burnERC20(tokenAddress, depositer, amount);
+            burnERC20(tokenAddress, depositor, amount);
         } else {
-            lockERC20(tokenAddress, depositer, address(this), amount);
+            lockERC20(tokenAddress, depositor, address(this), amount);
         }
     }
 

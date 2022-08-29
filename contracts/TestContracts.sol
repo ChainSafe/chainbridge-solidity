@@ -35,11 +35,11 @@ contract ThreeArguments {
     }
 }
 
-contract WithDepositer {
-    event WithDepositerCalled(address argumentOne, uint256 argumentTwo);
+contract WithDepositor {
+    event WithDepositorCalled(address argumentOne, uint256 argumentTwo);
 
-    function withDepositer(address argumentOne, uint256 argumentTwo) external {
-        emit WithDepositerCalled(argumentOne, argumentTwo);
+    function withDepositor(address argumentOne, uint256 argumentTwo) external {
+        emit WithDepositorCalled(argumentOne, argumentTwo);
     }
 }
 

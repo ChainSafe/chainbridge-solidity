@@ -147,7 +147,7 @@ contract Bridge is Pausable, Context {
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositerOffset Depositer address position offset in the metadata, in bytes.
+        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
         @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
      */
     function adminSetGenericResource(
@@ -155,12 +155,12 @@ contract Bridge is Pausable, Context {
         bytes32 resourceID,
         address contractAddress,
         bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositerOffset,
+        uint256 depositFunctionDepositorOffset,
         bytes4 executeFunctionSig
     ) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IGenericHandler handler = IGenericHandler(handlerAddress);
-        handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
+        handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositorOffset, executeFunctionSig);
     }
 
     /**

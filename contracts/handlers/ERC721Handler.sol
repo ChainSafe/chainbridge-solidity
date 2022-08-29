@@ -29,7 +29,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of {tokenID} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         tokenID                                     uint256    bytes    0  - 32
@@ -44,7 +44,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         @return metaData : the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
     function deposit(bytes32    resourceID,
-                    address     depositer,
+                    address     depositor,
                     bytes       calldata data
                     ) external override onlyBridge returns (bytes memory metaData) {
         uint         tokenID;
@@ -61,9 +61,9 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         }
 
         if (_burnList[tokenAddress]) {
-            burnERC721(tokenAddress, depositer, tokenID);
+            burnERC721(tokenAddress, depositor, tokenID);
         } else {
-            lockERC721(tokenAddress, depositer, address(this), tokenID);
+            lockERC721(tokenAddress, depositor, address(this), tokenID);
         }
     }
 

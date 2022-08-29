@@ -25,10 +25,10 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of ABI-encoded arrays of tokenIDs and amounts.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
         uint[] memory tokenIDs;
         uint[] memory amounts;
 
@@ -38,9 +38,9 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         require(tokenAddress != address(0), "provided resourceID does not exist");
 
         if (_burnList[tokenAddress]) {
-            burnBatchERC1155(tokenAddress, depositer, tokenIDs, amounts);
+            burnBatchERC1155(tokenAddress, depositor, tokenIDs, amounts);
         } else {
-            lockBatchERC1155(tokenAddress, depositer, address(this), tokenIDs, amounts, EMPTY_BYTES);
+            lockBatchERC1155(tokenAddress, depositor, address(this), tokenIDs, amounts, EMPTY_BYTES);
         }
     }
 

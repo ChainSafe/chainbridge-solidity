@@ -14,7 +14,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const tokenAmount = 100;
     const feeData = '0x';
@@ -41,11 +41,11 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
-            ERC20MintableInstance.mint(depositerAddress, tokenAmount)
+            ERC20MintableInstance.mint(depositorAddress, tokenAmount)
         ]);
 
         await Promise.all([
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositorAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
         ]);
 
@@ -53,13 +53,13 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
-    it('[sanity] depositer owns tokenAmount of ERC20', async () => {
-        const depositerBalance = await ERC20MintableInstance.balanceOf(depositerAddress);
-        assert.equal(tokenAmount, depositerBalance);
+    it('[sanity] depositor owns tokenAmount of ERC20', async () => {
+        const depositorBalance = await ERC20MintableInstance.balanceOf(depositorAddress);
+        assert.equal(tokenAmount, depositorBalance);
     });
 
-    it('[sanity] ERC20HandlerInstance.address has an allowance of tokenAmount from depositerAddress', async () => {
-        const handlerAllowance = await ERC20MintableInstance.allowance(depositerAddress, ERC20HandlerInstance.address);
+    it('[sanity] ERC20HandlerInstance.address has an allowance of tokenAmount from depositorAddress', async () => {
+        const handlerAllowance = await ERC20MintableInstance.allowance(depositorAddress, ERC20HandlerInstance.address);
         assert.equal(tokenAmount, handlerAllowance);
     });
 
@@ -75,14 +75,14 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createERCDepositData(
                     tokenAmount,
                     lenRecipientAddress,
@@ -103,14 +103,14 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createERCDepositData(
                     tokenAmount,
                     lenRecipientAddress,
@@ -138,7 +138,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ), "ERC20: not a contract");
 
         await TruffleAssert.reverts(BridgeInstance.deposit(
@@ -149,7 +149,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
                 lenRecipientAddress,
                 recipientAddress),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ), "ERC20: not a contract");
     });
 });

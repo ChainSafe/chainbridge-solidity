@@ -17,7 +17,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     const expectedDepositNonce = 1;
     const feeData = '0x';
     const adminAddress = accounts[0]
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     let BridgeInstance;
     let GenericHandlerInstance;
@@ -25,7 +25,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
-    let initialDepositFunctionDepositerOffsets;
+    let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
 
     beforeEach(async () => {
@@ -38,13 +38,13 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
-        initialDepositFunctionDepositerOffsets = [Helpers.blankFunctionDepositerOffset];
+        initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
         initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store')];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]);
+        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]);
 
         depositData = Helpers.createGenericDepositData('0xdeadbeef');
 
@@ -89,6 +89,6 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     });
 
     it('Deposit destination domain can not be current bridge domain ', async () => {
-        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositorAddress }), "Can't deposit to current domain");
   });
 });

@@ -15,7 +15,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const adminAddress = accounts[0]
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
 
     const originChainInitialTokenAmount = 100;
@@ -40,9 +40,9 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
 
         await Promise.all([
             BridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, resourceID, OriginERC20MintableInstance.address),
-            OriginERC20MintableInstance.mint(depositerAddress, originChainInitialTokenAmount)
+            OriginERC20MintableInstance.mint(depositorAddress, originChainInitialTokenAmount)
         ]);
-        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositerAddress });
+        await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositorAddress });
 
         depositData = Helpers.createERCDepositData(
             depositAmount,
@@ -54,13 +54,13 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
-    it("[sanity] test depositerAddress' balance", async () => {
-        const originChainDepositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(originChainDepositerBalance.toNumber(), originChainInitialTokenAmount);
+    it("[sanity] test depositorAddress' balance", async () => {
+        const originChainDepositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
+        assert.strictEqual(originChainDepositorBalance.toNumber(), originChainInitialTokenAmount);
     });
 
     it("[sanity] test OriginERC20HandlerInstance.address' allowance", async () => {
-        const originChainHandlerAllowance = await OriginERC20MintableInstance.allowance(depositerAddress, OriginERC20HandlerInstance.address);
+        const originChainHandlerAllowance = await OriginERC20MintableInstance.allowance(depositorAddress, OriginERC20HandlerInstance.address);
         assert.strictEqual(originChainHandlerAllowance.toNumber(), depositAmount * 2);
     });
 
@@ -70,7 +70,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
     });
 
@@ -80,7 +80,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         const depositCount = await BridgeInstance._depositCounts.call(destinationDomainID);
@@ -93,11 +93,11 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
-        const originChainDepositerBalance = await OriginERC20MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(originChainDepositerBalance.toNumber(), originChainInitialTokenAmount - depositAmount);
+        const originChainDepositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
+        assert.strictEqual(originChainDepositorBalance.toNumber(), originChainInitialTokenAmount - depositAmount);
 
         const originChainHandlerBalance = await OriginERC20MintableInstance.balanceOf(OriginERC20HandlerInstance.address);
         assert.strictEqual(originChainHandlerBalance.toNumber(), depositAmount);
@@ -109,7 +109,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
@@ -123,7 +123,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
@@ -134,10 +134,10 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     });
 
     it('deposit requires resourceID that is mapped to a handler', async () => {
-        await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "resourceID not mapped to handler");
+        await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositorAddress }), "resourceID not mapped to handler");
     });
 
     it('Deposit destination domain can not be current bridge domain ', async () => {
-        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositorAddress }), "Can't deposit to current domain");
     });
 });

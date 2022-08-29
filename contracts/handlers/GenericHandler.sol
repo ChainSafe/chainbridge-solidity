@@ -74,7 +74,7 @@ contract GenericHandler is IGenericHandler {
     }
 
     /**
-        @notice A deposit is initiatied by making a deposit in the Bridge contract.
+        @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of contract to be used for deposit.
         @param depositer Address of the account making deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
@@ -119,6 +119,7 @@ contract GenericHandler is IGenericHandler {
 
     /**
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
+        @param resourceID ResourceID to be used when making deposits.
         @param data Consists of {resourceID}, {lenMetaData}, and {metaData}.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32

@@ -7,7 +7,7 @@ pragma solidity 0.8.11;
  */
 interface IGenericHandler {
     /**
-        @notice Correlates {resourceID} with {contractAddress}, {depositFunctionSig}, and {executeFunctionSig}.
+        @notice Correlates {resourceID} with {contractAddress}, {depositFunctionSig}, {depositFunctionDepositerOffset}, and {executeFunctionSig}.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.

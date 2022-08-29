@@ -146,6 +146,9 @@ contract Bridge is Pausable, Context {
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
+        @param depositFunctionDepositerOffset Depositer address position offset in the metadata, in bytes.
+        @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
      */
     function adminSetGenericResource(
         address handlerAddress,

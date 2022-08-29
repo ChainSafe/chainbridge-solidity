@@ -94,7 +94,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     /**
         @notice Sets the fee properties.
         @param gasUsed Gas used for transfer.
-        @param feePercent Added to fee amount. total fee = fee + fee * feePercent
+        @param feePercent Added to fee amount. total fee = fee_from_oracle.amount * feePercent / 1e4
      */
     function setFeeProperties(uint32 gasUsed, uint16 feePercent) external onlyAdmin {
         _gasUsed = gasUsed;

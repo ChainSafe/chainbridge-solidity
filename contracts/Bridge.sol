@@ -277,6 +277,9 @@ contract Bridge is Pausable, Context {
         @param data Data originally provided when deposit was made.
         @param signature bytes memory signature composed of MPC key shares
         @notice Emits {ProposalExecution} event.
+        @notice Behaviour of this function is different for {GenericHandler} and other specific ERC handlers.
+        In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
+        In the case of {GenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
     function executeProposal(uint8 originDomainID, uint64 depositNonce, bytes calldata data, bytes32 resourceID, bytes calldata signature) public whenNotPaused {
         require(isProposalExecuted(originDomainID, depositNonce) != true, "Deposit with provided nonce already executed");
@@ -306,6 +309,9 @@ contract Bridge is Pausable, Context {
         - data Data originally provided when deposit was made.
         @param signature bytes memory signature for the whole array composed of MPC key shares
         @notice Emits {ProposalExecution} event for each proposal in the batch.
+        @notice Behaviour of this function is different for {GenericHandler} and other specific ERC handlers.
+        In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
+        In the case of {GenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
     function executeProposals(Proposal[] memory proposals, bytes memory signature) public whenNotPaused {
         require(proposals.length > 0, "Proposals can't be an empty array");
@@ -376,6 +382,7 @@ contract Bridge is Pausable, Context {
     /**
         @notice This method is used to trigger the process for retrying failed deposits on the MPC side.
         @param txHash Transaction hash which contains deposit that should be retried
+        @notice This is not applicable for failed executions on {GenericHandler}
      */
     function retry(string memory txHash) external {
         emit Retry(txHash);

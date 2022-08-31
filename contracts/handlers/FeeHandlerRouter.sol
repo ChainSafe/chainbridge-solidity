@@ -59,6 +59,7 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     /**
         @notice Initiates collecting fee with corresponding fee handler contract using IFeeHandler interface.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
@@ -72,6 +73,7 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
      /**
         @notice Initiates calculating fee with corresponding fee handler contract using IFeeHandler interface.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.

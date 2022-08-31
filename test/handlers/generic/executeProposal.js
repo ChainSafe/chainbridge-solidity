@@ -19,7 +19,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     const relayer1Address = accounts[2];
     const relayer2Address = accounts[3];
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const centrifugeAssetMinCount = 10;
     const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
@@ -30,7 +30,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
-    let initialDepositFunctionDepositerOffsets;
+    let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
     let GenericHandlerInstance;
     let resourceID;
@@ -48,13 +48,13 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         initialResourceIDs = [resourceID];
         initialContractAddresses = [CentrifugeAssetInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
-        initialDepositFunctionDepositerOffsets = [Helpers.blankFunctionDepositerOffset];
+        initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
         initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]);
+        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]);
 
         depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
@@ -71,7 +71,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
 
         // relayer1 executes the proposal
@@ -97,7 +97,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
 
         // relayer1 executes the proposal

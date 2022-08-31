@@ -57,6 +57,7 @@ interface IFeeHandler {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
         @return Returns the fee amount.
+        @return Returns the address of the token to be used for fee.
      */
     function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256, address);
 }

@@ -15,7 +15,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const tokenID = 1;
     const tokenAmount = 100;
@@ -44,11 +44,11 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
 
         await Promise.all([
             ERC1155HandlerContract.new(BridgeInstance.address).then(instance => ERC1155HandlerInstance = instance),
-            ERC1155MintableInstance.mintBatch(depositerAddress, [tokenID], [tokenAmount], "0x0")
+            ERC1155MintableInstance.mintBatch(depositorAddress, [tokenID], [tokenAmount], "0x0")
         ]);
 
         await Promise.all([
-            ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress }),
+            ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositorAddress }),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID, ERC1155MintableInstance.address)
         ]);
 
@@ -58,9 +58,9 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
-    it('[sanity] depositer owns tokenAmount of tokenID', async () => {
-        const depositerBalance = await ERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
-        assert.equal(tokenAmount, depositerBalance);
+    it('[sanity] depositor owns tokenAmount of tokenID', async () => {
+        const depositorBalance = await ERC1155MintableInstance.balanceOf(depositorAddress, tokenID);
+        assert.equal(tokenAmount, depositorBalance);
     });
 
     it('Deposit event is emitted with expected values', async () => {
@@ -69,7 +69,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
             resourceID,
             depositData,
             feeData,
-            {from: depositerAddress}
+            {from: depositorAddress}
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {

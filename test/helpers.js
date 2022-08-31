@@ -4,6 +4,7 @@
  */
 
  const Ethers = require('ethers');
+ const ethSigUtil = require('eth-sig-util');
 
  const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
  const BridgeContract = artifacts.require("Bridge");
@@ -174,48 +175,6 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
     return oracleMessage + rawSignature.substr(2) + toHex(amount, 32).substr(2);
 }
 
-
-const signDataWithMpc = async (originDomainID, destinationDomainID, depositNonce, depositData, resourceID) => {
-  const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
-
-  const messageHash = Ethers.utils.keccak256(
-    Ethers.utils.defaultAbiCoder.encode(
-      ['uint8', 'uint8', 'uint64', 'bytes', 'bytes32'],
-      [originDomainID, destinationDomainID, depositNonce, depositData, resourceID]
-    )
-  );
-
-  const signature = signingKey.signDigest(messageHash)
-  const rawSignature = Ethers.utils.joinSignature(signature)
-  return rawSignature
-}
-
-const signArrayOfDataWithMpc = async (proposals, destinationDomainID) => {
-  const signingKey = new Ethers.utils.SigningKey(mpcPrivateKey)
-
-  const messageHash = Ethers.utils.keccak256(
-    Ethers.utils.defaultAbiCoder.encode(
-      [{
-        type: "tuple[]",
-        name: "proposals",
-        components: [
-          { name: "originDomainID", type: 'uint8' },
-          { name: "depositNonce", type: 'uint64' },
-          { name: "resourceID", type: 'bytes32'},
-          { name: "data", type: 'bytes'}
-        ]
-      },
-      'uint8'
-      ],
-      [proposals, destinationDomainID]
-    )
-  );
-
-  const signature = signingKey.signDigest(messageHash)
-  const rawSignature = Ethers.utils.joinSignature(signature)
-  return rawSignature
-}
-
 const decimalToPaddedBinary = (decimal) => {
   return decimal.toString(2).padStart(64,'0');
 }
@@ -243,6 +202,98 @@ const deployBridge = async (domainID, admin) => {
     return await BridgeContract.new(domainID, accessControlInstance.address);
 }
 
+const signTypedProposal = async (bridgeAddress, proposals) => {
+
+  const name = "Bridge";
+  const version = "3.1.0";
+
+  const EIP712Domain = [
+    { name: 'name' ,type: 'string' },
+    { name: 'version' ,type: 'string' },
+    { name: 'chainId' ,type: 'uint256' },
+    { name: 'verifyingContract' ,type: 'address' },
+  ];
+
+  const types = {
+    EIP712Domain: EIP712Domain,
+    Proposal: [
+      { name: 'originDomainID', type: 'uint8' },
+      { name: 'depositNonce', type: 'uint64' },
+      { name: 'resourceID', type: 'bytes32' },
+      { name: 'data', type: 'bytes' },
+    ],
+    Proposals: [
+      { name: 'proposals', type: "Proposal[]"}
+    ]
+  };
+
+
+  return ethSigUtil.signTypedMessage(
+    Ethers.utils.arrayify(mpcPrivateKey),
+    {
+      data: {
+        types: types,
+        domain: {
+          name,
+          version,
+          chainId: 1,
+          verifyingContract: bridgeAddress,
+        },
+        primaryType: 'Proposals',
+        message: {
+          proposals: proposals
+        }
+      }
+    }
+  )
+}
+
+const mockSignTypedProposalWithInvalidChainID = async (bridgeAddress, proposals) => {
+
+  const name = "Bridge";
+  const version = "3.1.0";
+
+  const EIP712Domain = [
+    { name: 'name' ,type: 'string' },
+    { name: 'version' ,type: 'string' },
+    { name: 'chainId' ,type: 'uint256' },
+    { name: 'verifyingContract' ,type: 'address' },
+  ];
+
+  const types = {
+    EIP712Domain: EIP712Domain,
+    Proposal: [
+      { name: 'originDomainID', type: 'uint8' },
+      { name: 'depositNonce', type: 'uint64' },
+      { name: 'resourceID', type: 'bytes32' },
+      { name: 'data', type: 'bytes' },
+    ],
+    Proposals: [
+      { name: 'proposals', type: "Proposal[]"}
+    ]
+  };
+
+
+  return ethSigUtil.signTypedMessage(
+    Ethers.utils.arrayify(mpcPrivateKey),
+    {
+      data: {
+        types: types,
+        domain: {
+          name,
+          version,
+          chainId: 3,
+          verifyingContract: bridgeAddress,
+        },
+        primaryType: 'Proposals',
+        message: {
+          proposals: proposals
+        }
+      }
+    }
+  )
+}
+
 module.exports = {
     advanceBlock,
     advanceTime,
@@ -265,8 +316,8 @@ module.exports = {
     assertObjectsMatch,
     nonceAndId,
     createOracleFeeData,
-    signDataWithMpc,
-    signArrayOfDataWithMpc,
     decimalToPaddedBinary,
-    deployBridge
+    deployBridge,
+    signTypedProposal,
+    mockSignTypedProposalWithInvalidChainID
 };

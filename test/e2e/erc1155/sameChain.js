@@ -33,6 +33,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
     let resourceID;
     let depositData;
     let proposalData;
+    let proposal;
 
     beforeEach(async () => {
         await Promise.all([
@@ -57,6 +58,13 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
         depositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
         proposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x");
 
+        proposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: proposalData,
+          resourceID: resourceID
+        };
+
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
@@ -67,7 +75,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
     });
 
     it("depositAmount of Destination ERC1155 should be transferred to recipientAddress", async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, proposalData, resourceID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
         // depositerAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
@@ -84,10 +92,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
 
         // relayer1 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            proposalData,
-            resourceID,
+            proposal,
             proposalSignedData,
             { from: relayer1Address }
         ));

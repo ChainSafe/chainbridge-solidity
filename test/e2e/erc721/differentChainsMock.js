@@ -38,6 +38,9 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     let destinationResourceID;
     let destinationBurnableContractAddresses;
 
+    let originDomainProposal;
+    let destinationDomainProposal;
+
     beforeEach(async () => {
         await Promise.all([
             OriginBridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress),
@@ -80,6 +83,20 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         destinationDepositProposalData = Helpers.createERC721DepositProposalData(tokenID, 20, depositerAddress, 32, 0)
         destinationDepositProposalDataHash = Ethers.utils.keccak256(OriginERC721HandlerInstance.address + destinationDepositProposalData.substr(2));
 
+        originDomainProposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: originDepositProposalData,
+          resourceID: destinationResourceID
+        };
+
+        destinationDomainProposal = {
+          originDomainID: destinationDomainID,
+          depositNonce: expectedDepositNonce,
+          data: destinationDepositProposalData,
+          resourceID: originResourceID
+        };
+
         // set MPC address to unpause the Bridge
         await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
         await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -101,9 +118,9 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     });
 
     it("E2E: tokenID of Origin ERC721 owned by depositAddress to Destination ERC721 owned by recipientAddress and back again", async () => {
-        // when signing data, first param is domain from where deposit originated and second is destination
-        const originProposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, originDepositProposalData, destinationResourceID);
-        const destinationProposalSignedData = await Helpers.signDataWithMpc(destinationDomainID, originDomainID, expectedDepositNonce, destinationDepositProposalData, originResourceID);
+      const originProposalSignedData = await Helpers.signTypedProposal(DestinationBridgeInstance.address, [originDomainProposal]);
+      const destinationProposalSignedData = await Helpers.signTypedProposal(OriginBridgeInstance.address, [destinationDomainProposal]);
+
 
         let tokenOwner;
 
@@ -122,10 +139,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
         // destinationRelayer2 executes the proposal
         await TruffleAssert.passes(DestinationBridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            originDepositProposalData,
-            destinationResourceID,
+            originDomainProposal,
             originProposalSignedData,
             { from: destinationRelayer1Address }
         ));
@@ -159,10 +173,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
 
         // originRelayer executes the proposal
         await TruffleAssert.passes(OriginBridgeInstance.executeProposal(
-            destinationDomainID,
-            expectedDepositNonce,
-            destinationDepositProposalData,
-            originResourceID,
+            destinationDomainProposal,
             destinationProposalSignedData,
             { from: originRelayer1Address }
         ));

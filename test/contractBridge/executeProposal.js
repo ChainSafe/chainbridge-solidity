@@ -39,6 +39,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
 
     let data = '';
     let dataHash = '';
+    let proposal;
 
     beforeEach(async () => {
         await Promise.all([
@@ -71,6 +72,13 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
 
+        proposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          resourceID: resourceID,
+          data: depositProposalData
+        };
+
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
@@ -79,10 +87,10 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         const destinationDomainID = await BridgeInstance._domainID();
 
         assert.isFalse(await BridgeInstance.isProposalExecuted(destinationDomainID, expectedDepositNonce));
-    });
+      });
 
-    it('should create and execute executeProposal successfully', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+      it('should create and execute executeProposal successfully', async () => {
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -95,12 +103,9 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         ));
 
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            depositProposalData,
-            resourceID,
-            proposalSignedData,
-            { from: relayer1Address }
+          proposal,
+          proposalSignedData,
+          { from: relayer1Address }
         ));
 
         // check that deposit nonce has been marked as used in bitmap
@@ -112,7 +117,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
     });
 
     it('should fail to executeProposal if deposit nonce is already used', async () => {
-      const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+      const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
       // depositerAddress makes initial deposit of depositAmount
       assert.isFalse(await BridgeInstance.paused());
@@ -125,26 +130,20 @@ contract('Bridge - [execute proposal]', async (accounts) => {
       ));
 
       await TruffleAssert.passes(BridgeInstance.executeProposal(
-        originDomainID,
-        expectedDepositNonce,
-        depositProposalData,
-        resourceID,
+        proposal,
         proposalSignedData,
         { from: relayer1Address }
     ));
 
       await TruffleAssert.reverts(BridgeInstance.executeProposal(
-          originDomainID,
-          expectedDepositNonce,
-          depositProposalData,
-          resourceID,
-          proposalSignedData,
-          { from: relayer1Address }
+      proposal,
+      proposalSignedData,
+      { from: relayer1Address }
       ), "Deposit with provided nonce already executed");
     });
 
     it('executeProposal event should be emitted with expected values', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -157,13 +156,10 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         ));
 
         const proposalTx = await BridgeInstance.executeProposal(
-          originDomainID,
-          expectedDepositNonce,
-          depositProposalData,
-          resourceID,
+          proposal,
           proposalSignedData,
-            { from: relayer1Address }
-        );
+          { from: relayer1Address }
+      );
 
         TruffleAssert.eventEmitted(proposalTx, 'ProposalExecution', (event) => {
             return event.originDomainID.toNumber() === originDomainID &&
@@ -179,8 +175,8 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
     });
 
-    it('should fail to executeProposal if signed destinationDomainID in not the domain on which proposal should be executed', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, invalidDestinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+    it('should fail to executeProposal if signed Proposal has different chainID than the one on which it should be executed', async () => {
+        const proposalSignedData = await Helpers.mockSignTypedProposalWithInvalidChainID(BridgeInstance.address, [proposal]);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -193,12 +189,9 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         ));
 
         await TruffleAssert.reverts(BridgeInstance.executeProposal(
-          originDomainID,
-          expectedDepositNonce,
-          depositProposalData,
-          resourceID,
+          proposal,
           proposalSignedData,
           { from: relayer1Address }
-      ), "Invalid message signer");
+      ), "Invalid proposal signer");
     });
 });

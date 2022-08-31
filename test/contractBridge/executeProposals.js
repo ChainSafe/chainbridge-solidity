@@ -126,7 +126,7 @@
   });
 
     it('should create and execute executeProposal successfully', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -180,7 +180,7 @@
     });
 
     it('should skip executing proposal if deposit nonce is already used', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -245,7 +245,7 @@
     });
 
     it('should fail executing proposals if empty array is passed for execution', async () => {
-      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
+      const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, proposalsForExecution);
 
       await TruffleAssert.reverts(BridgeInstance.executeProposals(
         [],
@@ -255,7 +255,7 @@
     });
 
     it('executeProposal event should be emitted with expected values', async () => {
-        const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, destinationDomainID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, proposalsForExecution);
 
         // depositerAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -322,8 +322,8 @@
         assert.strictEqual(recipientERC1155Balance.toNumber(), depositAmount);
     });
 
-    it('should fail to executeProposals if signed destinationDomainID in not the domain on which proposal should be executed', async () => {
-      const proposalSignedData = await Helpers.signArrayOfDataWithMpc(proposalsForExecution, invalidDestinationDomainID);
+    it('should fail to executeProposals if signed Proposal has different chainID than the one on which it should be executed', async () => {
+      const proposalSignedData = await Helpers.mockSignTypedProposalWithInvalidChainID(BridgeInstance.address, proposalsForExecution);
 
       // depositerAddress makes initial deposit of depositAmount
       assert.isFalse(await BridgeInstance.paused());
@@ -355,6 +355,6 @@
           proposalsForExecution,
           proposalSignedData,
           { from: relayer1Address }
-      ), "Invalid message signer");
+      ), "Invalid proposal signer");
     });
 });

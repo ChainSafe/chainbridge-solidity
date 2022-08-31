@@ -55,10 +55,8 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         @param resourceID ResourceID to be used when making deposits.
         @param data Consists of ABI-encoded {tokenIDs}, {amounts}, {recipient},
         and {transferData} of types uint[], uint[], bytes, bytes.
-        @notice Data passed into the function should be constructed as follows:
-        tokenIDs                        length      uint256    bytes
+        @notice Data passed into the function should be constructed as ABI encoding of:
         tokenIDs                                    uint256[]  bytes
-        amounts                         length      uint256    bytes
         amounts                                     uint256[]  bytes
         destinationRecipientAddress                   bytes    bytes
         transferData                                  bytes    bytes

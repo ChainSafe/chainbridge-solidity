@@ -27,10 +27,8 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of ABI-encoded arrays of tokenIDs and amounts.
-        @notice Data passed into the function should be constructed as follows:
-        tokenIDs                        length      uint256    bytes
+        @notice Data passed into the function should be constructed as ABI encoding of:
         tokenIDs                                    uint256[]  bytes
-        amounts                         length      uint256    bytes
         amounts                                     uint256[]  bytes
         destinationRecipientAddress                   bytes    bytes
         transferData                                  bytes    bytes

@@ -14,14 +14,14 @@ const NoArgumentContract = artifacts.require("NoArgument");
 const OneArgumentContract = artifacts.require("OneArgument");
 const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
-const WithDepositerContract = artifacts.require("WithDepositer");
+const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
 contract('GenericHandler - [deposit]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const feeData = '0x';
 
@@ -31,13 +31,13 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     let OneArgumentInstance;
     let TwoArgumentsInstance;
     let ThreeArgumentsInstance;
-    let WithDepositerInstance;
+    let WithDepositorInstance;
     let ReturnDataInstance;
 
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
-    let initialDepositFunctionDepositerOffsets;
+    let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
     let GenericHandlerInstance;
     let depositData
@@ -50,7 +50,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             OneArgumentContract.new().then(instance => OneArgumentInstance = instance),
             TwoArgumentsContract.new().then(instance => TwoArgumentsInstance = instance),
             ThreeArgumentsContract.new().then(instance => ThreeArgumentsInstance = instance),
-            WithDepositerContract.new().then(instance => WithDepositerInstance = instance),
+            WithDepositorContract.new().then(instance => WithDepositorInstance = instance),
             ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
         initialResourceIDs = [
@@ -59,7 +59,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.createResourceID(OneArgumentInstance.address, originDomainID),
             Helpers.createResourceID(TwoArgumentsInstance.address, originDomainID),
             Helpers.createResourceID(ThreeArgumentsInstance.address, originDomainID),
-            Helpers.createResourceID(WithDepositerInstance.address, originDomainID),
+            Helpers.createResourceID(WithDepositorInstance.address, originDomainID),
             Helpers.createResourceID(ReturnDataInstance.address, originDomainID),
         ];
         initialContractAddresses = [
@@ -68,7 +68,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             OneArgumentInstance.address,
             TwoArgumentsInstance.address,
             ThreeArgumentsInstance.address,
-            WithDepositerInstance.address,
+            WithDepositorInstance.address,
             ReturnDataInstance.address,
         ];
         initialDepositFunctionSignatures = [
@@ -77,17 +77,17 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'),
             Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'),
             Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments'),
-            Helpers.getFunctionSignature(WithDepositerInstance, 'withDepositer'),
+            Helpers.getFunctionSignature(WithDepositorInstance, 'withDepositor'),
             Helpers.getFunctionSignature(ReturnDataInstance, 'returnData'),
         ];
-        initialDepositFunctionDepositerOffsets = [
-            Helpers.blankFunctionDepositerOffset,
-            Helpers.blankFunctionDepositerOffset,
-            Helpers.blankFunctionDepositerOffset,
-            Helpers.blankFunctionDepositerOffset,
-            Helpers.blankFunctionDepositerOffset,
+        initialDepositFunctionDepositorOffsets = [
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionDepositorOffset,
             12,
-            Helpers.blankFunctionDepositerOffset,
+            Helpers.blankFunctionDepositorOffset,
         ];
         initialExecuteFunctionSignatures = [
             Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store'),
@@ -103,13 +103,13 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             BridgeInstance.address);
 
         await Promise.all([
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositerOffsets[0], initialExecuteFunctionSignatures[0]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], initialDepositFunctionSignatures[1], initialDepositFunctionDepositerOffsets[1], initialExecuteFunctionSignatures[1]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], initialDepositFunctionSignatures[2], initialDepositFunctionDepositerOffsets[2], initialExecuteFunctionSignatures[2]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialDepositFunctionDepositerOffsets[3], initialExecuteFunctionSignatures[3]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialDepositFunctionDepositerOffsets[4], initialExecuteFunctionSignatures[4]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], initialDepositFunctionSignatures[5], initialDepositFunctionDepositerOffsets[5], initialExecuteFunctionSignatures[5]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[6], initialContractAddresses[6], initialDepositFunctionSignatures[6], initialDepositFunctionDepositerOffsets[6], initialExecuteFunctionSignatures[6])
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], initialDepositFunctionSignatures[1], initialDepositFunctionDepositorOffsets[1], initialExecuteFunctionSignatures[1]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], initialDepositFunctionSignatures[2], initialDepositFunctionDepositorOffsets[2], initialExecuteFunctionSignatures[2]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialDepositFunctionDepositorOffsets[3], initialExecuteFunctionSignatures[3]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialDepositFunctionDepositorOffsets[4], initialExecuteFunctionSignatures[4]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], initialDepositFunctionSignatures[5], initialDepositFunctionDepositorOffsets[5], initialExecuteFunctionSignatures[5]),
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[6], initialContractAddresses[6], initialDepositFunctionSignatures[6], initialDepositFunctionDepositorOffsets[6], initialExecuteFunctionSignatures[6])
         ]);
 
         depositData = Helpers.createGenericDepositData('0xdeadbeef');
@@ -124,7 +124,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[0],
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
     });
 
@@ -134,14 +134,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[0],
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[0].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === depositData &&
                 event.handlerResponse === null
         });
@@ -153,14 +153,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[1],
             Helpers.createGenericDepositData(null),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[1].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(null) &&
                 event.handlerResponse === null
         });
@@ -177,14 +177,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[2],
             Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[2].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)) &&
                 event.handlerResponse === null
         });
@@ -203,14 +203,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[3],
             Helpers.createGenericDepositData(encodedMetaData),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[3].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
@@ -233,14 +233,14 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[4],
             Helpers.createGenericDepositData(encodedMetaData),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[4].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
@@ -252,8 +252,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             event.argumentThree === argumentThree);
     });
 
-    it('withDepositer can be called successfully and deposit event is emitted with expected values', async () => {
-        const argumentOne = depositerAddress;
+    it('withDepositor can be called successfully and deposit event is emitted with expected values', async () => {
+        const argumentOne = depositorAddress;
         const argumentTwo = 100;
         const encodedMetaData = Helpers.abiEncode(['address','uint256'], [argumentOne, argumentTwo]);
 
@@ -262,27 +262,27 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[5],
             Helpers.createGenericDepositData(encodedMetaData),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[5].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
 
-        const internalTx = await TruffleAssert.createTransactionResult(WithDepositerInstance, depositTx.tx);
-        TruffleAssert.eventEmitted(internalTx, 'WithDepositerCalled', event =>
+        const internalTx = await TruffleAssert.createTransactionResult(WithDepositorInstance, depositTx.tx);
+        TruffleAssert.eventEmitted(internalTx, 'WithDepositorCalled', event =>
             event.argumentOne === argumentOne &&
             event.argumentTwo.toNumber() === argumentTwo);
     });
 
-    it('depositer is enforced in the metadata', async () => {
-        const anotherDepositer = accounts[2];
-        const argumentOne = anotherDepositer;
+    it('depositor is enforced in the metadata', async () => {
+        const anotherDepositor = accounts[2];
+        const argumentOne = anotherDepositor;
         const argumentTwo = 100;
         const encodedMetaData = Helpers.abiEncode(['address','uint256'], [argumentOne, argumentTwo]);
 
@@ -291,8 +291,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[5],
             Helpers.createGenericDepositData(encodedMetaData),
             feeData,
-            { from: depositerAddress }
-        ), 'incorrect depositer in the data');
+            { from: depositorAddress }
+        ), 'incorrect depositor in the data');
     });
 
     it('returnedData can be called successfully and deposit event is emitted with expect values', async () => {
@@ -304,7 +304,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             initialResourceIDs[6],
             Helpers.createGenericDepositData(encodedMetaData),
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         const expectedMetaData = Ethers.utils.formatBytes32String(argument);
@@ -313,7 +313,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === initialResourceIDs[6].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === Helpers.createGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === expectedMetaData
         });

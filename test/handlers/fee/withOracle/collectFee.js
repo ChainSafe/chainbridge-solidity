@@ -20,7 +20,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
     const recipientAddress = accounts[2];
     const tokenAmount = Ethers.utils.parseEther("1");
     const fee = Ethers.utils.parseEther("0.05");
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const gasUsed = 100000;
     const feePercent = 500;
@@ -74,9 +74,9 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
 
         await Promise.all([
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
-            ERC20MintableInstance.mint(depositerAddress, tokenAmount + fee),
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
-            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, fee, { from: depositerAddress }),
+            ERC20MintableInstance.mint(depositorAddress, tokenAmount + fee),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositorAddress }),
+            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, fee, { from: depositorAddress }),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address),
         ]);
@@ -109,7 +109,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             );
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
@@ -118,7 +118,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(FeeHandlerWithOracleInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&
@@ -148,7 +148,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             ),
@@ -169,7 +169,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
-        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
+        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositorAddress });
         await TruffleAssert.reverts(
             BridgeInstance.deposit(
                 destinationDomainID,
@@ -177,7 +177,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             )
@@ -197,17 +197,17 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
-        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
+        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositorAddress });
         await TruffleAssert.reverts(
             FeeHandlerWithOracleInstance.collectFee(
-                depositerAddress,
+                depositorAddress,
                 originDomainID,
                 destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             ),
@@ -228,17 +228,17 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         };
 
         const feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
-        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositerAddress });
+        await ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, 0, { from: depositorAddress });
         await TruffleAssert.reverts(
             FeeHandlerRouterInstance.collectFee(
-                depositerAddress,
+                depositorAddress,
                 originDomainID,
                 destinationDomainID,
                 resourceID,
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
             ),
@@ -269,7 +269,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             );
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
@@ -278,7 +278,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async accounts => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(FeeHandlerWithOracleInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === resourceID.toLowerCase() &&

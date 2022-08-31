@@ -15,7 +15,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const adminAddress = accounts[0]
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
 
     const originChainTokenID = 42;
@@ -45,10 +45,10 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
 
         await Promise.all([
             BridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
-            OriginERC721MintableInstance.mint(depositerAddress, originChainTokenID, genericBytes)
+            OriginERC721MintableInstance.mint(depositorAddress, originChainTokenID, genericBytes)
         ]);
 
-        await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositerAddress });
+        await OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, originChainTokenID, { from: depositorAddress });
 
         depositData = Helpers.createERCDepositData(
             originChainTokenID,
@@ -59,14 +59,14 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
-    it("[sanity] test depositerAddress' balance", async () => {
-        const originChainDepositerBalance = await OriginERC721MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(originChainDepositerBalance.toNumber(), 1);
+    it("[sanity] test depositorAddress' balance", async () => {
+        const originChainDepositorBalance = await OriginERC721MintableInstance.balanceOf(depositorAddress);
+        assert.strictEqual(originChainDepositorBalance.toNumber(), 1);
     });
 
-    it(`[sanity] test depositerAddress owns token with ID: ${originChainTokenID}`, async () => {
+    it(`[sanity] test depositorAddress owns token with ID: ${originChainTokenID}`, async () => {
         const tokenOwner = await OriginERC721MintableInstance.ownerOf(originChainTokenID);
-        assert.strictEqual(tokenOwner, depositerAddress);
+        assert.strictEqual(tokenOwner, depositorAddress);
     });
 
     it("[sanity] test OriginERC721HandlerInstance.address' allowance", async () => {
@@ -80,7 +80,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             originResourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         )
     });
 
@@ -90,7 +90,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             originResourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         const depositCount = await BridgeInstance._depositCounts.call(destinationDomainID);
@@ -103,14 +103,14 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             originResourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         const tokenOwner = await OriginERC721MintableInstance.ownerOf(originChainTokenID);
         assert.strictEqual(tokenOwner, OriginERC721HandlerInstance.address);
 
-        const originChainDepositerBalance = await OriginERC721MintableInstance.balanceOf(depositerAddress);
-        assert.strictEqual(originChainDepositerBalance.toNumber(), 0);
+        const originChainDepositorBalance = await OriginERC721MintableInstance.balanceOf(depositorAddress);
+        assert.strictEqual(originChainDepositorBalance.toNumber(), 0);
 
         const originChainHandlerBalance = await OriginERC721MintableInstance.balanceOf(OriginERC721HandlerInstance.address);
         assert.strictEqual(originChainHandlerBalance.toNumber(), 1);
@@ -122,7 +122,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             originResourceID,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         let expectedMetaData = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(genericBytes));
@@ -132,13 +132,13 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === originResourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
-                event.user === depositerAddress &&
+                event.user === depositorAddress &&
                 event.data === depositData.toLowerCase() &&
                 event.handlerResponse === expectedMetaData
         });
     });
 
     it('Deposit destination domain can not be current bridge domain ', async () => {
-        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "Can't deposit to current domain");
+        await TruffleAssert.reverts(BridgeInstance.deposit(originDomainID, '0x0', depositData, feeData, { from: depositorAddress }), "Can't deposit to current domain");
   });
 });

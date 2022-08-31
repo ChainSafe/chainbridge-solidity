@@ -10,7 +10,7 @@
  const BridgeContract = artifacts.require("Bridge");
 
  const blankFunctionSig = '0x00000000';
- const blankFunctionDepositerOffset = 0;
+ const blankFunctionDepositorOffset = 0;
  const AbiCoder = new Ethers.utils.AbiCoder;
  const mpcAddress = "0x1Ad4b1efE3Bc6FEE085e995FCF48219430e615C3";
  const mpcPrivateKey= "0x497b6ae580cb1b0238f8b6b543fada697bc6f8768a983281e5e52a1a5bca4d58"
@@ -298,7 +298,7 @@ module.exports = {
     advanceBlock,
     advanceTime,
     blankFunctionSig,
-    blankFunctionDepositerOffset,
+    blankFunctionDepositorOffset,
     mpcAddress,
     mpcPrivateKey,
     toHex,

@@ -23,12 +23,17 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
     }
 
     /**
-        @notice A deposit is initiatied by making a deposit in the Bridge contract.
+        @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
-        @param depositer Address of account making the deposit in the Bridge contract.
+        @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of ABI-encoded arrays of tokenIDs and amounts.
+        @notice Data passed into the function should be constructed as ABI encoding of:
+        tokenIDs                                    uint256[]  bytes
+        amounts                                     uint256[]  bytes
+        destinationRecipientAddress                   bytes    bytes
+        transferData                                  bytes    bytes
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
         uint[] memory tokenIDs;
         uint[] memory amounts;
 
@@ -38,17 +43,23 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         require(tokenAddress != address(0), "provided resourceID does not exist");
 
         if (_burnList[tokenAddress]) {
-            burnBatchERC1155(tokenAddress, depositer, tokenIDs, amounts);
+            burnBatchERC1155(tokenAddress, depositor, tokenIDs, amounts);
         } else {
-            lockBatchERC1155(tokenAddress, depositer, address(this), tokenIDs, amounts, EMPTY_BYTES);
+            lockBatchERC1155(tokenAddress, depositor, address(this), tokenIDs, amounts, EMPTY_BYTES);
         }
     }
 
     /**
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         by a relayer on the deposit's destination chain.
+        @param resourceID ResourceID to be used when making deposits.
         @param data Consists of ABI-encoded {tokenIDs}, {amounts}, {recipient},
         and {transferData} of types uint[], uint[], bytes, bytes.
+        @notice Data passed into the function should be constructed as ABI encoding of:
+        tokenIDs                                    uint256[]  bytes
+        amounts                                     uint256[]  bytes
+        destinationRecipientAddress                   bytes    bytes
+        transferData                                  bytes    bytes
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
         uint[] memory tokenIDs;

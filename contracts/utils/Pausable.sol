@@ -55,11 +55,11 @@ contract Pausable {
     }
 
     /**
-     * @dev Modifier to make a function callable only when the contract is not paused.
+     * @dev Modifier to make a function callable only when the contract is paused.
      *
      * Requirements:
      *
-     * - The contract must not be paused.
+     * - The contract must be paused.
      */
     modifier whenPaused() {
         _whenPaused();

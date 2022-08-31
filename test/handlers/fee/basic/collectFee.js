@@ -20,7 +20,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
 
@@ -61,10 +61,10 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         await Promise.all([
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
-            ERC20MintableInstance.mint(depositerAddress, depositAmount),
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
-            ERC721MintableInstance.mint(depositerAddress, tokenID, ""),
-            ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
+            ERC20MintableInstance.mint(depositorAddress, depositAmount),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
+            ERC721MintableInstance.mint(depositorAddress, tokenID, ""),
+            ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositorAddress }),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, erc20ResourceID, ERC20BasicFeeHandlerInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, erc721ResourceID, ERC721BasicFeeHandlerInstance.address),
@@ -84,7 +84,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
             erc20ResourceID,
             erc20depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
     });
 
@@ -99,7 +99,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("1.0")
                 }
             ),
@@ -123,7 +123,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: fee
                 }
             );
@@ -134,7 +134,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(ERC20BasicFeeHandlerInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === erc20ResourceID.toLowerCase() &&
@@ -161,7 +161,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc721depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: fee
                 }
             );
@@ -172,7 +172,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(ERC721BasicFeeHandlerInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === erc721ResourceID.toLowerCase() &&
@@ -193,7 +193,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("1.0")
                 }
             ),
@@ -208,7 +208,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc20ResourceID,
                 erc20depositData,
                 feeData,
-                { from: depositerAddress }
+                { from: depositorAddress }
             )
         )
     });
@@ -226,14 +226,14 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
         await TruffleAssert.reverts(
             ERC20BasicFeeHandlerInstance.collectFee(
-                depositerAddress,
+                depositorAddress,
                 originDomainID,
                 destinationDomainID,
                 erc20ResourceID,
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
               ),
@@ -257,14 +257,14 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
         await TruffleAssert.reverts(
             FeeHandlerRouterInstance.collectFee(
-                depositerAddress,
+                depositorAddress,
                 originDomainID,
                 destinationDomainID,
                 erc20ResourceID,
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: Ethers.utils.parseEther("0.5").toString(),
                 }
               ),
@@ -293,7 +293,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc20depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: fee
                 }
             );
@@ -304,7 +304,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(ERC20BasicFeeHandlerInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === erc20ResourceID.toLowerCase() &&
@@ -333,7 +333,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
                 erc721depositData,
                 feeData,
                 {
-                    from: depositerAddress,
+                    from: depositorAddress,
                     value: fee
                 }
             );
@@ -344,7 +344,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         });
         const internalTx = await TruffleAssert.createTransactionResult(ERC721BasicFeeHandlerInstance, depositTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'FeeCollected', event => {
-            return event.sender === depositerAddress &&
+            return event.sender === depositorAddress &&
                 event.fromDomainID.toNumber() === originDomainID &&
                 event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.resourceID === erc721ResourceID.toLowerCase() &&

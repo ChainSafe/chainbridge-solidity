@@ -18,7 +18,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const adminAddress = accounts[0]
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
     const relayer1Address = accounts[3];
 
@@ -42,7 +42,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
     let initialGenericContractAddress;
     let initialGenericDepositFunctionSignature;
-    let initialGenericDepositFunctionDepositerOffset;
+    let initialGenericDepositFunctionDepositorOffset;
     let initialGenericExecuteFunctionSignature;
 
     let erc20ResourceID;
@@ -80,24 +80,24 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
         initialGenericContractAddress = ERC20MintableInstance.address;
         initialGenericDepositFunctionSignature = Helpers.blankFunctionSig;
-        initialGenericDepositFunctionDepositerOffset = Helpers.blankFunctionDepositerOffset;
+        initialGenericDepositFunctionDepositorOffset = Helpers.blankFunctionDepositorOffset;
         initialGenericExecuteFunctionSignature = Helpers.getFunctionSignature(ERC20MintableContract, 'mint');;
 
         await Promise.all([
-            ERC20MintableInstance.mint(depositerAddress, initialTokenAmount),
+            ERC20MintableInstance.mint(depositorAddress, initialTokenAmount),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
             ERC721MintableInstance.grantRole(await ERC721MintableInstance.MINTER_ROLE(), ERC721HandlerInstance.address),
-            ERC721MintableInstance.mint(depositerAddress, tokenID, erc721DepositMetadata),
+            ERC721MintableInstance.mint(depositorAddress, tokenID, erc721DepositMetadata),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
-            ERC1155MintableInstance.mintBatch(depositerAddress, [tokenID], [initialTokenAmount], "0x0"),
+            ERC1155MintableInstance.mintBatch(depositorAddress, [tokenID], [initialTokenAmount], "0x0"),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, genericResourceID, initialGenericContractAddress, initialGenericDepositFunctionSignature, initialGenericDepositFunctionDepositerOffset, initialGenericExecuteFunctionSignature)
+            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, genericResourceID, initialGenericContractAddress, initialGenericDepositFunctionSignature, initialGenericDepositFunctionDepositorOffset, initialGenericExecuteFunctionSignature)
         ]);
 
         await Promise.all([
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, 5000, { from: depositerAddress }),
-            ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
-            ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositerAddress })
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, 5000, { from: depositorAddress }),
+            ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositorAddress }),
+            ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositorAddress })
         ]);
 
         erc20DepositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
@@ -254,13 +254,13 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
 
         const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, proposalsForExecution);
 
-        // depositerAddress makes initial deposit of depositAmount
+        // depositorAddress makes initial deposit of depositAmount
         await TruffleAssert.passes(BridgeInstance.deposit(
             originDomainID,
             erc721ResourceID,
             erc721DepositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         ));
 
         // check that all nonces in nonce set are 0

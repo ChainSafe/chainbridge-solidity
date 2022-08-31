@@ -15,7 +15,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
 
     const tokenID = 1;
@@ -48,11 +48,11 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
 
         await Promise.all([
             ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
-            ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
+            ERC721MintableInstance1.mint(depositorAddress, tokenID, "")
         ]);
 
         await Promise.all([
-            ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
+            ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositorAddress }),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID1, ERC721MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID2, ERC721MintableInstance2.address),
             BridgeInstance.adminSetBurnable(ERC721HandlerInstance.address, ERC721MintableInstance1.address),
@@ -71,9 +71,9 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
         }
     });
 
-    it('[sanity] ERC721MintableInstance1 tokenID has been minted for depositerAddress', async () => {
+    it('[sanity] ERC721MintableInstance1 tokenID has been minted for depositorAddress', async () => {
         const tokenOwner = await ERC721MintableInstance1.ownerOf(tokenID);
-        assert.strictEqual(tokenOwner, depositerAddress);
+        assert.strictEqual(tokenOwner, depositorAddress);
     });
 
     it('depositAmount of ERC721MintableInstance1 tokens should have been burned', async () => {
@@ -82,14 +82,14 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             resourceID1,
             depositData,
             feeData,
-            { from: depositerAddress }
+            { from: depositorAddress }
         );
 
         const handlerBalance = await ERC721MintableInstance1.balanceOf(ERC721HandlerInstance.address);
         assert.strictEqual(handlerBalance.toNumber(), 0);
 
-        const depositerBalance = await ERC721MintableInstance1.balanceOf(depositerAddress);
-        assert.strictEqual(depositerBalance.toNumber(), 0);
+        const depositorBalance = await ERC721MintableInstance1.balanceOf(depositorAddress);
+        assert.strictEqual(depositorBalance.toNumber(), 0);
 
         await TruffleAssert.reverts(
             ERC721MintableInstance1.ownerOf(tokenID),

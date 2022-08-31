@@ -20,8 +20,8 @@ contract GenericHandler is IGenericHandler {
     // contract address => deposit function signature
     mapping (address => bytes4) public _contractAddressToDepositFunctionSignature;
 
-    // contract address => depositer address position offset in the metadata
-    mapping (address => uint256) public _contractAddressToDepositFunctionDepositerOffset;
+    // contract address => depositor address position offset in the metadata
+    mapping (address => uint256) public _contractAddressToDepositFunctionDepositorOffset;
 
     // contract address => execute proposal function signature
     mapping (address => bytes4) public _contractAddressToExecuteFunctionSignature;
@@ -53,30 +53,30 @@ contract GenericHandler is IGenericHandler {
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID},
         {_contractAddressToDepositFunctionSignature} with {depositFunctionSig},
-        {_contractAddressToDepositFunctionDepositerOffset} with {depositFunctionDepositerOffset},
+        {_contractAddressToDepositFunctionDepositorOffset} with {depositFunctionDepositorOffset},
         {_contractAddressToExecuteFunctionSignature} with {executeFunctionSig},
         and {_contractWhitelist} to true for {contractAddress}.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositerOffset Depositer address position offset in the metadata, in bytes.
+        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
         @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
      */
     function setResource(
         bytes32 resourceID,
         address contractAddress,
         bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositerOffset,
+        uint256 depositFunctionDepositorOffset,
         bytes4 executeFunctionSig
     ) external onlyBridge override {
 
-        _setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositerOffset, executeFunctionSig);
+        _setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositorOffset, executeFunctionSig);
     }
 
     /**
-        @notice A deposit is initiatied by making a deposit in the Bridge contract.
+        @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of contract to be used for deposit.
-        @param depositer Address of the account making deposit in the Bridge contract.
+        @param depositor Address of the account making deposit in the Bridge contract.
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32
@@ -86,7 +86,7 @@ contract GenericHandler is IGenericHandler {
         {metaData} is expected to consist of needed function arguments.
         @return Returns the raw bytes returned from the call to {contractAddress}.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external onlyBridge returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external onlyBridge returns (bytes memory) {
         uint256      lenMetadata;
         bytes memory metadata;
 
@@ -94,16 +94,16 @@ contract GenericHandler is IGenericHandler {
         metadata = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
-        uint256 depositerOffset = _contractAddressToDepositFunctionDepositerOffset[contractAddress];
-        if (depositerOffset > 0) {
-            uint256 metadataDepositer;
-            // Skipping 32 bytes of length prefix and depositerOffset bytes.
+        uint256 depositorOffset = _contractAddressToDepositFunctionDepositorOffset[contractAddress];
+        if (depositorOffset > 0) {
+            uint256 metadataDepositor;
+            // Skipping 32 bytes of length prefix and depositorOffset bytes.
             assembly {
-                metadataDepositer := mload(add(add(metadata, 32), depositerOffset))
+                metadataDepositor := mload(add(add(metadata, 32), depositorOffset))
             }
-            // metadataDepositer contains 0xdepositerAddressdepositerAddressdeposite************************
-            // Shift it 12 bytes right:   0x000000000000000000000000depositerAddressdepositerAddressdeposite
-            require(depositer == address(uint160(metadataDepositer >> 96)), 'incorrect depositer in the data');
+            // metadataDepositor contains 0xdepositorAddressdepositorAddressdeposite************************
+            // Shift it 12 bytes right:   0x000000000000000000000000depositorAddressdepositorAddressdeposite
+            require(depositor == address(uint160(metadataDepositor >> 96)), 'incorrect depositor in the data');
         }
 
         require(_contractWhitelist[contractAddress], "provided contractAddress is not whitelisted");
@@ -119,6 +119,7 @@ contract GenericHandler is IGenericHandler {
 
     /**
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
+        @param resourceID ResourceID to be used when making deposits.
         @param data Consists of {resourceID}, {lenMetaData}, and {metaData}.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32
@@ -152,13 +153,13 @@ contract GenericHandler is IGenericHandler {
         bytes32 resourceID,
         address contractAddress,
         bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositerOffset,
+        uint256 depositFunctionDepositorOffset,
         bytes4 executeFunctionSig
     ) internal {
         _resourceIDToContractAddress[resourceID] = contractAddress;
         _contractAddressToResourceID[contractAddress] = resourceID;
         _contractAddressToDepositFunctionSignature[contractAddress] = depositFunctionSig;
-        _contractAddressToDepositFunctionDepositerOffset[contractAddress] = depositFunctionDepositerOffset;
+        _contractAddressToDepositFunctionDepositorOffset[contractAddress] = depositFunctionDepositorOffset;
         _contractAddressToExecuteFunctionSignature[contractAddress] = executeFunctionSig;
 
         _contractWhitelist[contractAddress] = true;

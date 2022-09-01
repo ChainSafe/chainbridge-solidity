@@ -38,6 +38,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
+        @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
     constructor(address bridgeAddress, address feeHandlerRouterAddress) public {
@@ -61,6 +62,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.
@@ -74,6 +76,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
      /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
+        @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
         @param depositData Additional data to be passed to specified handler.

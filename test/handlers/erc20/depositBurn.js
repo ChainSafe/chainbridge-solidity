@@ -14,7 +14,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
     const domainID = 1;
 
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
 
     const initialTokenAmount = 100;
@@ -47,11 +47,11 @@ contract('ERC20Handler - [Deposit Burn ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
-            ERC20MintableInstance1.mint(depositerAddress, initialTokenAmount)
+            ERC20MintableInstance1.mint(depositorAddress, initialTokenAmount)
         ]);
 
         await Promise.all([
-            ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositerAddress }),
+            ERC20MintableInstance1.approve(ERC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address),
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address),
             BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance1.address)

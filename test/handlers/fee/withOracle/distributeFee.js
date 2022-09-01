@@ -19,7 +19,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
     const destinationDomainID = 2;
     const oracle = new Ethers.Wallet.createRandom();
     const recipientAddress = accounts[2];
-    const depositerAddress = accounts[1];
+    const depositorAddress = accounts[1];
 
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
 
@@ -52,9 +52,9 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
 
         await Promise.all([
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
-            ERC20MintableInstance.mint(depositerAddress, tokenAmount.add(feeAmount)),
-            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositerAddress }),
-            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositerAddress }),
+            ERC20MintableInstance.mint(depositorAddress, tokenAmount.add(feeAmount)),
+            ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositorAddress }),
+            ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositorAddress }),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address),
         ]);
@@ -88,7 +88,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             )
         );
@@ -127,7 +127,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             )
         );
@@ -157,7 +157,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             )
         );
@@ -176,7 +176,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
                 depositData,
                 feeData,
                 {
-                    from: depositerAddress
+                    from: depositorAddress
                 }
             )
         );

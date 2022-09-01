@@ -116,7 +116,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         assert.strictEqual(recipientBalance.toNumber(), depositAmount);
     });
 
-    it('should fail to executeProposal if deposit nonce is already used', async () => {
+    it('should skip executing proposal if deposit nonce is already used', async () => {
       const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
       // depositorAddress makes initial deposit of depositAmount
@@ -135,11 +135,14 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         { from: relayer1Address }
     ));
 
-      await TruffleAssert.reverts(BridgeInstance.executeProposal(
-      proposal,
-      proposalSignedData,
-      { from: relayer1Address }
-      ), "Deposit with provided nonce already executed");
+      const skipExecuteTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        { from: relayer1Address }
+        );
+
+        // check that no ProposalExecution events are emitted
+        assert.equal(skipExecuteTx.logs.length, 0);
     });
 
     it('executeProposal event should be emitted with expected values', async () => {

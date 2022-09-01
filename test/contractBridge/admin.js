@@ -23,6 +23,7 @@ contract('Bridge - [admin]', async (accounts) => {
     const someAddress = "0xcafecafecafecafecafecafecafecafecafecafe";
     const nullAddress = "0x0000000000000000000000000000000000000000";
     const topologyHash = "549f715f5b06809ada23145c2dc548db";
+    const txHash = "0x59d881e01ca682130e550e3576b6de760951fb45b1d5dd81342132f57920bbfa";
 
     const bytes32 = "0x0";
     let ADMIN_ROLE;
@@ -240,5 +241,19 @@ contract('Bridge - [admin]', async (accounts) => {
     it('Should require admin role to change access control contract', async () => {
         await assertOnlyAdmin(BridgeInstance.adminChangeAccessControl, someAddress)
     })
+
+    // Retry
+
+    it('Should require admin role to retry deposit', async () => {
+        await assertOnlyAdmin(BridgeInstance.retry, txHash);
+    });
+
+    it('Should successfully emit Retry event', async () => {
+        const eventTx = await BridgeInstance.retry(txHash);
+
+        TruffleAssert.eventEmitted(eventTx, 'Retry', (event) => {
+            return event.txHash === txHash
+        });
+    });
 
 });

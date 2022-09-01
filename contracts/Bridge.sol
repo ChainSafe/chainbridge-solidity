@@ -279,6 +279,7 @@ contract Bridge is Pausable, Context, EIP712 {
 
     /**
         @notice Executes a deposit proposal using a specified handler contract (only if signature is signed by MPC).
+        @notice Failed executeProposal from handler don't revert, emits {FailedHandlerExecution} event.
         @param proposal Proposal which consists of:
         - originDomainID ID of chain deposit originated from.
         - resourceID ResourceID to be used when making deposits.
@@ -294,24 +295,12 @@ contract Bridge is Pausable, Context, EIP712 {
         Proposal[] memory proposalArray = new Proposal[](1);
         proposalArray[0] = proposal;
 
-        require(isProposalExecuted(proposalArray[0].originDomainID, proposalArray[0].depositNonce) != true, "Deposit with provided nonce already executed");
-        require(verify(proposalArray, signature), "Invalid proposal signer");
-
-        address handler = _resourceIDToHandlerAddress[proposalArray[0].resourceID];
-        bytes32 dataHash = keccak256(abi.encodePacked(handler, proposalArray[0].data));
-
-        IDepositExecute depositHandler = IDepositExecute(handler);
-
-        usedNonces[proposalArray[0].originDomainID][proposalArray[0].depositNonce / 256] |= 1 << (proposalArray[0].depositNonce % 256);
-
-        // Reverts for every handler except GenericHandler
-        depositHandler.executeProposal(proposalArray[0].resourceID, proposalArray[0].data);
-
-        emit ProposalExecution(proposalArray[0].originDomainID, proposalArray[0].depositNonce, dataHash);
+        executeProposals(proposalArray, signature);
     }
 
     /**
         @notice Executes a batch of deposit proposals using a specified handler contract for each proposal (only if signature is signed by MPC).
+        @notice If executeProposals fails it doesn't revert, emits {FailedHandlerExecution} event.
         @param proposals Array of Proposal which consists of:
         - originDomainID ID of chain deposit originated from.
         - resourceID ResourceID to be used when making deposits.

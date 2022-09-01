@@ -378,10 +378,12 @@ contract Bridge is Pausable, Context, EIP712 {
 
     /**
         @notice This method is used to trigger the process for retrying failed deposits on the MPC side.
+        @notice Only callable by address that has the right to call the specific function,
+        which is mapped in {functionAccess} in AccessControlSegregator contract.
         @param txHash Transaction hash which contains deposit that should be retried
         @notice This is not applicable for failed executions on {GenericHandler}
      */
-    function retry(string memory txHash) external {
+    function retry(string memory txHash) external onlyAllowed {
         emit Retry(txHash);
     }
 

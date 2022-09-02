@@ -291,7 +291,7 @@ contract Bridge is Pausable, Context, EIP712 {
         In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
         In the case of {GenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
-    function executeProposal(Proposal memory proposal, bytes calldata signature) public whenNotPaused {
+    function executeProposal(Proposal memory proposal, bytes calldata signature) public {
         Proposal[] memory proposalArray = new Proposal[](1);
         proposalArray[0] = proposal;
 

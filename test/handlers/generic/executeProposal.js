@@ -36,6 +36,8 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     let resourceID;
     let depositData;
 
+    let proposal;
+
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
@@ -59,12 +61,19 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
+        proposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: depositData,
+          resourceID: resourceID
+        };
+
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
 
     it('deposit can be executed successfully', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
         await TruffleAssert.passes(BridgeInstance.deposit(
             originDomainID,
@@ -76,10 +85,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            depositData,
-            resourceID,
+            proposal,
             proposalSignedData,
             { from: relayer1Address }
         ));
@@ -89,7 +95,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     });
 
     it('AssetStored event should be emitted', async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositData, resourceID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
 
         await TruffleAssert.passes(BridgeInstance.deposit(
@@ -102,10 +108,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
         // relayer1 executes the proposal
         const executeTx = await BridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            depositData,
-            resourceID,
+            proposal,
             proposalSignedData,
             { from: relayer2Address }
         );

@@ -30,6 +30,8 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     let depositProposalData;
     let depositProposalDataHash;
 
+    let proposal;
+
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
@@ -51,6 +53,13 @@ contract('E2E ERC20 - Same Chain', async accounts => {
         depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
         depositProposalDataHash = Ethers.utils.keccak256(ERC20HandlerInstance.address + depositProposalData.substr(2));
 
+        proposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: depositProposalData,
+          resourceID: resourceID
+        };
+
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
     });
@@ -66,7 +75,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     });
 
     it("depositAmount of Destination ERC20 should be transferred to recipientAddress", async () => {
-        const proposalSignedData = await Helpers.signDataWithMpc(originDomainID, destinationDomainID, expectedDepositNonce, depositProposalData, resourceID);
+        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
 
         // depositorAddress makes initial deposit of depositAmount
         assert.isFalse(await BridgeInstance.paused());
@@ -84,10 +93,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         // relayer2 executes the proposal
         await TruffleAssert.passes(BridgeInstance.executeProposal(
-            originDomainID,
-            expectedDepositNonce,
-            depositProposalData,
-            resourceID,
+            proposal,
             proposalSignedData,
             { from: relayer1Address }
         ));

@@ -203,7 +203,7 @@ const deployBridge = async (domainID, admin) => {
     return await BridgeContract.new(domainID, accessControlInstance.address);
 }
 
-const signTypedProposal = async (bridgeAddress, proposals) => {
+const signTypedProposal = (bridgeAddress, proposals, chainId = 1) => {
 
   const name = "Bridge";
   const version = "3.1.0";
@@ -237,7 +237,7 @@ const signTypedProposal = async (bridgeAddress, proposals) => {
         domain: {
           name,
           version,
-          chainId: 1,
+          chainId,
           verifyingContract: bridgeAddress,
         },
         primaryType: 'Proposals',
@@ -246,53 +246,11 @@ const signTypedProposal = async (bridgeAddress, proposals) => {
         }
       }
     }
-  )
+  );
 }
 
-const mockSignTypedProposalWithInvalidChainID = async (bridgeAddress, proposals) => {
-
-  const name = "Bridge";
-  const version = "3.1.0";
-
-  const EIP712Domain = [
-    { name: 'name' ,type: 'string' },
-    { name: 'version' ,type: 'string' },
-    { name: 'chainId' ,type: 'uint256' },
-    { name: 'verifyingContract' ,type: 'address' },
-  ];
-
-  const types = {
-    EIP712Domain: EIP712Domain,
-    Proposal: [
-      { name: 'originDomainID', type: 'uint8' },
-      { name: 'depositNonce', type: 'uint64' },
-      { name: 'resourceID', type: 'bytes32' },
-      { name: 'data', type: 'bytes' },
-    ],
-    Proposals: [
-      { name: 'proposals', type: "Proposal[]"}
-    ]
-  };
-
-
-  return ethSigUtil.signTypedMessage(
-    Ethers.utils.arrayify(mpcPrivateKey),
-    {
-      data: {
-        types: types,
-        domain: {
-          name,
-          version,
-          chainId: 3,
-          verifyingContract: bridgeAddress,
-        },
-        primaryType: 'Proposals',
-        message: {
-          proposals: proposals
-        }
-      }
-    }
-  )
+const mockSignTypedProposalWithInvalidChainID = (bridgeAddress, proposals) => {
+  return signTypedProposal(bridgeAddress, proposals, 3);
 }
 
 module.exports = {

@@ -58,7 +58,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         }
 
         if (_burnList[tokenAddress]) {
-            burnERC721(tokenAddress, tokenID);
+            burnERC721(tokenAddress, depositer, tokenID);
         } else {
             lockERC721(tokenAddress, depositer, address(this), tokenID);
         }

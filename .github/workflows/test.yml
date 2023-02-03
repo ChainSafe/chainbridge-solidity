@@ -13,7 +13,7 @@ jobs:
         node-version: [12.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
       - uses: actions/cache@v2.1.7
         with:
           path: ~/.npm
@@ -39,7 +39,7 @@ jobs:
         node-version: [12.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
       - name: Install Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2.5.1
         with:

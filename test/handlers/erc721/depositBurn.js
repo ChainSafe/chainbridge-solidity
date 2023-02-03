@@ -2,7 +2,7 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
- 
+
  const TruffleAssert = require('truffle-assertions');
 
  const Helpers = require('../../helpers');
@@ -48,7 +48,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
             ERC721HandlerContract.new(BridgeInstance.address).then(instance => ERC721HandlerInstance = instance),
             ERC721MintableInstance1.mint(depositerAddress, tokenID, "")
         ]);
-            
+
         await Promise.all([
             ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, { from: depositerAddress }),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID1, ERC721MintableInstance1.address),
@@ -91,10 +91,9 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
     });
     it('depositAmount of ERC721MintableInstance1 tokens should NOT burn from NOT token owner', async () => {
         await TruffleAssert.reverts(BridgeInstance.deposit(
-                destinationDomainID,
+                domainID,
                 resourceID1,
                 depositData,
-                feeData,
                 { from: accounts[3] }
             ),
             'Burn not from owner');

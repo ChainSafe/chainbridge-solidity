@@ -69,7 +69,7 @@ jobs:
       #in case of failure
       - name: Rollback on failure
         if: failure()
-        uses: author/action-rollback@9ec72a6af74774e00343c6de3e946b0901c23013
+        uses: author/action-rollback@5bf3d25b05c5192123e0bfc077d4986420c0beec
         with:
           id: ${{ steps.create_release.outputs.id }}
           tag: ${{ needs.tag.outputs.tag }}

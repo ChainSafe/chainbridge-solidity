@@ -9,7 +9,12 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
-contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155Holder {
+contract ERC1155Handler is
+    IDepositExecute,
+    HandlerHelpers,
+    ERC1155Safe,
+    ERC1155Holder
+{
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC1155_METADATA = 0x0e89341c;
@@ -18,30 +23,41 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(
-        address bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
-    }
+    constructor(address bridgeAddress) HandlerHelpers(bridgeAddress) {}
 
     /**
         @notice A deposit is initiatied by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositer Address of account making the deposit in the Bridge contract.
-        @param data Consists of ABI-encoded arrays of tokenIDs and amounts.
+        @param data Consists of ABI-encoded arrays of tokenID and amount.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
-        uint[] memory tokenIDs;
-        uint[] memory amounts;
+    function deposit(
+        bytes32 resourceID,
+        address depositer,
+        bytes calldata data
+    ) external override onlyBridge returns (bytes memory metaData) {
+        uint256 tokenID;
+        uint256 amount;
 
-        (tokenIDs, amounts) = abi.decode(data, (uint[], uint[]));
+        (tokenID, amount) = abi.decode(data, (uint256, uint256));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(tokenAddress != address(0), "provided resourceID does not exist");
+        require(
+            tokenAddress != address(0),
+            "provided resourceID does not exist"
+        );
 
         if (_burnList[tokenAddress]) {
-            burnBatchERC1155(tokenAddress, depositer, tokenIDs, amounts);
+            burnERC1155(tokenAddress, depositer, tokenID, amount);
         } else {
-            lockBatchERC1155(tokenAddress, depositer, address(this), tokenIDs, amounts, EMPTY_BYTES);
+            lockERC1155(
+                tokenAddress,
+                depositer,
+                address(this),
+                tokenID,
+                amount,
+                EMPTY_BYTES
+            );
         }
     }
 
@@ -51,27 +67,51 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         @param data Consists of ABI-encoded {tokenIDs}, {amounts}, {recipient},
         and {transferData} of types uint[], uint[], bytes, bytes.
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
-        uint[] memory tokenIDs;
-        uint[] memory amounts;
-        bytes memory recipient;
-        bytes memory transferData;
+    function executeProposal(bytes32 resourceID, bytes calldata data)
+        external
+        override
+        onlyBridge
+    {
+        uint256 tokenID;
+        uint256 amount;
+        uint256 lenDestinationRecipientAddress;
+        bytes memory destinationRecipientAddress;
 
-        (tokenIDs, amounts, recipient, transferData) = abi.decode(data, (uint[], uint[], bytes, bytes));
+        (tokenID, amount, lenDestinationRecipientAddress) = abi.decode(
+            data,
+            (uint256, uint256, uint256)
+        );
+        destinationRecipientAddress = bytes(
+            data[96:96 + lenDestinationRecipientAddress]
+        );
 
         bytes20 recipientAddress;
+        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
         assembly {
-            recipientAddress := mload(add(recipient, 0x20))
+            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
-        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[address(tokenAddress)], "provided tokenAddress is not whitelisted");
+        require(
+            _contractWhitelist[address(tokenAddress)],
+            "provided tokenAddress is not whitelisted"
+        );
 
         if (_burnList[tokenAddress]) {
-            mintBatchERC1155(tokenAddress, address(recipientAddress), tokenIDs, amounts, transferData);
+            mintERC1155(
+                tokenAddress,
+                address(recipientAddress),
+                tokenID,
+                amount
+            );
         } else {
-            releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
+            releaseERC1155(
+                tokenAddress,
+                address(this),
+                address(recipientAddress),
+                tokenID,
+                amount
+            );
         }
     }
 
@@ -83,12 +123,22 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
         address recipient;
-        uint[] memory tokenIDs;
-        uint[] memory amounts;
+        uint256[] memory tokenIDs;
+        uint256[] memory amounts;
         bytes memory transferData;
 
-        (tokenAddress, recipient, tokenIDs, amounts, transferData) = abi.decode(data, (address, address, uint[], uint[], bytes));
+        (tokenAddress, recipient, tokenIDs, amounts, transferData) = abi.decode(
+            data,
+            (address, address, uint256[], uint256[], bytes)
+        );
 
-        releaseBatchERC1155(tokenAddress, address(this), recipient, tokenIDs, amounts, transferData);
+        releaseBatchERC1155(
+            tokenAddress,
+            address(this),
+            recipient,
+            tokenIDs,
+            amounts,
+            transferData
+        );
     }
 }

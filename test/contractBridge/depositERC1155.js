@@ -20,7 +20,8 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
-    
+    const recipeintAddress = accounts[2];
+
     let BridgeInstance;
     let OriginERC1155MintableInstance;
     let OriginERC1155HandlerInstance;
@@ -31,19 +32,19 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             ERC1155MintableContract.new("TOK").then(instance => OriginERC1155MintableInstance = instance),
             BridgeInstance = await BridgeContract.new(originDomainID, [], relayerThreshold, 0, 100)
         ]);
-        
-        
+
+
         resourceID = Helpers.createResourceID(OriginERC1155MintableInstance.address, originDomainID);
 
         OriginERC1155HandlerInstance = await ERC1155HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
             BridgeInstance.adminSetResource(OriginERC1155HandlerInstance.address, resourceID, OriginERC1155MintableInstance.address),
-            OriginERC1155MintableInstance.mintBatch(depositerAddress, [originChainTokenID], [originChainInitialTokenAmount], "0x0")
+            OriginERC1155MintableInstance.mint(depositerAddress, originChainTokenID, originChainInitialTokenAmount, "0x0")
         ]);
         await OriginERC1155MintableInstance.setApprovalForAll(OriginERC1155HandlerInstance.address, true, { from: depositerAddress });
 
-        depositData = Helpers.createERC1155DepositData([originChainTokenID], [depositAmount]);
+        depositData = Helpers.createERC1155DepositData(originChainTokenID, depositAmount, 20, recipeintAddress);
     });
 
     it("[sanity] test depositerAddress' balance", async () => {

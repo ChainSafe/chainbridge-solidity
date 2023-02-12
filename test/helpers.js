@@ -3,31 +3,31 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const Ethers = require('ethers');
+const Ethers = require('ethers');
 
- const blankFunctionSig = '0x00000000';
- const blankFunctionDepositerOffset = 0;
- const AbiCoder = new Ethers.utils.AbiCoder;
+const blankFunctionSig = '0x00000000';
+const blankFunctionDepositerOffset = 0;
+const AbiCoder = new Ethers.utils.AbiCoder;
 
- const toHex = (covertThis, padding) => {
+const toHex = (covertThis, padding) => {
     return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(covertThis), padding);
- };
+};
 
- const abiEncode = (valueTypes, values) => {
+const abiEncode = (valueTypes, values) => {
     return AbiCoder.encode(valueTypes, values)
- };
+};
 
- const getFunctionSignature = (contractInstance, functionName) => {
+const getFunctionSignature = (contractInstance, functionName) => {
     return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
- };
+};
 
- const createCallData = (contractInstance, functionName, valueTypes, values) => {
+const createCallData = (contractInstance, functionName, valueTypes, values) => {
     let signature = getFunctionSignature(contractInstance, functionName);
     let encodedABI = abiEncode(valueTypes, values);
     return signature + encodedABI.substr(2);
- };
+};
 
- const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
+const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
     return '0x' +
         toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
         toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
@@ -41,16 +41,31 @@ const createERCWithdrawData = (tokenAddress, recipientAddress, tokenAmountOrID) 
         toHex(tokenAmountOrID, 32).substr(2);
 }
 
-const createERC1155DepositData = (tokenIDs, amounts) => {
-    return abiEncode(["uint[]", "uint[]"], [tokenIDs, amounts]);
+const createERC1155DepositData = (tokenId, amount, lenRecipientAddress, recipientAddress) => {
+    return '0x' +
+        toHex(tokenId, 32).substr(2) +      // Token ID to deposit (32 bytes)
+        toHex(amount, 32).substr(2) +      // Token amount to deposit (32 bytes)
+        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
+        recipientAddress.substr(2);               // recipientAddress               (?? bytes)
 }
 
-const createERC1155DepositProposalData = (tokenIDs, amounts, recipient, transferData) => {
-    return abiEncode(["uint[]", "uint[]", "bytes", "bytes"], [tokenIDs, amounts, recipient, transferData])
+const createERC1155DepositProposalData = (tokenId, amount, lenRecipientAddress, recipientAddress, lenMetaData, metaData) => {
+    return '0x' +
+        toHex(tokenId, 32).substr(2) +      // Token ID to deposit (32 bytes)
+        toHex(amount, 32).substr(2) +      // Token amount to deposit (32 bytes)
+        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)         (32 bytes)
+        recipientAddress.substr(2) +               // recipientAddress              (?? bytes)
+        toHex(lenMetaData, 32).substr(2) +         // len(metaData)                 (32 bytes)
+        toHex(metaData, lenMetaData).substr(2)     // metaData                      (?? bytes)
+
 }
 
-const createERC1155WithdrawData = (tokenAddress, recipient, tokenIDs, amounts, transferData) => {
-    return abiEncode(["address", "address", "uint[]", "uint[]", "bytes"], [tokenAddress, recipient, tokenIDs, amounts, transferData])
+const createERC1155WithdrawData = (tokenAddress, recipientAddress, tokenId, amount) => {
+    return '0x' +
+        toHex(tokenAddress, 32).substr(2) +
+        toHex(recipientAddress, 32).substr(2) +
+        toHex(tokenId, 32).substr(2) +
+        toHex(amount, 32).substr(2);
 }
 
 const createERC721DepositProposalData = (
@@ -74,7 +89,7 @@ const createGenericDepositData = (hexMetaData) => {
     if (hexMetaData === null) {
         return '0x' +
             toHex(0, 32).substr(2) // len(metaData) (32 bytes)
-    } 
+    }
     const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
     return '0x' +
         toHex(hexMetaDataLength, 32).substr(2) +
@@ -113,8 +128,8 @@ const assertObjectsMatch = (expectedObj, actualObj) => {
                 actualValue = parseInt(actualValue);
             }
         }
-        
-        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);    
+
+        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);
     }
 };
 //uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(domainID);

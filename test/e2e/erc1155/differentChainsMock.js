@@ -22,7 +22,7 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
     const recipientAddress = accounts[2];
     const tokenID = 1;
     const initialTokenAmount = 100;
-    const depositAmount = 10; 
+    const depositAmount = 10;
     const expectedDepositNonce = 1;
 
     let OriginBridgeInstance;
@@ -48,12 +48,12 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
             ERC1155MintableContract.new("TOK").then(instance => OriginERC1155MintableInstance = instance),
             ERC1155MintableContract.new("TOK").then(instance => DestinationERC1155MintableInstance = instance)
         ]);
-        
+
         originResourceID = Helpers.createResourceID(OriginERC1155MintableInstance.address, originDomainID);
         originInitialResourceIDs = [originResourceID];
         originInitialContractAddresses = [OriginERC1155MintableInstance.address];
         originBurnableContractAddresses = [];
-        
+
         destinationResourceID = Helpers.createResourceID(DestinationERC1155MintableInstance.address, originDomainID)
         destinationInitialResourceIDs = [destinationResourceID];
         destinationInitialContractAddresses = [DestinationERC1155MintableInstance.address];
@@ -66,7 +66,7 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
                 .then(instance => DestinationERC1155HandlerInstance = instance)
         ]);
 
-        await OriginERC1155MintableInstance.mintBatch(depositerAddress, [tokenID], [initialTokenAmount], "0x0");
+        await OriginERC1155MintableInstance.mint(depositerAddress, tokenID, initialTokenAmount, "0x0");
 
         await Promise.all([
             OriginERC1155MintableInstance.setApprovalForAll(OriginERC1155HandlerInstance.address, true, { from: depositerAddress }),
@@ -75,12 +75,12 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
             DestinationBridgeInstance.adminSetResource(DestinationERC1155HandlerInstance.address, destinationResourceID, DestinationERC1155MintableInstance.address),
             DestinationBridgeInstance.adminSetBurnable(DestinationERC1155HandlerInstance.address, destinationBurnableContractAddresses[0])
         ]);
-        
-        originDepositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
-        originDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], recipientAddress, "0x");
 
-        destinationDepositData = Helpers.createERC1155DepositData([tokenID], [depositAmount]);
-        destinationDepositProposalData = Helpers.createERC1155DepositProposalData([tokenID], [depositAmount], depositerAddress, "0x");
+        originDepositData = Helpers.createERC1155DepositData(tokenID, depositAmount, 20, recipientAddress);
+        originDepositProposalData = Helpers.createERC1155DepositProposalData(tokenID, depositAmount, 20, recipientAddress, "0x");
+
+        destinationDepositData = Helpers.createERC1155DepositData(tokenID, depositAmount, 20, recipientAddress);
+        destinationDepositProposalData = Helpers.createERC1155DepositProposalData(tokenID, depositAmount, 20, depositerAddress, "0x");
     });
 
     it("[sanity] depositerAddress' balance of tokenID should be equal to initialTokenAmount", async () => {
@@ -174,7 +174,7 @@ contract('E2E ERC1155 - Two EVM Chains', async accounts => {
 
         recipientBalance = await DestinationERC1155MintableInstance.balanceOf(recipientAddress, tokenID);
         assert.strictEqual(recipientBalance.toNumber(), 0);
-        
+
         depositerBalance = await OriginERC1155MintableInstance.balanceOf(depositerAddress, tokenID);
         assert.strictEqual(depositerBalance.toNumber(), initialTokenAmount);
     });

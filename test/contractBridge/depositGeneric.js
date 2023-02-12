@@ -15,6 +15,7 @@ contract('Bridge - [deposit - Generic]', async () => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
+    const feeData = '0x';
     
     let BridgeInstance;
     let GenericHandlerInstance;
@@ -28,7 +29,7 @@ contract('Bridge - [deposit - Generic]', async () => {
     beforeEach(async () => {
         await Promise.all([
             CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
-            BridgeInstance = BridgeContract.new(originDomainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeInstance = BridgeContract.new(originDomainID, [], 0, 100).then(instance => BridgeInstance = instance)
         ]);
         
         resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
@@ -50,7 +51,8 @@ contract('Bridge - [deposit - Generic]', async () => {
         await TruffleAssert.passes(BridgeInstance.deposit(
             destinationDomainID,
             resourceID,
-            depositData
+            depositData,
+            feeData
         ));
     });
 
@@ -58,7 +60,8 @@ contract('Bridge - [deposit - Generic]', async () => {
         await BridgeInstance.deposit(
             destinationDomainID,
             resourceID,
-            depositData
+            depositData,
+            feeData
         );
 
         const depositCount = await BridgeInstance._depositCounts.call(destinationDomainID);
@@ -69,7 +72,8 @@ contract('Bridge - [deposit - Generic]', async () => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             resourceID,
-            depositData
+            depositData,
+            feeData
         );
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {

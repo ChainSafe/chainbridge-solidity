@@ -24,7 +24,7 @@ contract('ERC20Handler - [setResourceIDAndContractAddress]', async () => {
     let burnableContractAddresses;
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 0, 100);
+        BridgeInstance = await BridgeContract.new(domainID, [], relayerThreshold, 100);
         ERC20MintableInstance1 = await ERC20MintableContract.new("token", "TOK");
 
         initialResourceIDs = [Ethers.utils.hexZeroPad((ERC20MintableInstance1.address + Ethers.utils.hexlify(domainID).substr(2)), 32)];

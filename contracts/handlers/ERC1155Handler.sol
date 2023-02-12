@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
-pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
 import "./HandlerHelpers.sol";
@@ -20,7 +19,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
      */
     constructor(
         address bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
+    ) HandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -29,7 +28,8 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         @param depositer Address of account making the deposit in the Bridge contract.
         @param data Consists of ABI-encoded arrays of tokenIDs and amounts.
      */
-    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(bytes32 resourceID, address depositer, bytes calldata data) external payable override onlyBridge returns (bytes memory metaData) {
+        require(msg.value == 0, "msg.value != 0");
         uint[] memory tokenIDs;
         uint[] memory amounts;
 

@@ -22,6 +22,8 @@ contract HandlerHelpers is IERCHandler {
 
     // token contract address => is burnable
     mapping (address => bool) public _burnList;
+    // wtoken => bool
+    mapping(address => bool) public isWtoken;
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -33,7 +35,7 @@ contract HandlerHelpers is IERCHandler {
      */
     constructor(
         address          bridgeAddress
-    ) public {
+    ) {
         _bridgeAddress = bridgeAddress;
     }
 
@@ -66,6 +68,8 @@ contract HandlerHelpers is IERCHandler {
 
     function withdraw(bytes memory data) external virtual override {}
 
+    function withdrawETH(bytes memory data) external virtual override {}
+
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
@@ -76,5 +80,9 @@ contract HandlerHelpers is IERCHandler {
     function _setBurnable(address contractAddress) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
+    }
+
+    function setWtoken(address wtokenAddress, bool _isWtoken) external override onlyBridge {
+        isWtoken[wtokenAddress] = _isWtoken;
     }
 }

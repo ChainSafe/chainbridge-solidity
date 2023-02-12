@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
-pragma experimental ABIEncoderV2;
 
 import "../interfaces/IDepositExecute.sol";
 import "./HandlerHelpers.sol";
@@ -24,7 +23,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
      */
     constructor(
         address bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
+    ) HandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -43,7 +42,8 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
     function deposit(bytes32    resourceID,
                     address     depositer,
                     bytes       calldata data
-                    ) external override onlyBridge returns (bytes memory metaData) {
+                    ) external payable override onlyBridge returns (bytes memory metaData) {
+        require(msg.value == 0, "msg.value != 0");
         uint         tokenID;
 
         (tokenID) = abi.decode(data, (uint));

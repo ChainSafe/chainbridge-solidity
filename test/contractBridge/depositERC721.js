@@ -19,6 +19,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const originChainTokenID = 42;
     const expectedDepositNonce = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
+    const feeData = '0x';
     
     let BridgeInstance;
     let OriginERC721MintableInstance;
@@ -30,7 +31,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC721MintableContract.new("token", "TOK", "").then(instance => OriginERC721MintableInstance = instance),
-            BridgeContract.new(originDomainID, [], 0, 0, 100).then(instance => BridgeInstance = instance)
+            BridgeContract.new(originDomainID, [], 0, 100).then(instance => BridgeInstance = instance)
         ]);
         
         originResourceID = Helpers.createResourceID(OriginERC721MintableInstance.address, originDomainID);
@@ -73,6 +74,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             destinationDomainID,
             originResourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         )
     });
@@ -82,6 +84,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             destinationDomainID,
             originResourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -94,6 +97,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             destinationDomainID,
             originResourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -112,6 +116,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
             destinationDomainID,
             originResourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
         

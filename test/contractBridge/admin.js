@@ -34,7 +34,7 @@ contract('Bridge - [admin]', async accounts => {
     };
 
     beforeEach(async () => {
-        BridgeInstance = await BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 0, 100);
+        BridgeInstance = await BridgeContract.new(domainID, initialRelayers, initialRelayerThreshold, 100);
         ADMIN_ROLE = await BridgeInstance.DEFAULT_ADMIN_ROLE()
     });
 
@@ -166,25 +166,6 @@ contract('Bridge - [admin]', async accounts => {
 
     it('Should require admin role to set ERC20MintableInstance.address as burnable', async () => {
         await assertOnlyAdmin(BridgeInstance.adminSetBurnable, someAddress, someAddress);
-    });
-
-    // Set fee
-
-    it('Should set fee', async () => {
-        assert.equal(await BridgeInstance._fee.call(), 0);
-
-        const fee = Ethers.utils.parseEther("0.05");
-        await BridgeInstance.adminChangeFee(fee);
-        const newFee = await BridgeInstance._fee.call()
-        assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05")
-    });
-
-    it('Should not set the same fee', async () => {
-        await TruffleAssert.reverts(BridgeInstance.adminChangeFee(0), "Current fee is equal to new fee");
-    });
-
-    it('Should require admin role to set fee', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminChangeFee, 0);
     });
 
     // Withdraw

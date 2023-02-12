@@ -20,6 +20,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     const originChainInitialTokenAmount = 100;
     const depositAmount = 10;
     const expectedDepositNonce = 1;
+    const feeData = '0x';
     
     let BridgeInstance;
     let OriginERC1155MintableInstance;
@@ -29,7 +30,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             ERC1155MintableContract.new("TOK").then(instance => OriginERC1155MintableInstance = instance),
-            BridgeInstance = await BridgeContract.new(originDomainID, [], relayerThreshold, 0, 100)
+            BridgeInstance = await BridgeContract.new(originDomainID, [], relayerThreshold, 100)
         ]);
         
         
@@ -61,6 +62,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             destinationDomainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         ));
     });
@@ -70,6 +72,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             destinationDomainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -82,6 +85,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             destinationDomainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -97,6 +101,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             destinationDomainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -110,6 +115,7 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
             destinationDomainID,
             resourceID,
             depositData,
+            feeData,
             { from: depositerAddress }
         );
 
@@ -121,6 +127,6 @@ contract('Bridge - [deposit - ERC1155]', async (accounts) => {
     });
 
     it('deposit requires resourceID that is mapped to a handler', async () => {
-        await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, { from: depositerAddress }), "resourceID not mapped to handler");
+        await TruffleAssert.reverts(BridgeInstance.deposit(destinationDomainID, '0x0', depositData, feeData, { from: depositerAddress }), "resourceID not mapped to handler");
     });
 });
